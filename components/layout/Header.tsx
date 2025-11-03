@@ -10,7 +10,7 @@ export default function Header() {
       <div className="flex items-center gap-3">
         <Link href="/" className="flex items-center gap-3">
           <Image src="/file.svg" alt="E-motel logo" width={28} height={28} className="rounded" />
-          <span className="text-sm font-semibold">E-motel</span>
+          <span className="site-title text-sm font-semibold">E-motel</span>
         </Link>
         <span className="hidden text-xs text-zinc-500 sm:inline">Quản lý nhà trọ hiện đại</span>
       </div>
