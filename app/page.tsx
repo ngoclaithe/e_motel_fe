@@ -45,7 +45,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-center justify-center">
-            <div className="w-full max-w-md overflow-hidden rounded-2xl border border-black/10 bg-white p-6 shadow-lg dark:border-white/10 dark:bg-black/40">
+            <div className="card w-full max-w-md overflow-hidden">
               <Image src="/globe.svg" alt="E-motel illustration" width={560} height={360} className="object-cover" />
             </div>
           </div>
