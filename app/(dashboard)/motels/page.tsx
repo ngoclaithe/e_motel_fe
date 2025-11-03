@@ -53,7 +53,7 @@ export default function MotelsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nhà trọ</h1>
-        <button onClick={() => setOpen(true)} className="rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Thêm nhà trọ</button>
+        <button onClick={() => setOpen(true)} className="btn-primary">Thêm nhà trọ</button>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {motels.map((m) => (
