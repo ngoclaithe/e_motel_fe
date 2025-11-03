@@ -87,7 +87,7 @@ export default function RoomsPage() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù hợp</div>
+          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù h��p</div>
         )}
       </div>
 
@@ -136,7 +136,7 @@ export default function RoomsPage() {
               </div>
               <div className="col-span-2 flex justify-end gap-2 pt-2">
                 <button onClick={() => { setOpen(false); setEditing(null); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
-                <button onClick={save} className="rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Lưu</button>
+                <button onClick={save} className="btn-primary">Lưu</button>
               </div>
             </div>
           </div>
