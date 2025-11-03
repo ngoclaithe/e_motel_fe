@@ -38,7 +38,7 @@ export default function ForgotPasswordPage() {
               placeholder="you@example.com"
             />
           </div>
-          <button className="inline-flex w-full items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]">Gửi OTP</button>
+          <button className="btn-primary w-full">Gửi OTP</button>
         </form>
       ) : (
         <form onSubmit={reset} className="space-y-4">
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
               placeholder="••••••••"
             />
           </div>
-          <button className="inline-flex w-full items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc]">Đặt lại mật khẩu</button>
+          <button className="btn-primary w-full">Đặt lại mật khẩu</button>
         </form>
       )}
     </div>
