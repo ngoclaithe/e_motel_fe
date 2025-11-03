@@ -89,3 +89,12 @@ body {
 @media (prefers-color-scheme: dark) {
   .feature { background: linear-gradient(180deg, rgba(2,6,23,0.4), rgba(3,7,18,0.45)); }
 }
+
+/* Site title accent */
+.site-title {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* small helpers */
+.text-muted { color: var(--muted); }
