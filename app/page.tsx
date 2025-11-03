@@ -29,15 +29,15 @@ export default function Home() {
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-black/10 bg-white p-4 text-center shadow-sm dark:border-white/10 dark:bg-black/40">
+              <div className="feature text-center">
                 <div className="text-sm font-semibold">Quản lý phòng</div>
                 <div className="mt-2 text-xs text-zinc-500">Tạo, sửa, lọc theo trạng thái</div>
               </div>
-              <div className="rounded-lg border border-black/10 bg-white p-4 text-center shadow-sm dark:border-white/10 dark:bg-black/40">
+              <div className="feature text-center">
                 <div className="text-sm font-semibold">Hợp đồng & Hóa đơn</div>
                 <div className="mt-2 text-xs text-zinc-500">Theo dõi thanh toán và trạng thái hợp đồng</div>
               </div>
-              <div className="rounded-lg border border-black/10 bg-white p-4 text-center shadow-sm dark:border-white/10 dark:bg-black/40">
+              <div className="feature text-center">
                 <div className="text-sm font-semibold">Báo cáo nhanh</div>
                 <div className="mt-2 text-xs text-zinc-500">Doanh thu, phòng trống, lịch sử thanh toán</div>
               </div>
