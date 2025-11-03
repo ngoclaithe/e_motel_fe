@@ -54,15 +54,15 @@ export default function Home() {
         <section className="mt-14">
           <h2 className="text-2xl font-semibold">Cách hoạt động</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-black/10 bg-white p-4 text-center dark:border-white/10 dark:bg-black/40">
+            <div className="feature text-center">
               <div className="text-sm font-semibold">1. Đăng ký</div>
               <div className="mt-2 text-xs text-zinc-500">Tạo tài khoản chủ trọ hoặc người thuê</div>
             </div>
-            <div className="rounded-lg border border-black/10 bg-white p-4 text-center dark:border-white/10 dark:bg-black/40">
+            <div className="feature text-center">
               <div className="text-sm font-semibold">2. Quản lý</div>
               <div className="mt-2 text-xs text-zinc-500">Thêm nhà trọ, phòng, hợp đồng và hóa đơn</div>
             </div>
-            <div className="rounded-lg border border-black/10 bg-white p-4 text-center dark:border-white/10 dark:bg-black/40">
+            <div className="feature text-center">
               <div className="text-sm font-semibold">3. Theo dõi</div>
               <div className="mt-2 text-xs text-zinc-500">Xem báo cáo, gửi thông báo và xuất PDF</div>
             </div>
