@@ -10,8 +10,6 @@ export default function Home() {
           <div className="flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/login" className="rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Đăng nhập</Link>
             <Link href="/register" className="rounded-xl border border-black/10 px-5 py-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Đăng ký</Link>
-            <Link href="/landlord" className="rounded-xl border border-black/10 px-5 py-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Chủ trọ</Link>
-            <Link href="/admin" className="rounded-xl border border-black/10 px-5 py-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Admin</Link>
           </div>
         </div>
       </main>
