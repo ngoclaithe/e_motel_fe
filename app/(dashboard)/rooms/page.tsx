@@ -62,7 +62,7 @@ export default function RoomsPage() {
             <option value="occupied">Đang thuê</option>
             <option value="maintenance">Bảo trì</option>
           </select>
-          <button onClick={() => setOpen(true)} className="rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Thêm phòng</button>
+          <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
         </div>
       </div>
 
