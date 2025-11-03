@@ -5,9 +5,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 
 const nav = [
-  { href: "/admin", label: "Admin" },
-  { href: "/landlord", label: "Chủ trọ" },
-  { href: "/tenant", label: "Người thuê" },
   { href: "/motels", label: "Nhà trọ" },
   { href: "/rooms", label: "Phòng" },
 ];
