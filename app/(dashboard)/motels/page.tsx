@@ -117,7 +117,7 @@ export default function MotelsPage() {
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button onClick={() => { setOpen(false); setEditing(null); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
-                <button onClick={save} className="rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Lưu</button>
+                <button onClick={save} className="btn-primary">Lưu</button>
               </div>
             </div>
           </div>
