@@ -24,7 +24,7 @@ export default function Home() {
             <p className="mt-4 max-w-xl text-lg text-zinc-600 dark:text-zinc-400">E-motel giúp chủ trọ và người thuê quản lý phòng, hợp đồng và hóa đơn dễ dàng. Giao diện trực quan, tối ưu mobile và hỗ trợ dark mode.</p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link href="/login" className="inline-flex items-center rounded-xl bg-foreground px-5 py-3 text-sm font-medium text-background hover:bg-[#383838] dark:hover:bg-[#ccc]">Bắt đầu (Đăng nhập)</Link>
+              <Link href="/login" className="btn-primary inline-flex items-center px-5 py-3 text-sm font-medium">Bắt đầu (Đăng nhập)</Link>
               <Link href="/register" className="inline-flex items-center rounded-xl border border-black/10 px-5 py-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Tạo tài khoản</Link>
             </div>
 
