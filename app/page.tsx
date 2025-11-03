@@ -11,7 +11,7 @@ export default function Home() {
             <span className="text-lg font-semibold">E-motel</span>
           </Link>
           <nav className="flex items-center gap-3">
-            <Link href="/login" className="rounded-lg px-4 py-2 text-sm font-medium hover:bg-black/5 dark:hover:bg-white/10">Đăng nhập</Link>
+            <Link href="/login" className="btn-primary px-4 py-2 text-sm">Đăng nhập</Link>
             <Link href="/register" className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Đăng ký</Link>
           </nav>
         </div>
