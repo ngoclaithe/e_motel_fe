@@ -15,7 +15,7 @@ export default function LandlordDashboard() {
       </div>
       <div className="flex gap-3">
         <Link href="/motels" className="rounded-xl border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Quản lý nhà trọ</Link>
-        <Link href="/rooms" className="rounded-xl border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg_white/10">Quản lý phòng</Link>
+        <Link href="/rooms" className="rounded-xl border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Quản lý phòng</Link>
       </div>
     </div>
   );
