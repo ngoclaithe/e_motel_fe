@@ -99,6 +99,14 @@ export function useAuth() {
   const { push } = useToast();
   const [loading, setLoading] = useState(false);
 
+  const clearLocal = () => {
+    try {
+      localStorage.removeItem("emotel_token");
+      localStorage.removeItem("emotel_session");
+      localStorage.removeItem("emotel_active_role");
+    } catch {}
+  };
+
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -154,9 +162,23 @@ export function useAuth() {
     }
   };
 
+  const logout = (opts?: { redirect?: boolean }) => {
+    clearLocal();
+    push({ title: "Đã đăng xuất", type: "info" });
+    if (opts?.redirect !== false) router.push("/login");
+  };
+
+  const getSession = () => {
+    try {
+      return JSON.parse(localStorage.getItem("emotel_session") || "null");
+    } catch {
+      return null;
+    }
+  };
+
   const redirectByRole = (role: UserRole) => {
     router.push(routeForRole(role));
   };
 
-  return { login, redirectByRole, loading };
+  return { login, redirectByRole, logout, getSession, loading };
 }
