@@ -3,14 +3,33 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
-
-const nav = [
-  { href: "/motels", label: "Nhà trọ" },
-  { href: "/rooms", label: "Phòng" },
-];
+import { useCurrentRole } from "../../hooks/useAuth";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const role = useCurrentRole();
+
+  const nav = (() => {
+    if (role === "landlord") {
+      return [
+        { href: "/landlord", label: "Tổng quan" },
+        { href: "/motels", label: "Nhà trọ" },
+        { href: "/rooms", label: "Phòng" },
+      ];
+    }
+    if (role === "tenant") {
+      return [
+        { href: "/tenant", label: "Tổng quan" },
+      ];
+    }
+    if (role === "admin") {
+      return [
+        { href: "/admin", label: "Bảng điều khiển" },
+      ];
+    }
+    return [] as { href: string; label: string }[];
+  })();
+
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-black/10 px-4 py-6 dark:border-white/10 md:block">
       <div className="mb-6 text-lg font-semibold">E-Motel</div>
