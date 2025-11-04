@@ -15,13 +15,11 @@ function normalizeRole(value: unknown): UserRole | null {
   return null;
 }
 
+import { api } from "../lib/api";
+
 async function fetchMe(): Promise<{ role?: string } | null> {
   try {
-    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
-    const url = base ? `${base}/api/v1/auth/me` : "/api/v1/auth/me";
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) return null;
-    return await res.json();
+    return await api.get("/api/v1/auth/me");
   } catch {
     return null;
   }
