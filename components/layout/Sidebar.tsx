@@ -15,6 +15,11 @@ export default function Sidebar() {
         { href: "/landlord", label: "Tổng quan" },
         { href: "/motels", label: "Nhà trọ" },
         { href: "/rooms", label: "Phòng" },
+        { href: "/landlord/contracts", label: "Hợp đồng" },
+        { href: "/landlord/bills", label: "Hóa đơn" },
+        { href: "/landlord/feedbacks", label: "Sửa chữa" },
+        { href: "/notifications", label: "Thông báo" },
+        { href: "/profile", label: "Hồ sơ" },
       ];
     }
     if (role === "tenant") {
@@ -22,7 +27,9 @@ export default function Sidebar() {
         { href: "/tenant", label: "Tổng quan" },
         { href: "/contracts", label: "Hợp đồng" },
         { href: "/bills", label: "Hóa đơn" },
-        { href: "/support", label: "Hỗ trợ" },
+        { href: "/feedbacks", label: "Sửa chữa" },
+        { href: "/notifications", label: "Thông báo" },
+        { href: "/profile", label: "Hồ sơ" },
       ];
     }
     if (role === "admin") {
@@ -32,7 +39,9 @@ export default function Sidebar() {
         { href: "/admin/motels", label: "Nhà trọ" },
         { href: "/admin/rooms", label: "Phòng" },
         { href: "/admin/reports", label: "Báo cáo" },
-        { href: "/admin/notifications", label: "Thông báo" },
+        { href: "/admin/notifications", label: "Quản lý thông báo" },
+        { href: "/notifications", label: "Thông báo" },
+        { href: "/profile", label: "Hồ sơ" },
       ];
     }
     return [] as { href: string; label: string }[];
