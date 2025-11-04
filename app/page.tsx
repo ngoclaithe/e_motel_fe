@@ -7,7 +7,7 @@ export default function Home() {
       <header className="mx-auto max-w-6xl px-6 py-6">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/file.svg" width={36} height={36} alt="E-motel" className="rounded-md" />
+            <Image src="/images/e-motel.png" width={36} height={36} alt="E-motel" className="rounded-md" />
             <span className="text-lg font-semibold">E-motel</span>
           </Link>
           <nav className="flex items-center gap-3">
@@ -46,7 +46,7 @@ export default function Home() {
 
           <div className="flex items-center justify-center">
             <div className="card w-full max-w-md overflow-hidden">
-              <Image src="/globe.svg" alt="E-motel illustration" width={560} height={360} className="object-cover" />
+              <div className="home-hero-visual h-[360px] w-full"></div>
             </div>
           </div>
         </section>
