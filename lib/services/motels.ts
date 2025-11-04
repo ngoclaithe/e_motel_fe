@@ -6,6 +6,10 @@ export interface CreateMotelRequest {
   address: string;
   logoUrl?: string;
   description?: string;
+  totalRooms?: number;
+  latitude?: number;
+  longitude?: number;
+  images?: string[];
 }
 
 export interface UpdateMotelRequest {
@@ -13,6 +17,10 @@ export interface UpdateMotelRequest {
   address?: string;
   logoUrl?: string;
   description?: string;
+  totalRooms?: number;
+  latitude?: number;
+  longitude?: number;
+  images?: string[];
 }
 
 export interface MotelListResponse {
