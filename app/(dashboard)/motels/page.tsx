@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import type { Motel } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
+import { useEnsureRole } from "../../../hooks/useAuth";
 
 export default function MotelsPage() {
+  useEnsureRole(["landlord"]);
   const { push } = useToast();
   const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
   const [open, setOpen] = useState(false);
