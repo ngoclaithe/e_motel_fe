@@ -85,7 +85,10 @@ export function useEnsureRole(allowed: UserRole[], fallback?: string) {
   const router = useRouter();
   const role = useCurrentRole();
   useEffect(() => {
-    if (!role) return;
+    if (role === null) {
+      router.replace("/login");
+      return;
+    }
     if (!allowed.includes(role)) {
       const to = fallback || routeForRole(role);
       router.replace(to);
