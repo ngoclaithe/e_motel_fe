@@ -5,6 +5,7 @@ import type { Motel } from "../../../../types";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
+import { uploadToCloudinary } from "../../../../lib/cloudinary";
 
 export default function AdminMotelsPage() {
   useEnsureRole(["admin"]);
@@ -13,7 +14,17 @@ export default function AdminMotelsPage() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
-  const [form, setForm] = useState<Partial<Motel>>({ name: "", address: "", ownerEmail: "" });
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState<Partial<Motel>>({
+    name: "",
+    address: "",
+    ownerEmail: "",
+    description: "",
+    totalRooms: undefined,
+    latitude: undefined,
+    longitude: undefined,
+    images: [],
+  });
 
   const filtered = motels.filter((m) => {
     const q = query.trim().toLowerCase();
