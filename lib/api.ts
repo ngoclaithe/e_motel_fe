@@ -6,15 +6,46 @@ function getBaseUrl() {
 
 function getToken(): string | null {
   if (typeof window === "undefined") return null;
+  const sanitize = (t: string) => t.replace(/^Bearer\s+/i, "").trim();
   try {
-    // Common token locations: dedicated key or inside emotel_session object
-    const explicit = localStorage.getItem("emotel_token") || localStorage.getItem("token");
-    if (explicit) return explicit;
+    const keys = ["emotel_token", "token", "access_token", "accessToken", "auth_token"];
 
-    const session = localStorage.getItem("emotel_session");
-    if (session) {
-      const obj = JSON.parse(session);
-      if (obj && typeof obj === "object" && typeof obj.token === "string") return obj.token;
+    // Check localStorage and sessionStorage
+    for (const storage of [localStorage, sessionStorage]) {
+      try {
+        // direct keys
+        for (const k of keys) {
+          const v = storage.getItem(k);
+          if (typeof v === "string" && v.trim()) return sanitize(v);
+        }
+        // nested session object
+        const session = storage.getItem("emotel_session");
+        if (session) {
+          const obj = JSON.parse(session);
+          if (obj && typeof obj === "object" && typeof (obj as any).token === "string") {
+            return sanitize((obj as any).token);
+          }
+        }
+      } catch {
+        // ignore per-storage errors
+      }
+    }
+
+    // Check cookies as a fallback
+    if (typeof document !== "undefined" && typeof document.cookie === "string" && document.cookie) {
+      const cookieMap: Record<string, string> = {};
+      document.cookie.split(";").forEach((entry) => {
+        const idx = entry.indexOf("=");
+        if (idx > -1) {
+          const k = entry.slice(0, idx).trim();
+          const v = decodeURIComponent(entry.slice(idx + 1));
+          cookieMap[k] = v;
+        }
+      });
+      for (const k of [...keys, "Authorization"]) {
+        const v = cookieMap[k];
+        if (typeof v === "string" && v.trim()) return sanitize(v);
+      }
     }
   } catch {
     // ignore
