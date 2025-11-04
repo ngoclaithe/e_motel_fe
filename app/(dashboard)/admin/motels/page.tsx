@@ -144,10 +144,10 @@ export default function AdminMotelsPage() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
+          <div className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40 my-8">
             <div className="mb-4 text-lg font-semibold">{editing ? "Cập nhật" : "Thêm nhà trọ"}</div>
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
               <div>
                 <label className="mb-1 block text-sm">Tên</label>
                 <input
@@ -174,12 +174,83 @@ export default function AdminMotelsPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm">Logo</label>
-                <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} className="w-full text-sm" />
+                <label className="mb-1 block text-sm">Mô tả</label>
+                <textarea
+                  value={form.description || ""}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25 resize-none"
+                  rows={3}
+                />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm">Tổng phòng</label>
+                  <input
+                    type="number"
+                    value={form.totalRooms || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, totalRooms: e.target.value ? parseInt(e.target.value) : undefined }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm">Vĩ độ</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={form.latitude || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, latitude: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">Kinh độ</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={form.longitude || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, longitude: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm">Logo</label>
+                <input type="file" accept="image/*" onChange={(e) => onLogoFile(e.target.files?.[0])} className="w-full text-sm" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm">Ảnh nhà trọ</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => onImageFiles(e.target.files)}
+                  disabled={uploading}
+                  className="w-full text-sm disabled:opacity-50"
+                />
+              </div>
+              {form.images && form.images.length > 0 && (
+                <div>
+                  <label className="mb-1 block text-sm">Ảnh đã tải ({form.images.length})</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {form.images.map((img, idx) => (
+                      <div key={idx} className="relative group rounded-lg overflow-hidden bg-black/10">
+                        <img src={img} alt={`motel-${idx}`} className="w-full h-20 object-cover" />
+                        <button
+                          onClick={() => setForm((f) => ({ ...f, images: (f.images || []).filter((_, i) => i !== idx) }))}
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs font-semibold"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-2">
-                <button onClick={() => { setOpen(false); setEditing(null); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
-                <button onClick={save} className="btn-primary">Lưu</button>
+                <button onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
+                <button onClick={save} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? "Đang tải..." : "Lưu"}</button>
               </div>
             </div>
           </div>
