@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useEnsureRole, useCurrentRole, useAuth } from "../../../hooks/useAuth";
 import type { UserRole } from "../../../types";
 
@@ -39,19 +39,24 @@ export default function NotificationsPage() {
     getInitialNotifications(role, session?.email)
   );
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const updated = getInitialNotifications(role, session?.email);
-      setNotifications(updated);
-    }, 5000);
-    return () => clearInterval(interval);
+  const updateNotifications = useCallback(() => {
+    setNotifications(getInitialNotifications(role, session?.email));
   }, [role, session?.email]);
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map((n) =>
-      n.id === id ? { ...n, read: true } : n
-    ));
-  };
+  useEffect(() => {
+    const interval = setInterval(updateNotifications, 5000);
+    return () => clearInterval(interval);
+  }, [updateNotifications]);
+
+  const markAsRead = useCallback((id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  }, []);
+
+  useEffect(() => {
+    updateNotifications();
+  }, [updateNotifications]);
 
   return (
     <div className="space-y-4">
