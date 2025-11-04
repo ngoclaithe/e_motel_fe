@@ -36,7 +36,7 @@ export default function BillsPage() {
     return tenantBills.filter((b) => b.status === "unpaid").reduce((sum, b) => sum + (b.totalAmount || 0), 0);
   };
 
-  const pay = (bill: Bill) => {
+  const pay = () => {
     push({ title: "Đang xử lý thanh toán", description: "Hóa đơn sẽ được cập nhật sau khi thanh toán", type: "info" });
     setSelectedBill(null);
   };
