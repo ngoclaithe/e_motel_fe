@@ -2,25 +2,35 @@
 
 import { useEffect, useState } from "react";
 
+function initializeTheme(): { mounted: boolean; dark: boolean } {
+  if (typeof window === "undefined") {
+    return { mounted: false, dark: false };
+  }
+  const saved = window.localStorage.getItem("theme");
+  const isDark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.classList.toggle("dark", isDark);
+  return { mounted: true, dark: isDark };
+}
+
 export default function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
-    const isDark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const { mounted: isMounted, dark: isDark } = initializeTheme();
+    setMounted(isMounted);
     setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
   useEffect(() => {
     if (!mounted) return;
     document.documentElement.classList.toggle("dark", dark);
-    try { window.localStorage.setItem("theme", dark ? "dark" : "light"); } catch {}
+    try {
+      window.localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch {}
   }, [dark, mounted]);
 
-  if (!mounted) return null;
+  if (!mounted) return <div className="h-9 w-12" />;
 
   return (
     <button
