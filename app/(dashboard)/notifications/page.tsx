@@ -40,8 +40,11 @@ export default function NotificationsPage() {
   );
 
   useEffect(() => {
-    setNotifications(getInitialNotifications(role, session?.email));
-  }, [role, session?.email]);
+    const updated = getInitialNotifications(role, session?.email);
+    if (JSON.stringify(updated) !== JSON.stringify(notifications)) {
+      setNotifications(updated);
+    }
+  }, [role, session?.email, notifications]);
 
   const markAsRead = (id: string) => {
     setNotifications(notifications.map((n) =>

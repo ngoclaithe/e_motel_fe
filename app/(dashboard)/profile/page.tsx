@@ -28,24 +28,27 @@ export default function ProfilePage() {
   const session = getSession();
 
   useEffect(() => {
-    try {
-      const users = JSON.parse(localStorage.getItem("emotel_users") || "[]") as Array<{
-        email: string;
-        fullName?: string;
-        phone?: string;
-        address?: string;
-        avatar?: string;
-      }>;
-      const currentUser = users.find((u) => u.email === session?.email);
-      if (currentUser) {
-        setForm({
-          fullName: currentUser.fullName || "",
-          phone: currentUser.phone || "",
-          address: currentUser.address || "",
-          avatar: currentUser.avatar || "",
-        });
-      }
-    } catch {}
+    const loadUserData = () => {
+      try {
+        const users = JSON.parse(localStorage.getItem("emotel_users") || "[]") as Array<{
+          email: string;
+          fullName?: string;
+          phone?: string;
+          address?: string;
+          avatar?: string;
+        }>;
+        const currentUser = users.find((u) => u.email === session?.email);
+        if (currentUser) {
+          setForm({
+            fullName: currentUser.fullName || "",
+            phone: currentUser.phone || "",
+            address: currentUser.address || "",
+            avatar: currentUser.avatar || "",
+          });
+        }
+      } catch {}
+    };
+    loadUserData();
   }, [session?.email]);
 
   const saveProfile = () => {
@@ -55,14 +58,20 @@ export default function ProfilePage() {
     }
 
     try {
-      const users = JSON.parse(localStorage.getItem("emotel_users") || "[]") as Array<{
+      const users: Array<{
         email: string;
         fullName?: string;
         phone?: string;
         address?: string;
         avatar?: string;
-      }>;
-      const updatedUsers = users.map((u) =>
+      }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
+      const updatedUsers: Array<{
+        email: string;
+        fullName?: string;
+        phone?: string;
+        address?: string;
+        avatar?: string;
+      }> = users.map((u) =>
         u.email === session?.email
           ? { ...u, ...form }
           : u
@@ -92,14 +101,14 @@ export default function ProfilePage() {
     }
 
     try {
-      const users = JSON.parse(localStorage.getItem("emotel_users") || "[]") as Array<{
+      const users: Array<{
         email: string;
         password?: string;
         fullName?: string;
         phone?: string;
         address?: string;
         avatar?: string;
-      }>;
+      }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
       const currentUser = users.find((u) => u.email === session?.email);
 
       if (!currentUser) {
@@ -112,7 +121,14 @@ export default function ProfilePage() {
         return;
       }
 
-      const updatedUsers = users.map((u) =>
+      const updatedUsers: Array<{
+        email: string;
+        password?: string;
+        fullName?: string;
+        phone?: string;
+        address?: string;
+        avatar?: string;
+      }> = users.map((u) =>
         u.email === session?.email
           ? { ...u, password: passwordForm.newPassword }
           : u

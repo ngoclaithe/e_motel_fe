@@ -113,20 +113,20 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      let loginResponse: any = null;
+      let loginResponse: Record<string, unknown> | null = null;
       try {
         loginResponse = await api.post("/api/v1/auth/login", { email, password });
-      } catch (err) {}
+      } catch {}
 
       try {
-        const pick = (obj: any, keys: string[]) => {
+        const pick = (obj: Record<string, unknown>, keys: string[]): string | null => {
           for (const k of keys) {
             const v = obj && typeof obj === "object" ? (obj as any)[k] : null;
             if (typeof v === "string" && v.trim()) return v;
           }
           return null;
         };
-        const nested = (obj: any): any => (obj && typeof obj === "object" ? obj : null);
+        const nested = (obj: Record<string, unknown>): Record<string, unknown> | null => (obj && typeof obj === "object" ? obj : null);
         const tokenRaw =
           (loginResponse && (pick(loginResponse, ["token", "access_token", "accessToken", "auth_token"]) ||
                              pick(nested(loginResponse?.data), ["token", "access_token", "accessToken", "auth_token"]) ||
@@ -146,7 +146,9 @@ export function useAuth() {
 
       if (!role) {
         try {
-          const users: Array<{ email: string; role?: string }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
+          const users: Array<{ email: string; role?: string }> = JSON.parse(
+            localStorage.getItem("emotel_users") || "[]"
+          ) as Array<{ email: string; role?: string }>;
           const found = users.find((u) => u.email === email);
           role = normalizeRole(found?.role) || "landlord";
         } catch {
