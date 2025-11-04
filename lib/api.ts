@@ -1,5 +1,3 @@
-type Maybe<T> = T | null;
-
 function getBaseUrl() {
   return (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 }
@@ -21,9 +19,13 @@ function getToken(): string | null {
         // nested session object
         const session = storage.getItem("emotel_session");
         if (session) {
-          const obj = JSON.parse(session);
-          if (obj && typeof obj === "object" && typeof (obj as any).token === "string") {
-            return sanitize((obj as any).token);
+          const obj = JSON.parse(session) as unknown;
+          if (
+            obj &&
+            typeof obj === "object" &&
+            typeof (obj as Record<string, unknown>).token === "string"
+          ) {
+            return sanitize((obj as Record<string, unknown>).token as string);
           }
         }
       } catch {
@@ -53,7 +55,7 @@ function getToken(): string | null {
   return null;
 }
 
-async function request(path: string, init: RequestInit = {}): Promise<any> {
+async function request(path: string, init: RequestInit = {}): Promise<unknown> {
   const base = getBaseUrl();
   const url = path.match(/^https?:\/\//i) ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 
@@ -73,13 +75,13 @@ async function request(path: string, init: RequestInit = {}): Promise<any> {
 
   if (!res.ok) {
     const text = await res.text();
-    let data: any = text;
+    let data: unknown = text;
     try {
       data = JSON.parse(text);
     } catch {
       // keep raw text
     }
-    const err: any = new Error(res.statusText || "Request failed");
+    const err = new Error(res.statusText || "Request failed") as Record<string, unknown> & Error;
     err.status = res.status;
     err.data = data;
     throw err;
@@ -87,8 +89,10 @@ async function request(path: string, init: RequestInit = {}): Promise<any> {
 
   if (res.status === 204) return null;
   const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) return res.json();
-  return res.text();
+  if (contentType.includes("application/json")) {
+    return res.json() as Promise<unknown>;
+  }
+  return res.text() as Promise<string>;
 }
 
 export const api = {

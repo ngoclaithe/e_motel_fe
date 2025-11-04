@@ -119,9 +119,16 @@ function getTokenFromStorage(): string | null {
         }
         const session = storage.getItem("emotel_session");
         if (session) {
-          const obj = JSON.parse(session);
-          if (obj && typeof obj === "object" && typeof (obj as any).token === "string") {
-            return (obj as any).token.replace(/^Bearer\s+/i, "").trim();
+          const obj = JSON.parse(session) as unknown;
+          if (
+            obj &&
+            typeof obj === "object" &&
+            typeof (obj as Record<string, unknown>).token === "string"
+          ) {
+            return ((obj as Record<string, unknown>).token as string).replace(
+              /^Bearer\s+/i,
+              ""
+            ).trim();
           }
         }
       } catch {
