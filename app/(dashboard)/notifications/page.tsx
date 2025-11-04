@@ -40,13 +40,9 @@ export default function NotificationsPage() {
   );
 
   useEffect(() => {
-    const updated = getInitialNotifications(role, session?.email);
-    setNotifications(updated);
-  }, [role, session?.email]);
-
-  useEffect(() => {
     const interval = setInterval(() => {
-      setNotifications((prev) => getInitialNotifications(role, session?.email));
+      const updated = getInitialNotifications(role, session?.email);
+      setNotifications(updated);
     }, 5000);
     return () => clearInterval(interval);
   }, [role, session?.email]);

@@ -13,29 +13,27 @@ function initializeTheme(): { mounted: boolean; dark: boolean } {
 }
 
 export default function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const { mounted: isMounted, dark: isDark } = initializeTheme();
-    setMounted(true);
+    const { dark: isDark } = initializeTheme();
     setDark(isDark);
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (dark === null) return;
     document.documentElement.classList.toggle("dark", dark);
     try {
       window.localStorage.setItem("theme", dark ? "dark" : "light");
     } catch {}
-  }, [dark, mounted]);
+  }, [dark]);
 
-  if (!mounted) return null;
+  if (dark === null) return null;
 
   return (
     <button
       aria-label="Toggle theme"
-      onClick={() => setDark((v) => !v)}
+      onClick={() => setDark((v) => (v === null ? false : !v))}
       className="inline-flex h-9 items-center justify-center rounded-full border border-black/10 px-3 text-sm font-medium transition-colors hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
     >
       {dark ? "🌙" : "☀️"}
