@@ -31,14 +31,10 @@ function writeNoti(items: NotificationItem[]) {
 export default function AdminNotificationsPage() {
   useEnsureRole(["admin"]);
   const { push } = useToast();
-  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>(() => readNoti());
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Partial<NotificationItem>>({ title: "", message: "", toRole: "all" });
-
-  useEffect(() => {
-    setItems(readNoti());
-  }, []);
 
   useEffect(() => {
     writeNoti(items);
@@ -52,11 +48,12 @@ export default function AdminNotificationsPage() {
 
   const create = () => {
     if (!form.title || !form.message) return;
+    const toRole = form.toRole as UserRole | "all" | undefined;
     const n: NotificationItem = {
       id: crypto.randomUUID(),
       title: String(form.title),
       message: String(form.message),
-      toRole: (form.toRole as UserRole | "all") || "all",
+      toRole: toRole || "all",
       toEmail: form.toEmail || "",
       createdAt: new Date().toISOString(),
     };

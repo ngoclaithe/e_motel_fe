@@ -72,11 +72,11 @@ export default function LandlordFeedbacksPage() {
   const filtered =
     filterStatus === "all" ? feedbacks : feedbacks.filter((f) => f.status === filterStatus);
 
-  const updateStatus = (id: string, newStatus: string) => {
+  const updateStatus = (id: string, newStatus: "pending" | "in_progress" | "completed") => {
     setFeedbacks(
       feedbacks.map((f) =>
         f.id === id
-          ? { ...f, status: newStatus as any, updatedAt: new Date().toISOString() }
+          ? { ...f, status: newStatus, updatedAt: new Date().toISOString() }
           : f
       )
     );
