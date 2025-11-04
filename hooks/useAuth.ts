@@ -15,11 +15,11 @@ function normalizeRole(value: unknown): UserRole | null {
   return null;
 }
 
+import { api } from "../lib/api";
+
 async function fetchMe(): Promise<{ role?: string } | null> {
   try {
-    const res = await fetch("/api/v1/auth/me", { credentials: "include" });
-    if (!res.ok) return null;
-    return await res.json();
+    return await api.get("/api/v1/auth/me");
   } catch {
     return null;
   }
@@ -45,8 +45,26 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      localStorage.setItem("emotel_session", JSON.stringify({ email }));
+      // attempt server login to receive token (if API supports it)
+      let loginResponse: any = null;
+      try {
+        loginResponse = await api.post("/api/v1/auth/login", { email, password });
+      } catch (err) {
+        // ignore: API may use cookie-based auth or not expose /login endpoint
+      }
 
+      // Persist token if provided by backend
+      try {
+        if (loginResponse && typeof loginResponse.token === "string") {
+          localStorage.setItem("emotel_token", loginResponse.token);
+          localStorage.setItem("emotel_session", JSON.stringify({ email, token: loginResponse.token }));
+        } else {
+          // keep at least the session email
+          localStorage.setItem("emotel_session", JSON.stringify({ email }));
+        }
+      } catch {}
+
+      // fetch current user (will include role); api.get will include token header automatically
       const me = await fetchMe();
       let role: UserRole | null = normalizeRole(me?.role);
 
