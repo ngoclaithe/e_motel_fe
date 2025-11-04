@@ -20,6 +20,9 @@ export default function Sidebar() {
     if (role === "tenant") {
       return [
         { href: "/tenant", label: "Tổng quan" },
+        { href: "/contracts", label: "Hợp đồng" },
+        { href: "/bills", label: "Hóa đơn" },
+        { href: "/support", label: "Hỗ trợ" },
       ];
     }
     if (role === "admin") {
