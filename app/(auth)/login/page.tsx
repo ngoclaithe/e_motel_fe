@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   return (
     <div>
-      <Link href="/" className="mb-4 flex items-center gap-3">
+      <Link href="/" className="mb-4 flex items-center justify-center gap-3">
         <Image src="/images/e-motel.png" width={44} height={44} alt="E-motel" className="rounded-md" />
         <span className="text-lg font-semibold">E-motel</span>
       </Link>
