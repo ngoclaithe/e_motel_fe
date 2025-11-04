@@ -28,6 +28,11 @@ export default function Sidebar() {
     if (role === "admin") {
       return [
         { href: "/admin", label: "Bảng điều khiển" },
+        { href: "/admin/users", label: "Người dùng" },
+        { href: "/admin/motels", label: "Nhà trọ" },
+        { href: "/admin/rooms", label: "Phòng" },
+        { href: "/admin/reports", label: "Báo cáo" },
+        { href: "/admin/notifications", label: "Thông báo" },
       ];
     }
     return [] as { href: string; label: string }[];
