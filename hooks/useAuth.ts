@@ -121,12 +121,13 @@ export function useAuth() {
       try {
         const pick = (obj: Record<string, unknown>, keys: string[]): string | null => {
           for (const k of keys) {
-            const v = obj && typeof obj === "object" ? (obj as any)[k] : null;
+            const v = obj && typeof obj === "object" ? (obj)[k as keyof typeof obj] : null;
             if (typeof v === "string" && v.trim()) return v;
           }
           return null;
         };
-        const nested = (obj: Record<string, unknown>): Record<string, unknown> | null => (obj && typeof obj === "object" ? obj : null);
+        const nested = (obj: unknown): Record<string, unknown> | null =>
+          (obj && typeof obj === "object" ? (obj as Record<string, unknown>) : null);
         const tokenRaw =
           (loginResponse && (pick(loginResponse, ["token", "access_token", "accessToken", "auth_token"]) ||
                              pick(nested(loginResponse?.data), ["token", "access_token", "accessToken", "auth_token"]) ||
@@ -160,7 +161,7 @@ export function useAuth() {
 
       push({ title: "Đăng nhập thành công", description: `Xin chào ${email}`, type: "success" });
       router.push(routeForRole(role!));
-    } catch (e) {
+    } catch {
       push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
     } finally {
       setLoading(false);

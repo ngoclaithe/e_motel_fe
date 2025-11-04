@@ -18,7 +18,7 @@ export default function ThemeToggle() {
 
   useEffect(() => {
     const { mounted: isMounted, dark: isDark } = initializeTheme();
-    setMounted(isMounted);
+    setMounted(true);
     setDark(isDark);
   }, []);
 
@@ -30,7 +30,7 @@ export default function ThemeToggle() {
     } catch {}
   }, [dark, mounted]);
 
-  if (!mounted) return <div className="h-9 w-12" />;
+  if (!mounted) return null;
 
   return (
     <button

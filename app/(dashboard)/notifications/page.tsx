@@ -41,10 +41,15 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     const updated = getInitialNotifications(role, session?.email);
-    if (JSON.stringify(updated) !== JSON.stringify(notifications)) {
-      setNotifications(updated);
-    }
-  }, [role, session?.email, notifications]);
+    setNotifications(updated);
+  }, [role, session?.email]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNotifications((prev) => getInitialNotifications(role, session?.email));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [role, session?.email]);
 
   const markAsRead = (id: string) => {
     setNotifications(notifications.map((n) =>
