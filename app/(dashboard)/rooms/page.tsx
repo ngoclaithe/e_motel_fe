@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import type { Room, RoomStatus } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
+import { useEnsureRole } from "../../../hooks/useAuth";
 
 export default function RoomsPage() {
+  useEnsureRole(["landlord"]);
   const { push } = useToast();
   const [rooms, setRooms] = useLocalStorage<Room[]>("emotel_rooms", []);
   const [status, setStatus] = useState<RoomStatus | "all">("all");
