@@ -17,7 +17,9 @@ function normalizeRole(value: unknown): UserRole | null {
 
 async function fetchMe(): Promise<{ role?: string } | null> {
   try {
-    const res = await fetch("/api/v1/auth/me", { credentials: "include" });
+    const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
+    const url = base ? `${base}/api/v1/auth/me` : "/api/v1/auth/me";
+    const res = await fetch(url, { credentials: "include" });
     if (!res.ok) return null;
     return await res.json();
   } catch {
