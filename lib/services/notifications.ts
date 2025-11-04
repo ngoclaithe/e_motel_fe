@@ -8,7 +8,7 @@ export interface Notification {
   type: "info" | "warning" | "error" | "success";
   read: boolean;
   createdAt: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface NotificationListResponse {

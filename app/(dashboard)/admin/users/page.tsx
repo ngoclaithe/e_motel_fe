@@ -35,13 +35,11 @@ function writeUsers(users: UserItem[]) {
 export default function AdminUsersPage() {
   useEnsureRole(["admin"]);
   const { push } = useToast();
-  const [users, setUsers] = useState<UserItem[]>([]);
+  const [users, setUsers] = useState<UserItem[]>(() => readUsers());
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UserItem | null>(null);
   const [form, setForm] = useState<UserItem>({ email: "", role: "landlord", createdAt: new Date().toISOString() });
   const [query, setQuery] = useState("");
-
-  useEffect(() => { setUsers(readUsers()); }, []);
 
   useEffect(() => { writeUsers(users); }, [users]);
 

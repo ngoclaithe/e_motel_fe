@@ -315,7 +315,7 @@ ${contract.notes || "Không có ghi chú"}
                 <label className="mb-1 block text-sm">Kỳ thanh toán</label>
                 <select
                   value={form.paymentPeriod || "monthly"}
-                  onChange={(e) => setForm((f) => ({ ...f, paymentPeriod: e.target.value as any }))}
+                  onChange={(e) => setForm((f) => ({ ...f, paymentPeriod: e.target.value as "monthly" | "quarterly" | "yearly" }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                 >
                   <option value="monthly">Hàng tháng</option>

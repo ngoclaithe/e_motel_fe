@@ -31,13 +31,14 @@ function writeNoti(items: NotificationItem[]) {
 export default function AdminNotificationsPage() {
   useEnsureRole(["admin"]);
   const { push } = useToast();
-  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>(() => readNoti());
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Partial<NotificationItem>>({ title: "", message: "", toRole: "all" });
 
-  useEffect(() => { setItems(readNoti()); }, []);
-  useEffect(() => { writeNoti(items); }, [items]);
+  useEffect(() => {
+    writeNoti(items);
+  }, [items]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -47,11 +48,12 @@ export default function AdminNotificationsPage() {
 
   const create = () => {
     if (!form.title || !form.message) return;
+    const toRole = form.toRole as UserRole | "all" | undefined;
     const n: NotificationItem = {
       id: crypto.randomUUID(),
       title: String(form.title),
       message: String(form.message),
-      toRole: (form.toRole as any) || "all",
+      toRole: toRole || "all",
       toEmail: form.toEmail || "",
       createdAt: new Date().toISOString(),
     };
@@ -129,7 +131,7 @@ export default function AdminNotificationsPage() {
                 <label className="mb-1 block text-sm">Gửi tới</label>
                 <select
                   value={form.toRole || "all"}
-                  onChange={(e) => setForm((f) => ({ ...f, toRole: e.target.value as any }))}
+                  onChange={(e) => setForm((f) => ({ ...f, toRole: e.target.value as UserRole | "all" }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                 >
                   <option value="all">Tất cả</option>

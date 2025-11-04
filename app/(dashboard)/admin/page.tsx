@@ -4,17 +4,28 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useEnsureRole } from "../../../hooks/useAuth";
 
+function getCounts() {
+  try {
+    const users = JSON.parse(localStorage.getItem("emotel_users") || "[]");
+    const motels = JSON.parse(localStorage.getItem("emotel_motels") || "[]");
+    const rooms = JSON.parse(localStorage.getItem("emotel_rooms") || "[]");
+    return {
+      users: Array.isArray(users) ? users.length : 0,
+      motels: Array.isArray(motels) ? motels.length : 0,
+      rooms: Array.isArray(rooms) ? rooms.length : 0,
+    };
+  } catch {
+    return { users: 0, motels: 0, rooms: 0 };
+  }
+}
+
 export default function AdminDashboard() {
   useEnsureRole(["admin"]);
-  const [counts, setCounts] = useState({ users: 0, motels: 0, rooms: 0 });
+  const [counts, setCounts] = useState(() => getCounts());
 
   useEffect(() => {
-    try {
-      const users = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-      const motels = JSON.parse(localStorage.getItem("emotel_motels") || "[]");
-      const rooms = JSON.parse(localStorage.getItem("emotel_rooms") || "[]");
-      setCounts({ users: Array.isArray(users) ? users.length : 0, motels: Array.isArray(motels) ? motels.length : 0, rooms: Array.isArray(rooms) ? rooms.length : 0 });
-    } catch {}
+    const interval = setInterval(() => setCounts(getCounts()), 1000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

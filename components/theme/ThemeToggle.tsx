@@ -2,25 +2,30 @@
 
 import { useEffect, useState } from "react";
 
+function getInitialDark(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const saved = window.localStorage.getItem("theme");
+  const isDark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return isDark;
+}
+
 export default function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    const isDark = getInitialDark();
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", isDark);
+    }
+    return isDark;
+  });
 
   useEffect(() => {
-    setMounted(true);
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
-    const isDark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     document.documentElement.classList.toggle("dark", dark);
-    try { window.localStorage.setItem("theme", dark ? "dark" : "light"); } catch {}
-  }, [dark, mounted]);
-
-  if (!mounted) return null;
+    try {
+      window.localStorage.setItem("theme", dark ? "dark" : "light");
+    } catch {}
+  }, [dark]);
 
   return (
     <button

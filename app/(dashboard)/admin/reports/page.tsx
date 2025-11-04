@@ -5,10 +5,10 @@ import type { Motel, Room } from "../../../../types";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useEnsureRole } from "../../../../hooks/useAuth";
 
-function toCSV<T extends Record<string, any>>(rows: T[]): string {
+function toCSV<T extends Record<string, unknown>>(rows: T[]): string {
   if (!rows.length) return "";
   const headers = Object.keys(rows[0]);
-  const escape = (v: any) => {
+  const escape = (v: unknown) => {
     const s = String(v ?? "");
     if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
     return s;
@@ -45,11 +45,11 @@ export default function AdminReportsPage() {
 
   const exportMotels = () => {
     if (!motels.length) return;
-    download("motels.csv", toCSV(motels as any));
+    download("motels.csv", toCSV(motels));
   };
   const exportRooms = () => {
     if (!rooms.length) return;
-    download("rooms.csv", toCSV(rooms as any));
+    download("rooms.csv", toCSV(rooms));
   };
 
   return (

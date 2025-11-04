@@ -56,7 +56,7 @@ export default function AdminRoomsPage() {
         <div className="flex items-center gap-2">
           <select
             value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
+            onChange={(e) => setStatus(e.target.value as RoomStatus | "all")}
             className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
           >
             <option value="all">Tất cả</option>

@@ -4,10 +4,8 @@ import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../../hooks/useAuth";
-import { useToast } from "../../../components/providers/ToastProvider";
 
 export default function LoginPage() {
-  const { push } = useToast();
   const { login, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
