@@ -7,6 +7,7 @@ import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { motelService } from "../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
+import { MapPicker } from "../../../components/MapPicker";
 
 export default function MotelsPage() {
   useEnsureRole(["landlord"]);
@@ -21,8 +22,8 @@ export default function MotelsPage() {
     address: "",
     description: "",
     totalRooms: 0,
-    latitude: 0,
-    longitude: 0,
+    latitude: 10.7769,
+    longitude: 106.6966,
     images: [],
   });
 
@@ -85,8 +86,8 @@ export default function MotelsPage() {
         address: form.address,
         description: form.description || "",
         totalRooms: form.totalRooms || 0,
-        latitude: form.latitude || 0,
-        longitude: form.longitude || 0,
+        latitude: form.latitude || 10.7769,
+        longitude: form.longitude || 106.6966,
         logoUrl: logoUrl || "",
         images: imageUrls.length > 0 ? imageUrls : form.images || [],
       };
@@ -108,8 +109,8 @@ export default function MotelsPage() {
         address: "",
         description: "",
         totalRooms: 0,
-        latitude: 0,
-        longitude: 0,
+        latitude: 10.7769,
+        longitude: 106.6966,
         images: [],
       });
       setLogoFile(null);
@@ -144,8 +145,8 @@ export default function MotelsPage() {
       address: "",
       description: "",
       totalRooms: 0,
-      latitude: 0,
-      longitude: 0,
+      latitude: 10.7769,
+      longitude: 106.6966,
       images: [],
     });
     setLogoFile(null);
@@ -190,42 +191,45 @@ export default function MotelsPage() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
-          <div className="w-full max-w-md rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40 my-8">
-            <div className="mb-4 text-lg font-semibold">{editing ? "Cập nhật" : "Thêm nhà trọ"}</div>
-            <div className="space-y-3 max-h-[80vh] overflow-y-auto">
-              <div>
-                <label className="mb-1 block text-sm font-medium">Tên nhà trọ <span className="text-red-500">*</span></label>
-                <input
-                  value={form.name || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  placeholder="Nhà trọ An Bình"
-                />
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
+            <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
+              <h2 className="text-lg font-semibold">{editing ? "Cập nhật" : "Thêm nhà trọ"}</h2>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Tên nhà trọ <span className="text-red-500">*</span></label>
+                  <input
+                    value={form.name || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    placeholder="Nhà trọ An Bình"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Địa chỉ <span className="text-red-500">*</span></label>
-                <input
-                  value={form.address || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  placeholder="123 Đường Nguyễn Văn Cừ, Quận 5, TP.HCM"
-                />
-              </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Địa chỉ <span className="text-red-500">*</span></label>
+                  <input
+                    value={form.address || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    placeholder="123 Đường Nguyễn Văn Cừ, Quận 5, TP.HCM"
+                  />
+                </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Mô tả</label>
-                <textarea
-                  value={form.description || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  placeholder="Nhà trọ sạch sẽ, an ninh tốt, gần trường đại học và chợ."
-                  rows={3}
-                />
-              </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Mô tả</label>
+                  <textarea
+                    value={form.description || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    placeholder="Nhà trọ sạch sẽ, an ninh tốt, gần trường đại học và chợ."
+                    rows={2}
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium">Tổng số phòng</label>
                   <input
@@ -236,81 +240,66 @@ export default function MotelsPage() {
                     placeholder="15"
                   />
                 </div>
-                <div></div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Vĩ độ (Latitude)</label>
-                  <input
-                    type="number"
-                    step="0.000001"
-                    value={form.latitude || 0}
-                    onChange={(e) => setForm((f) => ({ ...f, latitude: parseFloat(e.target.value) || 0 }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="10.762622"
+                  <label className="mb-1 block text-sm font-medium">Chọn vị trí trên bản đồ</label>
+                  <MapPicker
+                    latitude={form.latitude || 10.7769}
+                    longitude={form.longitude || 106.6966}
+                    onSelect={(lat, lng) => {
+                      setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
+                    }}
                   />
                 </div>
+
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Kinh độ (Longitude)</label>
+                  <label className="mb-1 block text-sm font-medium">Logo</label>
                   <input
-                    type="number"
-                    step="0.000001"
-                    value={form.longitude || 0}
-                    onChange={(e) => setForm((f) => ({ ...f, longitude: parseFloat(e.target.value) || 0 }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="106.660172"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoChange(e.target.files?.[0])}
+                    className="w-full text-sm"
+                    disabled={uploading}
                   />
+                  {form.logoUrl && logoFile && (
+                    <div className="mt-2 text-xs text-green-600">Logo sẵn sàng để tải lên</div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Hình ảnh nhà trọ</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleImagesChange(e.target.files)}
+                    className="w-full text-sm"
+                    disabled={uploading}
+                  />
+                  {form.images && form.images.length > 0 && (
+                    <div className="mt-2 text-xs text-green-600">
+                      {form.images.length} hình ảnh sẵn sàng
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">Logo</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleLogoChange(e.target.files?.[0])}
-                  className="w-full text-sm"
-                  disabled={uploading}
-                />
-                {form.logoUrl && logoFile && (
-                  <div className="mt-2 text-xs text-green-600">Logo sẵn sàng để tải lên</div>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium">Hình ảnh nhà trọ</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => handleImagesChange(e.target.files)}
-                  className="w-full text-sm"
-                  disabled={uploading}
-                />
-                {form.images && form.images.length > 0 && (
-                  <div className="mt-2 text-xs text-green-600">
-                    {form.images.length} hình ảnh sẵn sàng
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
-                <button
-                  onClick={closeModal}
-                  disabled={uploading}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={save}
-                  disabled={uploading}
-                  className="btn-primary disabled:opacity-50"
-                >
-                  {uploading ? "Đang tải lên..." : "Lưu"}
-                </button>
-              </div>
+            <div className="flex-shrink-0 border-t border-black/10 px-6 py-4 dark:border-white/15 flex justify-end gap-2">
+              <button
+                onClick={closeModal}
+                disabled={uploading}
+                className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={save}
+                disabled={uploading}
+                className="btn-primary disabled:opacity-50"
+              >
+                {uploading ? "Đang tải lên..." : "L��u"}
+              </button>
             </div>
           </div>
         </div>
