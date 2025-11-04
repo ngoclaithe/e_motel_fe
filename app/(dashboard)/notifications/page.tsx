@@ -11,36 +11,42 @@ interface NotificationItem {
   toRole?: UserRole | "all";
   toEmail?: string;
   createdAt: string;
+  read?: boolean;
+}
+
+function getInitialNotifications(role: UserRole | null, userEmail: string | undefined): NotificationItem[] {
+  try {
+    const allNotifications = JSON.parse(localStorage.getItem("emotel_notifications") || "[]");
+    const filtered = (allNotifications as NotificationItem[]).filter((n: NotificationItem) => {
+      const isForRole = !n.toRole || n.toRole === "all" || n.toRole === role;
+      const isForEmail = !n.toEmail || n.toEmail === userEmail;
+      return isForRole && isForEmail;
+    });
+    return filtered.sort((a: NotificationItem, b: NotificationItem) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch {
+    return [];
+  }
 }
 
 export default function NotificationsPage() {
   useEnsureRole(["tenant", "landlord", "admin"]);
   const role = useCurrentRole();
   const { getSession } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const session = getSession();
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
+    getInitialNotifications(role, session?.email)
+  );
 
   useEffect(() => {
-    try {
-      const allNotifications = JSON.parse(localStorage.getItem("emotel_notifications") || "[]");
-      const session = getSession();
-      const userEmail = session?.email;
-
-      const filtered = allNotifications.filter((n: NotificationItem) => {
-        const isForRole = !n.toRole || n.toRole === "all" || n.toRole === role;
-        const isForEmail = !n.toEmail || n.toEmail === userEmail;
-        return isForRole && isForEmail;
-      });
-
-      setNotifications(filtered.sort((a: NotificationItem, b: NotificationItem) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ));
-    } catch {}
-  }, [role, getSession]);
+    setNotifications(getInitialNotifications(role, session?.email));
+  }, [role, session?.email]);
 
   const markAsRead = (id: string) => {
     setNotifications(notifications.map((n) =>
       n.id === id ? { ...n, read: true } : n
-    ) as any);
+    ));
   };
 
   return (
