@@ -55,11 +55,24 @@ export function useAuth() {
 
       // Persist token if provided by backend
       try {
-        if (loginResponse && typeof loginResponse.token === "string") {
-          localStorage.setItem("emotel_token", loginResponse.token);
-          localStorage.setItem("emotel_session", JSON.stringify({ email, token: loginResponse.token }));
+        const pick = (obj: any, keys: string[]) => {
+          for (const k of keys) {
+            const v = obj && typeof obj === "object" ? (obj as any)[k] : null;
+            if (typeof v === "string" && v.trim()) return v;
+          }
+          return null;
+        };
+        const nested = (obj: any): any => (obj && typeof obj === "object" ? obj : null);
+        const tokenRaw =
+          (loginResponse && (pick(loginResponse, ["token", "access_token", "accessToken", "auth_token"]) ||
+                             pick(nested(loginResponse?.data), ["token", "access_token", "accessToken", "auth_token"]) ||
+                             pick(nested(loginResponse?.result), ["token", "access_token", "accessToken", "auth_token"])) ) || null;
+        const token = typeof tokenRaw === "string" ? tokenRaw.replace(/^Bearer\s+/i, "").trim() : null;
+
+        if (token) {
+          localStorage.setItem("emotel_token", token);
+          localStorage.setItem("emotel_session", JSON.stringify({ email, token }));
         } else {
-          // keep at least the session email
           localStorage.setItem("emotel_session", JSON.stringify({ email }));
         }
       } catch {}
