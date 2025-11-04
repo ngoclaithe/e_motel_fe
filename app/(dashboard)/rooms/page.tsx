@@ -87,7 +87,7 @@ export default function RoomsPage() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù h��p</div>
+          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù hợp</div>
         )}
       </div>
 

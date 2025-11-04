@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <div>
       <h1 className="mb-1 text-xl font-semibold">Đăng nhập</h1>
-      <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Sử dụng email và mật khẩu của b��n.</p>
+      <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">Sử dụng email và mật khẩu của bạn.</p>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium">Email</label>
