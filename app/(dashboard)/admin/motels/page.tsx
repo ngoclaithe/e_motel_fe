@@ -49,6 +49,10 @@ export default function AdminMotelsPage() {
         ownerEmail: String(form.ownerEmail),
         logoUrl: form.logoUrl || "",
         description: form.description || "",
+        totalRooms: form.totalRooms,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        images: form.images || [],
         createdAt: new Date().toISOString(),
       };
       setMotels([item, ...motels]);
@@ -56,7 +60,16 @@ export default function AdminMotelsPage() {
     }
     setOpen(false);
     setEditing(null);
-    setForm({ name: "", address: "", ownerEmail: "" });
+    setForm({
+      name: "",
+      address: "",
+      ownerEmail: "",
+      description: "",
+      totalRooms: undefined,
+      latitude: undefined,
+      longitude: undefined,
+      images: [],
+    });
   };
 
   const remove = (id: string) => {
