@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "../components/providers/ToastProvider";
 import type { UserRole } from "../types";
@@ -8,7 +8,7 @@ import type { UserRole } from "../types";
 function normalizeRole(value: unknown): UserRole | null {
   if (!value || typeof value !== "string") return null;
   const v = value.trim().toLowerCase();
-  if (v === "admin" || v === "landlord" || v === "tenant") return v;
+  if (v === "admin" || v === "landlord" || v === "tenant") return v as UserRole;
   if (v === "landlord".toUpperCase()) return "landlord";
   if (v === "tenant".toUpperCase()) return "tenant";
   if (v === "admin".toUpperCase()) return "admin";
@@ -25,7 +25,7 @@ async function fetchMe(): Promise<{ role?: string } | null> {
   }
 }
 
-function routeForRole(role: UserRole): string {
+export function routeForRole(role: UserRole): string {
   switch (role) {
     case "admin":
       return "/admin";
@@ -37,6 +37,63 @@ function routeForRole(role: UserRole): string {
   }
 }
 
+function readActiveEmail(): string | null {
+  try {
+    const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
+    return session?.email || null;
+  } catch {
+    return null;
+  }
+}
+
+function inferRoleFromLocal(email: string | null): UserRole | null {
+  try {
+    const active = normalizeRole(localStorage.getItem("emotel_active_role"));
+    if (active) return active;
+    if (!email) return null;
+    const users: Array<{ email: string; role?: string }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
+    const found = users.find((u) => u.email === email);
+    const role = normalizeRole(found?.role);
+    return role;
+  } catch {
+    return null;
+  }
+}
+
+export function useCurrentRole() {
+  const [role, setRole] = useState<UserRole | null>(() => inferRoleFromLocal(readActiveEmail()));
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const me = await fetchMe();
+      const normalized = normalizeRole(me?.role);
+      if (mounted && normalized) {
+        try { localStorage.setItem("emotel_active_role", normalized); } catch {}
+        setRole(normalized);
+      } else if (mounted) {
+        setRole(inferRoleFromLocal(readActiveEmail()) || null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  return role;
+}
+
+export function useEnsureRole(allowed: UserRole[], fallback?: string) {
+  const router = useRouter();
+  const role = useCurrentRole();
+  useEffect(() => {
+    if (!role) return;
+    if (!allowed.includes(role)) {
+      const to = fallback || routeForRole(role);
+      router.replace(to);
+    }
+  }, [role, allowed, fallback, router]);
+  return role;
+}
+
 export function useAuth() {
   const router = useRouter();
   const { push } = useToast();
@@ -45,15 +102,11 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // attempt server login to receive token (if API supports it)
       let loginResponse: any = null;
       try {
         loginResponse = await api.post("/api/v1/auth/login", { email, password });
-      } catch (err) {
-        // ignore: API may use cookie-based auth or not expose /login endpoint
-      }
+      } catch (err) {}
 
-      // Persist token if provided by backend
       try {
         const pick = (obj: any, keys: string[]) => {
           for (const k of keys) {
@@ -77,7 +130,6 @@ export function useAuth() {
         }
       } catch {}
 
-      // fetch current user (will include role); api.get will include token header automatically
       const me = await fetchMe();
       let role: UserRole | null = normalizeRole(me?.role);
 
@@ -91,8 +143,10 @@ export function useAuth() {
         }
       }
 
+      try { if (role) localStorage.setItem("emotel_active_role", role); } catch {}
+
       push({ title: "Đăng nhập thành công", description: `Xin chào ${email}`, type: "success" });
-      router.push(routeForRole(role));
+      router.push(routeForRole(role!));
     } catch (e) {
       push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
     } finally {
