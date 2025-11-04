@@ -13,7 +13,11 @@ export default function AdminDashboard() {
       const users = JSON.parse(localStorage.getItem("emotel_users") || "[]");
       const motels = JSON.parse(localStorage.getItem("emotel_motels") || "[]");
       const rooms = JSON.parse(localStorage.getItem("emotel_rooms") || "[]");
-      setCounts({ users: Array.isArray(users) ? users.length : 0, motels: Array.isArray(motels) ? motels.length : 0, rooms: Array.isArray(rooms) ? rooms.length : 0 });
+      setCounts({
+        users: Array.isArray(users) ? users.length : 0,
+        motels: Array.isArray(motels) ? motels.length : 0,
+        rooms: Array.isArray(rooms) ? rooms.length : 0,
+      });
     } catch {}
   }, []);
 

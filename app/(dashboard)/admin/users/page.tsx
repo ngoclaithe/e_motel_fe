@@ -41,7 +41,9 @@ export default function AdminUsersPage() {
   const [form, setForm] = useState<UserItem>({ email: "", role: "landlord", createdAt: new Date().toISOString() });
   const [query, setQuery] = useState("");
 
-  useEffect(() => { setUsers(readUsers()); }, []);
+  useEffect(() => {
+    setUsers(readUsers());
+  }, []);
 
   useEffect(() => { writeUsers(users); }, [users]);
 

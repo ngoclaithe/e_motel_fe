@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Motel } from "../../../../types";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useToast } from "../../../../components/providers/ToastProvider";
