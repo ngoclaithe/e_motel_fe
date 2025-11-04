@@ -78,11 +78,27 @@ export default function AdminMotelsPage() {
     push({ title: "Đã xóa", type: "info" });
   };
 
-  const onFile = (file?: File | null) => {
+  const onLogoFile = (file?: File | null) => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => setForm((f) => ({ ...f, logoUrl: String(reader.result) }));
     reader.readAsDataURL(file);
+  };
+
+  const onImageFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const uploadPromises = Array.from(files).map((file) => uploadToCloudinary(file));
+      const urls = await Promise.all(uploadPromises);
+      setForm((f) => ({ ...f, images: [...(f.images || []), ...urls] }));
+      push({ title: "Tải ảnh lên thành công", type: "success" });
+    } catch (error) {
+      console.error("Upload error:", error);
+      push({ title: "Lỗi khi tải ảnh", type: "error" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
