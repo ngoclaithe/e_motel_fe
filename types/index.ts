@@ -7,6 +7,10 @@ export interface Motel {
   logoUrl?: string;
   description?: string;
   ownerEmail: string;
+  totalRooms?: number;
+  latitude?: number;
+  longitude?: number;
+  images?: string[];
   createdAt: string;
 }
 
