@@ -98,3 +98,6 @@ body {
 
 /* small helpers */
 .text-muted { color: var(--muted); }
+
+/* Landing hero visual background */
+.home-hero-visual { background: url("/images/hero.png") center/cover no-repeat; }
