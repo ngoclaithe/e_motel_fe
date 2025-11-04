@@ -45,14 +45,11 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Persist a minimal local session so the demo app keeps working without a backend
       localStorage.setItem("emotel_session", JSON.stringify({ email }));
 
-      // Attempt to get the role from the backend
       const me = await fetchMe();
       let role: UserRole | null = normalizeRole(me?.role);
 
-      // Fallback: infer role from local registered users (demo storage)
       if (!role) {
         try {
           const users: Array<{ email: string; role?: string }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
