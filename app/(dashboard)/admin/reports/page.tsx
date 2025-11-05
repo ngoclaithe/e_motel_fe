@@ -35,10 +35,10 @@ export default function AdminReportsPage() {
 
   const stats = useMemo(() => {
     const totalRooms = rooms.length;
-    const occupied = rooms.filter((r) => r.status === "occupied").length;
-    const vacant = rooms.filter((r) => r.status === "vacant").length;
-    const maintenance = rooms.filter((r) => r.status === "maintenance").length;
-    const estimatedRevenue = rooms.filter((r) => r.status === "occupied").reduce((sum, r) => sum + (r.price || 0), 0);
+    const occupied = rooms.filter((r) => r.status === "OCCUPIED").length;
+    const vacant = rooms.filter((r) => r.status === "VACANT").length;
+    const maintenance = rooms.filter((r) => r.status === "MAINTENANCE").length;
+    const estimatedRevenue = rooms.filter((r) => r.status === "OCCUPIED").reduce((sum, r) => sum + (r.price || 0), 0);
     const occupancyRate = totalRooms ? Math.round((occupied / totalRooms) * 100) : 0;
     return { totalMotels: motels.length, totalRooms, occupied, vacant, maintenance, estimatedRevenue, occupancyRate };
   }, [motels, rooms]);
