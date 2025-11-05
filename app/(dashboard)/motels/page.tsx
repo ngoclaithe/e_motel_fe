@@ -1,70 +1,151 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Motel } from "../../../types";
+import type { Motel, AlleyType, SecurityType } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
-import { useEnsureRole } from "../../../hooks/useAuth";
-import { motelService } from "../../../lib/services/motels";
+import { useCurrentRole, useEnsureRole } from "../../../hooks/useAuth";
+import { motelService, type MotelFilterParams } from "../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
 import { MapPicker } from "../../../components/MapPicker";
 
+interface MotelFormImage {
+  type: 'new';
+  url: string;
+}
+
+interface MotelFormData {
+  id?: string;
+  name: string;
+  address: string;
+  description?: string;
+  totalRooms?: number;
+  latitude?: number;
+  longitude?: number;
+  alleyType?: AlleyType;
+  alleyWidth?: number;
+  hasElevator?: boolean;
+  hasParking?: boolean;
+  securityType?: SecurityType;
+  has24hSecurity?: boolean;
+  hasWifi?: boolean;
+  hasAirConditioner?: boolean;
+  hasWashingMachine?: boolean;
+  hasKitchen?: boolean;
+  hasRooftop?: boolean;
+  allowPets?: boolean;
+  allowCooking?: boolean;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  paymentCycleMonths?: number;
+  depositMonths?: number;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactZalo?: string;
+  regulations?: string;
+  nearbyPlaces?: string[];
+  images?: (string | MotelFormImage)[];
+}
+
+const INITIAL_FORM: MotelFormData = {
+  name: "",
+  address: "",
+  description: "",
+  totalRooms: 0,
+  latitude: 10.7769,
+  longitude: 106.6966,
+  alleyType: "MOTORBIKE",
+  alleyWidth: 0,
+  hasElevator: false,
+  hasParking: false,
+  securityType: "NONE",
+  has24hSecurity: false,
+  hasWifi: false,
+  hasAirConditioner: false,
+  hasWashingMachine: false,
+  hasKitchen: false,
+  hasRooftop: false,
+  allowPets: false,
+  allowCooking: true,
+  electricityCostPerKwh: 0,
+  waterCostPerCubicMeter: 0,
+  internetCost: 0,
+  parkingCost: 0,
+  paymentCycleMonths: 1,
+  depositMonths: 0,
+  contactPhone: "",
+  contactEmail: "",
+  contactZalo: "",
+  regulations: "",
+  nearbyPlaces: [],
+  images: [],
+};
+
 export default function MotelsPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["landlord", "tenant"]);
+  const role = useCurrentRole();
   const { push } = useToast();
+  
+  const [tab, setTab] = useState<'my' | 'all'>('my');
   const [motels, setMotels] = useState<Motel[]>([]);
+  const [allMotels, setAllMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
-
-  const [form, setForm] = useState<Partial<Motel>>({
-    name: "",
-    address: "",
-    description: "",
-    totalRooms: 0,
-    latitude: 10.7769,
-    longitude: 106.6966,
-    alleyType: "MOTORBIKE",
-    alleyWidth: 0,
-    hasElevator: false,
-    hasParking: false,
-    securityType: "NONE",
-    has24hSecurity: false,
-    hasWifi: false,
-    hasAirConditioner: false,
-    hasWashingMachine: false,
-    hasKitchen: false,
-    hasRooftop: false,
-    allowPets: false,
-    allowCooking: true,
-    electricityCostPerKwh: 0,
-    waterCostPerCubicMeter: 0,
-    internetCost: 0,
-    parkingCost: 0,
-    paymentCycleMonths: 1,
-    depositMonths: 0,
-    contactPhone: "",
-    contactEmail: "",
-    contactZalo: "",
-    regulations: "",
-    nearbyPlaces: [],
-    images: [],
-  });
-
+  const [form, setForm] = useState<MotelFormData>(INITIAL_FORM);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
 
-  useEffect(() => {
-    fetchMotels();
-  }, []);
+  // Pagination and filtering for "All Motels" tab
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<MotelFilterParams>({});
 
-  const fetchMotels = async () => {
+  useEffect(() => {
+    if (role === 'landlord' && tab === 'my') {
+      fetchMyMotels();
+    } else if (tab === 'all') {
+      fetchAllMotels();
+    }
+  }, [tab, role]);
+
+  useEffect(() => {
+    if (tab === 'all') {
+      fetchAllMotels();
+    }
+  }, [page, limit, searchTerm, filters]);
+
+  const fetchMyMotels = async () => {
     try {
       setLoading(true);
       const response = await motelService.getMyMotels();
       setMotels(response.data || []);
     } catch (error) {
-      console.error("Error fetching motels:", error);
+      console.error("Error fetching my motels:", error);
+      push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAllMotels = async () => {
+    try {
+      setLoading(true);
+      const params: MotelFilterParams = {
+        page,
+        limit,
+        search: searchTerm || undefined,
+        ...filters,
+      };
+      const response = await motelService.listMotels(params);
+      setAllMotels(response.data || []);
+      setTotalPages(response.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching all motels:", error);
       push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
     } finally {
       setLoading(false);
@@ -76,13 +157,15 @@ export default function MotelsPage() {
       const fileArray = Array.from(files);
       const newImageFiles = [...imageFiles, ...fileArray];
       setImageFiles(newImageFiles);
+      
       const readers = fileArray.map((file) => {
-        return new Promise<{ type: 'new', url: string }>((resolve) => {
+        return new Promise<MotelFormImage>((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve({ type: 'new', url: String(reader.result) });
           reader.readAsDataURL(file);
         });
       });
+      
       Promise.all(readers).then((dataUrls) => {
         setForm((f) => ({
           ...f,
@@ -96,7 +179,7 @@ export default function MotelsPage() {
     const images = form.images || [];
     const image = images[index];
 
-    if (image && typeof image === 'object' && 'type' in image && (image as any).type === 'new') {
+    if (image && typeof image === 'object' && 'type' in image && image.type === 'new') {
       setImageFiles((prev) => prev.filter((_, i) => i !== index));
     }
 
@@ -141,8 +224,8 @@ export default function MotelsPage() {
       }
 
       const existingImageUrls = (form.images || [])
-        .filter((img) => typeof img === 'object' && !(img as any).type)
-        .map((img) => (img as any).url);
+        .filter((img) => typeof img === 'string')
+        .map((img) => img as string);
 
       const finalImageUrls = imageUrls.length > 0 ? imageUrls : existingImageUrls;
 
@@ -188,7 +271,7 @@ export default function MotelsPage() {
         push({ title: "Tạo nhà trọ thành công", type: "success" });
       }
 
-      await fetchMotels();
+      await fetchMyMotels();
       closeModal();
     } catch (error) {
       console.error(error);
@@ -203,7 +286,7 @@ export default function MotelsPage() {
     try {
       await motelService.deleteMotel(id);
       push({ title: "Đã xóa", type: "info" });
-      await fetchMotels();
+      await fetchMyMotels();
     } catch (error) {
       console.error(error);
       push({ title: "Lỗi", description: "Không thể xóa nhà trọ", type: "error" });
@@ -212,7 +295,10 @@ export default function MotelsPage() {
 
   const openEditModal = (motel: Motel) => {
     setEditing(motel);
-    setForm(motel);
+    setForm({
+      ...motel,
+      images: (motel.images || []).map(img => img),
+    });
     setImageFiles([]);
     setOpen(true);
   };
@@ -222,47 +308,107 @@ export default function MotelsPage() {
     setEditing(null);
     setImageFiles([]);
     setNearbyPlaceInput("");
-    setForm({
-      name: "",
-      address: "",
-      description: "",
-      totalRooms: 0,
-      latitude: 10.7769,
-      longitude: 106.6966,
-      alleyType: "MOTORBIKE",
-      alleyWidth: 0,
-      hasElevator: false,
-      hasParking: false,
-      securityType: "NONE",
-      has24hSecurity: false,
-      hasWifi: false,
-      hasAirConditioner: false,
-      hasWashingMachine: false,
-      hasKitchen: false,
-      hasRooftop: false,
-      allowPets: false,
-      allowCooking: true,
-      electricityCostPerKwh: 0,
-      waterCostPerCubicMeter: 0,
-      internetCost: 0,
-      parkingCost: 0,
-      paymentCycleMonths: 1,
-      depositMonths: 0,
-      contactPhone: "",
-      contactEmail: "",
-      contactZalo: "",
-      regulations: "",
-      nearbyPlaces: [],
-      images: [],
-    });
+    setForm(INITIAL_FORM);
   };
+
+  const displayMotels = tab === 'my' ? motels : allMotels;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nhà trọ</h1>
-        <button onClick={() => setOpen(true)} disabled={loading} className="btn-primary disabled:opacity-50">Thêm nhà trọ</button>
+        {role === 'landlord' && (
+          <button onClick={() => setOpen(true)} disabled={loading} className="btn-primary disabled:opacity-50">
+            Thêm nhà trọ
+          </button>
+        )}
       </div>
+
+      {/* Tabs */}
+      {role === 'landlord' && (
+        <div className="flex gap-4 border-b border-black/10 dark:border-white/15">
+          <button
+            onClick={() => {
+              setTab('my');
+              setPage(1);
+            }}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'my'
+                ? 'border-black dark:border-white text-black dark:text-white'
+                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+            }`}
+          >
+            Của tôi
+          </button>
+          <button
+            onClick={() => {
+              setTab('all');
+              setPage(1);
+            }}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'all'
+                ? 'border-black dark:border-white text-black dark:text-white'
+                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+            }`}
+          >
+            Tất cả
+          </button>
+        </div>
+      )}
+
+      {/* Search and Filter for "All Motels" tab */}
+      {tab === 'all' && (
+        <div className="space-y-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black/40">
+          <input
+            type="text"
+            placeholder="Tìm kiếm nhà trọ..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+          />
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={filters.hasWifi || false}
+                onChange={(e) => {
+                  setFilters(f => ({ ...f, hasWifi: e.target.checked || undefined }));
+                  setPage(1);
+                }}
+                className="rounded"
+              />
+              WiFi
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={filters.hasParking || false}
+                onChange={(e) => {
+                  setFilters(f => ({ ...f, hasParking: e.target.checked || undefined }));
+                  setPage(1);
+                }}
+                className="rounded"
+              />
+              Gửi xe
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={filters.allowPets || false}
+                onChange={(e) => {
+                  setFilters(f => ({ ...f, allowPets: e.target.checked || undefined }));
+                  setPage(1);
+                }}
+                className="rounded"
+              />
+              Thú cưng
+            </label>
+          </div>
+        </div>
+      )}
 
       {loading && (
         <div className="rounded-2xl border border-black/10 bg-white p-8 text-center dark:border-white/10 dark:bg-black/40">
@@ -273,12 +419,12 @@ export default function MotelsPage() {
       {!loading && (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {motels.map((m) => (
+            {displayMotels.map((m) => (
               <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
                 {m.images && m.images.length > 0 && (
                   <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5">
                     <img 
-                      src={m.images[0].url} 
+                      src={m.images[0]}
                       alt={m.name}
                       className="w-full h-full object-cover"
                     />
@@ -295,20 +441,51 @@ export default function MotelsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex gap-2">
-                    <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                    <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                    {role === 'landlord' && tab === 'my' && (
+                      <>
+                        <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                        <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
-            {motels.length === 0 && (
-              <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Chưa có nhà trọ nào</div>
+            {displayMotels.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
+                {tab === 'my' ? 'Chưa có nhà trọ nào' : 'Không tìm thấy nhà trọ'}
+              </div>
             )}
           </div>
+
+          {/* Pagination for "All Motels" tab */}
+          {tab === 'all' && totalPages > 1 && (
+            <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black/40">
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                Trang {page} / {totalPages}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Trước
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-sm disabled:opacity-50 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Sau
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {open && (
+      {role === 'landlord' && open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
@@ -373,7 +550,7 @@ export default function MotelsPage() {
                       <label className="mb-1 block text-sm font-medium">Loại hẻm</label>
                       <select
                         value={form.alleyType || "MOTORBIKE"}
-                        onChange={(e) => setForm((f) => ({ ...f, alleyType: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, alleyType: e.target.value as AlleyType }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >
@@ -416,7 +593,7 @@ export default function MotelsPage() {
                       <label className="mb-1 block text-sm font-medium">Hệ thống bảo mật</label>
                       <select
                         value={form.securityType || "NONE"}
-                        onChange={(e) => setForm((f) => ({ ...f, securityType: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, securityType: e.target.value as SecurityType }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >
@@ -488,7 +665,7 @@ export default function MotelsPage() {
                         <input
                           type="checkbox"
                           checked={(form as any)[key] || false}
-                          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
+                          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked } as MotelFormData))}
                           className="rounded"
                           disabled={uploading}
                         />
@@ -687,7 +864,7 @@ export default function MotelsPage() {
                       <div className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Đã chọn {form.images.length} hình ảnh</div>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                         {form.images.map((img, idx) => {
-                          const imgUrl = typeof img === 'string' ? img : (img && typeof img === 'object' ? (img as any).url : '');
+                          const imgUrl = typeof img === 'string' ? img : (img && typeof img === 'object' && 'url' in img ? img.url : '');
                           return (
                             <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
                               <img src={imgUrl} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
