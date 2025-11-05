@@ -42,7 +42,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
     };
 
     const initializeMap = () => {
-      const L = (window as any).L;
+      const L = (window as Record<string, unknown>).L;
       if (!L || !mapContainer.current || map.current) return;
 
       const initialLat = latitude || 10.7769;
@@ -78,12 +78,12 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
 
     return () => {
       if (map.current) {
-        map.current.remove();
+        (map.current as Record<string, unknown>).remove?.();
         map.current = null;
         marker.current = null;
       }
     };
-  }, []);
+  }, [latitude, longitude, onSelect]);
 
   return (
     <div>
