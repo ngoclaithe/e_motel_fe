@@ -98,6 +98,7 @@ export default function MotelsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [viewingMotel, setViewingMotel] = useState<Motel | null>(null);
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -429,7 +430,7 @@ export default function MotelsPage() {
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
-                      src={m.images[0].url}
+                      src={m.images[0]}
                       alt={m.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(m.id)}
@@ -454,6 +455,9 @@ export default function MotelsPage() {
                         <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                         <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                       </>
+                    )}
+                    {role === 'tenant' && (
+                      <button onClick={() => setViewingMotel(m)} className="flex-1 rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xem chi tiết</button>
                     )}
                   </div>
                 </div>
@@ -497,7 +501,7 @@ export default function MotelsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
-              <h2 className="text-lg font-semibold">{editing ? "Cập nhật nhà trọ" : "Thêm nhà trọ"}</h2>
+              <h2 className="text-lg font-semibold">{editing ? "Cập nhật nhà tr���" : "Thêm nhà trọ"}</h2>
             </div>
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
