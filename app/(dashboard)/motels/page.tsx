@@ -97,6 +97,7 @@ export default function MotelsPage() {
   const [form, setForm] = useState<MotelFormData>(INITIAL_FORM);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -208,7 +209,7 @@ export default function MotelsPage() {
 
   const save = async () => {
     if (!form.name || !form.address) {
-      push({ title: "Lỗi", description: "Vui lòng điền tên và địa ch���", type: "error" });
+      push({ title: "Lỗi", description: "Vui lòng điền tên và địa chỉ", type: "error" });
       return;
     }
 
@@ -361,7 +362,7 @@ export default function MotelsPage() {
         <div className="space-y-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black/40">
           <input
             type="text"
-            placeholder="Tìm kiếm nhà tr���..."
+            placeholder="Tìm kiếm nhà trọ..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -587,7 +588,7 @@ export default function MotelsPage() {
 
                 {/* An toàn & Tiếp cận */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
-                  <h3 className="mb-4 text-sm font-semibold">An toàn & Ti���p cận</h3>
+                  <h3 className="mb-4 text-sm font-semibold">An toàn & Tiếp cận</h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-sm font-medium">Hệ thống bảo mật</label>
