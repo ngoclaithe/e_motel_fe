@@ -74,11 +74,55 @@ export interface MotelListResponse {
   total: number;
   page: number;
   limit: number;
+  totalPages: number;
 }
 
+export interface MotelFilterParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  hasWifi?: boolean;
+  hasParking?: boolean;
+  allowPets?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
+  alleyType?: string;
+  securityType?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
+
+const buildQueryString = (params: MotelFilterParams): string => {
+  const query = new URLSearchParams();
+
+  if (params.page) query.append('page', String(params.page));
+  if (params.limit) query.append('limit', String(params.limit));
+  if (params.search) query.append('search', params.search);
+  if (params.hasWifi !== undefined) query.append('hasWifi', String(params.hasWifi));
+  if (params.hasParking !== undefined) query.append('hasParking', String(params.hasParking));
+  if (params.allowPets !== undefined) query.append('allowPets', String(params.allowPets));
+  if (params.minPrice !== undefined) query.append('minPrice', String(params.minPrice));
+  if (params.maxPrice !== undefined) query.append('maxPrice', String(params.maxPrice));
+  if (params.alleyType) query.append('alleyType', params.alleyType);
+  if (params.securityType) query.append('securityType', params.securityType);
+  if (params.sortBy) query.append('sortBy', params.sortBy);
+  if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+
+  const qs = query.toString();
+  return qs ? `?${qs}` : '';
+};
+
 export const motelService = {
-  listMotels: async (page = 1, limit = 10): Promise<MotelListResponse> => {
-    return api.get(`/api/v1/motels?page=${page}&limit=${limit}`);
+  listMotels: async (params: MotelFilterParams = {}): Promise<MotelListResponse> => {
+    const defaultParams = { page: 1, limit: 10, ...params };
+    const queryString = buildQueryString(defaultParams);
+    return api.get(`/api/v1/motels${queryString}`);
+  },
+
+  getMyMotels: async (params: MotelFilterParams = {}): Promise<MotelListResponse> => {
+    const defaultParams = { page: 1, limit: 10, ...params };
+    const queryString = buildQueryString(defaultParams);
+    return api.get(`/api/v1/motels/my-motels${queryString}`);
   },
 
   getMotel: async (id: string): Promise<Motel> => {
