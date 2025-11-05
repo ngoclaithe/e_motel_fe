@@ -43,7 +43,7 @@ export default function MotelsPage() {
       Promise.all(readers).then((dataUrls) => {
         setForm((f) => ({
           ...f,
-          images: dataUrls,
+          images: [...(f.images || []), ...dataUrls],
         }));
       });
     }
