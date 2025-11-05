@@ -98,6 +98,7 @@ export default function MotelsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [viewingMotel, setViewingMotel] = useState<Motel | null>(null);
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -429,7 +430,7 @@ export default function MotelsPage() {
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
-                      src={m.images[0].url}
+                      src={m.images[0]}
                       alt={m.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(m.id)}
@@ -454,6 +455,9 @@ export default function MotelsPage() {
                         <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                         <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                       </>
+                    )}
+                    {role === 'tenant' && (
+                      <button onClick={() => setViewingMotel(m)} className="flex-1 rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xem chi tiết</button>
                     )}
                   </div>
                 </div>
@@ -491,6 +495,154 @@ export default function MotelsPage() {
             </div>
           )}
         </>
+      )}
+
+      {viewingMotel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
+            <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">{viewingMotel.name}</h2>
+              <button onClick={() => setViewingMotel(null)} className="text-zinc-500 hover:text-black dark:hover:text-white">✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="space-y-6">
+                {viewingMotel.images && viewingMotel.images.length > 0 && (
+                  <div>
+                    <div className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-60">
+                      <img
+                        src={viewingMotel.images[0]}
+                        alt={viewingMotel.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    {viewingMotel.images.length > 1 && (
+                      <div className="mt-2 grid grid-cols-4 gap-2">
+                        {viewingMotel.images.slice(1, 5).map((img, idx) => (
+                          <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-20">
+                            <img src={img} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <div className="mb-2 text-sm font-semibold">Địa chỉ</div>
+                  <div className="text-sm text-zinc-600 dark:text-zinc-400">{viewingMotel.address}</div>
+                </div>
+
+                {viewingMotel.description && (
+                  <div>
+                    <div className="mb-2 text-sm font-semibold">Mô tả</div>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400">{viewingMotel.description}</div>
+                  </div>
+                )}
+
+                {viewingMotel.totalRooms && (
+                  <div>
+                    <div className="mb-2 text-sm font-semibold">Tổng phòng</div>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400">{viewingMotel.totalRooms}</div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  {viewingMotel.hasWifi && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ WiFi</span>
+                    </div>
+                  )}
+                  {viewingMotel.hasParking && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Gửi xe</span>
+                    </div>
+                  )}
+                  {viewingMotel.hasAirConditioner && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Điều hòa</span>
+                    </div>
+                  )}
+                  {viewingMotel.hasWashingMachine && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Máy giặt</span>
+                    </div>
+                  )}
+                  {viewingMotel.hasKitchen && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Bếp chung</span>
+                    </div>
+                  )}
+                  {viewingMotel.hasRooftop && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Sân thượng</span>
+                    </div>
+                  )}
+                  {viewingMotel.allowPets && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Cho phép thú cưng</span>
+                    </div>
+                  )}
+                  {viewingMotel.allowCooking && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">✓ Cho phép nấu ăn</span>
+                    </div>
+                  )}
+                </div>
+
+                {(viewingMotel.electricityCostPerKwh || viewingMotel.waterCostPerCubicMeter || viewingMotel.internetCost) && (
+                  <div className="border-t border-black/10 pt-4 dark:border-white/15">
+                    <div className="mb-3 text-sm font-semibold">Chi phí</div>
+                    <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                      {viewingMotel.electricityCostPerKwh && <div>Điện: {viewingMotel.electricityCostPerKwh.toLocaleString()}đ/kWh</div>}
+                      {viewingMotel.waterCostPerCubicMeter && <div>Nước: {viewingMotel.waterCostPerCubicMeter.toLocaleString()}đ/m³</div>}
+                      {viewingMotel.internetCost && <div>Internet: {viewingMotel.internetCost.toLocaleString()}đ/tháng</div>}
+                      {viewingMotel.parkingCost && <div>Gửi xe: {viewingMotel.parkingCost.toLocaleString()}đ/tháng</div>}
+                    </div>
+                  </div>
+                )}
+
+                {viewingMotel.nearbyPlaces && viewingMotel.nearbyPlaces.length > 0 && (
+                  <div className="border-t border-black/10 pt-4 dark:border-white/15">
+                    <div className="mb-3 text-sm font-semibold">Địa điểm lân cận</div>
+                    <div className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+                      {viewingMotel.nearbyPlaces.map((place, idx) => (
+                        <div key={idx}>• {place}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {viewingMotel.regulations && (
+                  <div className="border-t border-black/10 pt-4 dark:border-white/15">
+                    <div className="mb-3 text-sm font-semibold">Quy định</div>
+                    <div className="text-sm text-zinc-600 dark:text-zinc-400 whitespace-pre-line">{viewingMotel.regulations}</div>
+                  </div>
+                )}
+
+                {(viewingMotel.contactPhone || viewingMotel.contactEmail || viewingMotel.contactZalo) && (
+                  <div className="border-t border-black/10 pt-4 dark:border-white/15">
+                    <div className="mb-3 text-sm font-semibold">Thông tin liên hệ</div>
+                    <div className="space-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+                      {viewingMotel.contactPhone && <div>SĐT: {viewingMotel.contactPhone}</div>}
+                      {viewingMotel.contactEmail && <div>Email: {viewingMotel.contactEmail}</div>}
+                      {viewingMotel.contactZalo && <div>Zalo: {viewingMotel.contactZalo}</div>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-shrink-0 border-t border-black/10 px-6 py-4 dark:border-white/15 flex justify-end">
+              <button
+                onClick={() => setViewingMotel(null)}
+                className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {role === 'landlord' && open && (
