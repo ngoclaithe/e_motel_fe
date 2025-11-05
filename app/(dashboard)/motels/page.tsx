@@ -105,9 +105,8 @@ export default function MotelsPage() {
         latitude: 10.7769,
         longitude: 106.6966,
         images: [],
-      });
-      setLogoFile(null);
-      setImageFiles([]);
+    });
+    setImageFiles([]);
     } catch (error) {
       console.error(error);
       push({ title: "Lỗi", description: "Không thể lưu nhà trọ", type: "error" });
