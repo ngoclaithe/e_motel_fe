@@ -19,7 +19,8 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["landlord", "tenant"]);
+  const role = useCurrentRole();
   const { push } = useToast();
   const [rooms, setRooms] = useLocalStorage<Room[]>("emotel_rooms", []);
   const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
