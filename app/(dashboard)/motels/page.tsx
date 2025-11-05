@@ -77,9 +77,9 @@ export default function MotelsPage() {
       const newImageFiles = [...imageFiles, ...fileArray];
       setImageFiles(newImageFiles);
       const readers = fileArray.map((file) => {
-        return new Promise<string>((resolve) => {
+        return new Promise<{ type: 'new', url: string }>((resolve) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
+          reader.onload = () => resolve({ type: 'new', url: String(reader.result) });
           reader.readAsDataURL(file);
         });
       });
@@ -93,7 +93,13 @@ export default function MotelsPage() {
   };
 
   const removeImage = (index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    const images = form.images || [];
+    const image = images[index];
+
+    if (image && typeof image === 'object' && 'type' in image && (image as any).type === 'new') {
+      setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+
     setForm((f) => ({
       ...f,
       images: (f.images || []).filter((_, i) => i !== index),
@@ -134,6 +140,12 @@ export default function MotelsPage() {
         }
       }
 
+      const existingImageUrls = (form.images || [])
+        .filter((img) => typeof img === 'object' && !(img as any).type)
+        .map((img) => (img as any).url);
+
+      const finalImageUrls = imageUrls.length > 0 ? imageUrls : existingImageUrls;
+
       const payload = {
         name: form.name,
         address: form.address,
@@ -165,7 +177,7 @@ export default function MotelsPage() {
         contactZalo: form.contactZalo || "",
         regulations: form.regulations || "",
         nearbyPlaces: form.nearbyPlaces || [],
-        images: imageUrls.length > 0 ? imageUrls : form.images || [],
+        images: finalImageUrls,
       };
 
       if (editing) {
@@ -262,19 +274,30 @@ export default function MotelsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {motels.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-                <div>
-                  <div className="font-medium">{m.name}</div>
-                  <div className="text-xs text-zinc-500">{m.address}</div>
-                </div>
-                {m.totalRooms && (
-                  <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    Tổng phòng: {m.totalRooms}
+              <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
+                {m.images && m.images.length > 0 && (
+                  <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5">
+                    <img 
+                      src={m.images[0].url} 
+                      alt={m.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                  <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                <div className="p-4 flex flex-col flex-1">
+                  <div>
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs text-zinc-500">{m.address}</div>
+                  </div>
+                  {m.totalRooms && (
+                    <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                      Tổng phòng: {m.totalRooms}
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                    <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -580,7 +603,7 @@ export default function MotelsPage() {
                   </div>
                 </div>
 
-                {/* Quy đ���nh */}
+                {/* Quy định */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Quy định nhà trọ</h3>
                   <textarea
@@ -663,19 +686,22 @@ export default function MotelsPage() {
                     <div className="mt-3">
                       <div className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Đã chọn {form.images.length} hình ảnh</div>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {form.images.map((img, idx) => (
-                          <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
-                            <img src={img} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => removeImage(idx)}
-                              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
-                              disabled={uploading}
-                            >
-                              ��
-                            </button>
-                          </div>
-                        ))}
+                        {form.images.map((img, idx) => {
+                          const imgUrl = typeof img === 'string' ? img : (img && typeof img === 'object' ? (img as any).url : '');
+                          return (
+                            <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
+                              <img src={imgUrl} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(idx)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
+                                disabled={uploading}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
