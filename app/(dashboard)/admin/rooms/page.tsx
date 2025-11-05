@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Room, RoomStatus, Motel } from "../../../../types";
+import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../../types";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
