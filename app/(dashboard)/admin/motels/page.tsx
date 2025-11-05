@@ -77,20 +77,29 @@ export default function AdminMotelsPage() {
     push({ title: "Đã xóa", type: "info" });
   };
 
-  const onImageFiles = async (files: FileList | null) => {
+  const onImageFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const uploadPromises = Array.from(files).map((file) => uploadToCloudinary(file));
-      const urls = await Promise.all(uploadPromises);
-      setForm((f) => ({ ...f, images: [...(f.images || []), ...urls] }));
-      push({ title: "Tải ảnh lên thành công", type: "success" });
-    } catch (error) {
-      console.error("Upload error:", error);
-      push({ title: "Lỗi khi tải ảnh", type: "error" });
-    } finally {
-      setUploading(false);
-    }
+    const fileArray = Array.from(files);
+    const readers = fileArray.map((file) => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.readAsDataURL(file);
+      });
+    });
+    Promise.all(readers).then((dataUrls) => {
+      setForm((f) => ({
+        ...f,
+        images: [...(f.images || []), ...dataUrls],
+      }));
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setForm((f) => ({
+      ...f,
+      images: (f.images || []).filter((_, i) => i !== index),
+    }));
   };
 
   return (
@@ -177,6 +186,36 @@ export default function AdminMotelsPage() {
                   />
                 </div>
               </div>
+              <div>
+                <label className="mb-1 block text-sm">Ảnh nhà trọ</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => onImageFiles(e.target.files)}
+                  disabled={uploading}
+                  className="w-full text-sm disabled:opacity-50"
+                />
+              </div>
+              {form.images && form.images.length > 0 && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Đã chọn {form.images.length} hình ảnh</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {form.images.map((img, idx) => (
+                      <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
+                        <img src={img} alt={`motel-${idx}`} className="w-full h-20 object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-sm">Vĩ độ</label>
@@ -199,37 +238,8 @@ export default function AdminMotelsPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="mb-1 block text-sm">Ảnh nhà trọ</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => onImageFiles(e.target.files)}
-                  disabled={uploading}
-                  className="w-full text-sm disabled:opacity-50"
-                />
-              </div>
-              {form.images && form.images.length > 0 && (
-                <div>
-                  <label className="mb-1 block text-sm">Ảnh đã tải ({form.images.length})</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {form.images.map((img, idx) => (
-                      <div key={idx} className="relative group rounded-lg overflow-hidden bg-black/10">
-                        <img src={img} alt={`motel-${idx}`} className="w-full h-20 object-cover" />
-                        <button
-                          onClick={() => setForm((f) => ({ ...f, images: (f.images || []).filter((_, i) => i !== idx) }))}
-                          className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs font-semibold"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               <div className="flex justify-end gap-2 pt-2">
-                <button onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
+                <button type="button" onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
                 <button onClick={save} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? "Đang tải..." : "Lưu"}</button>
               </div>
             </div>

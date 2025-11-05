@@ -32,7 +32,8 @@ export default function MotelsPage() {
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
       const fileArray = Array.from(files);
-      setImageFiles(fileArray);
+      const newImageFiles = [...imageFiles, ...fileArray];
+      setImageFiles(newImageFiles);
       const readers = fileArray.map((file) => {
         return new Promise<string>((resolve) => {
           const reader = new FileReader();
@@ -47,6 +48,14 @@ export default function MotelsPage() {
         }));
       });
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setForm((f) => ({
+      ...f,
+      images: (f.images || []).filter((_, i) => i !== index),
+    }));
   };
 
   const save = async () => {
@@ -120,9 +129,18 @@ export default function MotelsPage() {
     setOpen(true);
   };
 
+  const resetFormImages = () => {
+    setForm((f) => ({
+      ...f,
+      images: [],
+    }));
+    setImageFiles([]);
+  };
+
   const closeModal = () => {
     setOpen(false);
     setEditing(null);
+    resetFormImages();
     setForm({
       name: "",
       address: "",
@@ -132,7 +150,6 @@ export default function MotelsPage() {
       longitude: 106.6966,
       images: [],
     });
-    setImageFiles([]);
   };
 
   return (
@@ -216,17 +233,6 @@ export default function MotelsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Chọn vị trí trên bản đồ</label>
-                  <MapPicker
-                    latitude={form.latitude || 10.7769}
-                    longitude={form.longitude || 106.6966}
-                    onSelect={(lat, lng) => {
-                      setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
-                    }}
-                  />
-                </div>
-
-                <div>
                   <label className="mb-1 block text-sm font-medium">Hình ảnh nhà trọ</label>
                   <input
                     type="file"
@@ -237,16 +243,42 @@ export default function MotelsPage() {
                     disabled={uploading}
                   />
                   {form.images && form.images.length > 0 && (
-                    <div className="mt-2 text-xs text-green-600">
-                      {form.images.length} hình ảnh sẵn sàng
+                    <div className="mt-3">
+                      <div className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Đã chọn {form.images.length} hình ảnh</div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {form.images.map((img, idx) => (
+                          <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
+                            <img src={img} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Chọn vị trí trên bản đồ</label>
+                  <MapPicker
+                    latitude={form.latitude || 10.7769}
+                    longitude={form.longitude || 106.6966}
+                    onSelect={(lat, lng) => {
+                      setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
+                    }}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="flex-shrink-0 border-t border-black/10 px-6 py-4 dark:border-white/15 flex justify-end gap-2">
               <button
+                type="button"
                 onClick={closeModal}
                 disabled={uploading}
                 className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
