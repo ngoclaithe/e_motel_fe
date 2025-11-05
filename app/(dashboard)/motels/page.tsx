@@ -112,15 +112,9 @@ export default function MotelsPage() {
     } else if (tab === 'all') {
       fetchAllMotels();
     }
-  }, [tab, role, page, searchTerm, filters]);
+  }, [tab, role, page, searchTerm, filters, fetchMyMotels, fetchAllMotels]);
 
-  useEffect(() => {
-    if (tab === 'all') {
-      fetchAllMotels();
-    }
-  }, [page, searchTerm, filters, tab]);
-
-  const fetchMyMotels = async () => {
+  const fetchMyMotels = useCallback(async () => {
     try {
       setLoading(true);
       const response = await motelService.getMyMotels();
@@ -131,14 +125,14 @@ export default function MotelsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [push]);
 
-  const fetchAllMotels = async () => {
+  const fetchAllMotels = useCallback(async () => {
     try {
       setLoading(true);
       const params: MotelFilterParams = {
         page,
-        limit,
+        limit: 12,
         search: searchTerm || undefined,
         ...filters,
       };
@@ -151,7 +145,7 @@ export default function MotelsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, filters, push]);
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -778,7 +772,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Có chỗ gửi xe</span>
+                      <span className="text-sm">Có chỗ g���i xe</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
