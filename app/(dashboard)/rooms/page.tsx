@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
-import type { Room, RoomStatus, Motel } from "../../../types";
+import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
@@ -111,7 +111,7 @@ export default function RoomsPage() {
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường bắt buộc", type: "error" });
+      push({ title: "L���i", description: "Vui lòng điền tất cả các trường bắt buộc", type: "error" });
       return;
     }
 
@@ -136,9 +136,9 @@ export default function RoomsPage() {
           amenities: form.amenities || [],
           images: imageUrls.length > 0 ? imageUrls : form.images,
           motelId: form.motelId,
-          bathroomType: form.bathroomType as any,
+          bathroomType: form.bathroomType as BathroomType,
           hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as any,
+          furnishingStatus: form.furnishingStatus as FurnishingStatus,
           hasAirConditioner: form.hasAirConditioner || false,
           hasBalcony: form.hasBalcony || false,
           hasWindow: form.hasWindow || true,
@@ -177,9 +177,9 @@ export default function RoomsPage() {
           amenities: form.amenities || [],
           images: imageUrls.length > 0 ? imageUrls : [],
           motelId: form.motelId,
-          bathroomType: form.bathroomType as any,
+          bathroomType: form.bathroomType as BathroomType,
           hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as any,
+          furnishingStatus: form.furnishingStatus as FurnishingStatus,
           hasAirConditioner: form.hasAirConditioner || false,
           hasBalcony: form.hasBalcony || false,
           hasWindow: form.hasWindow || true,
