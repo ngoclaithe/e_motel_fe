@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useState, useEffect } from "react";
 import type { Motel } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
@@ -12,7 +11,12 @@ import { MapPicker } from "../../../components/MapPicker";
 export default function MotelsPage() {
   useEnsureRole(["landlord"]);
   const { push } = useToast();
-  const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
+  const [motels, setMotels] = useState<Motel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -53,6 +57,25 @@ export default function MotelsPage() {
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
+
+  useEffect(() => {
+    fetchMotels();
+  }, [page, limit]);
+
+  const fetchMotels = async () => {
+    try {
+      setLoading(true);
+      const response = await motelService.getMyMotels({ page, limit });
+      setMotels(response.data || []);
+      setTotal(response.total || 0);
+      setTotalPages(response.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching motels:", error);
+      push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -153,14 +176,13 @@ export default function MotelsPage() {
 
       if (editing) {
         await motelService.updateMotel(editing.id, payload);
-        setMotels(motels.map((m) => (m.id === editing.id ? { ...editing, ...payload } as Motel : m)));
         push({ title: "Cập nhật thành công", type: "success" });
       } else {
-        const newMotel = await motelService.createMotel(payload);
-        setMotels([newMotel, ...motels]);
+        await motelService.createMotel(payload);
         push({ title: "Tạo nhà trọ thành công", type: "success" });
       }
 
+      await fetchMotels();
       closeModal();
     } catch (error) {
       console.error(error);
@@ -170,10 +192,16 @@ export default function MotelsPage() {
     }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Xóa nhà trọ này?")) return;
-    setMotels(motels.filter((m) => m.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+    try {
+      await motelService.deleteMotel(id);
+      push({ title: "Đã xóa", type: "info" });
+      await fetchMotels();
+    } catch (error) {
+      console.error(error);
+      push({ title: "Lỗi", description: "Không thể xóa nhà trọ", type: "error" });
+    }
   };
 
   const openEditModal = (motel: Motel) => {
@@ -227,30 +255,65 @@ export default function MotelsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nhà trọ</h1>
-        <button onClick={() => setOpen(true)} className="btn-primary">Thêm nhà trọ</button>
+        <button onClick={() => setOpen(true)} disabled={loading} className="btn-primary disabled:opacity-50">Thêm nhà trọ</button>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {motels.map((m) => (
-          <div key={m.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-            <div>
-              <div className="font-medium">{m.name}</div>
-              <div className="text-xs text-zinc-500">{m.address}</div>
-            </div>
-            {m.totalRooms && (
-              <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-                Tổng phòng: {m.totalRooms}
+
+      {loading && (
+        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center dark:border-white/10 dark:bg-black/40">
+          <div className="text-sm text-zinc-500">Đang tải...</div>
+        </div>
+      )}
+
+      {!loading && (
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {motels.map((m) => (
+              <div key={m.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
+                <div>
+                  <div className="font-medium">{m.name}</div>
+                  <div className="text-xs text-zinc-500">{m.address}</div>
+                </div>
+                {m.totalRooms && (
+                  <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                    Tổng phòng: {m.totalRooms}
+                  </div>
+                )}
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                  <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                </div>
               </div>
+            ))}
+            {motels.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Chưa có nhà trọ nào</div>
             )}
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-              <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
-            </div>
           </div>
-        ))}
-        {motels.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Chưa có nhà trọ nào</div>
-        )}
-      </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black/40">
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">
+                Trang {page} / {totalPages} • Tổng {total} nhà trọ
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  ← Trước
+                </button>
+                <button
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Sau →
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -547,7 +610,7 @@ export default function MotelsPage() {
                   </div>
                 </div>
 
-                {/* Quy định */}
+                {/* Quy đ���nh */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Quy định nhà trọ</h3>
                   <textarea
