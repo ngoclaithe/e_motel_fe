@@ -661,7 +661,7 @@ export default function MotelsPage() {
                         value={form.name || ""}
                         onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Nhà trọ Sinh Vi��n Hòa Bình"
+                        placeholder="Nhà trọ Sinh Viên Hòa Bình"
                         disabled={uploading}
                       />
                     </div>
@@ -681,7 +681,7 @@ export default function MotelsPage() {
                         value={form.description || ""}
                         onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Nhà trọ g���n trường, giá rẻ, an ninh tốt, sạch sẽ"
+                        placeholder="Nhà trọ gần trường, giá rẻ, an ninh tốt, sạch sẽ"
                         rows={2}
                         disabled={uploading}
                       />
@@ -782,7 +782,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Có chỗ g���i xe</span>
+                      <span className="text-sm">Có chỗ gửi xe</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -802,7 +802,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Cho ph��p nấu ăn</span>
+                      <span className="text-sm">Cho phép nấu ăn</span>
                     </label>
                   </div>
                 </div>

@@ -45,7 +45,7 @@ export default function ContractsPage() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    push({ title: "Đã tải xu���ng", type: "success" });
+    push({ title: "Đã tải xuống", type: "success" });
   };
 
   const generatePDFContent = (contract: Contract) => {

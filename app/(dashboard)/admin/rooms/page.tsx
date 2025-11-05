@@ -482,7 +482,7 @@ export default function AdminRoomsPage() {
                       >
                         <option value="UNFURNISHED">Không có nội thất</option>
                         <option value="PARTIALLY_FURNISHED">Nội thất cơ bản</option>
-                        <option value="FULLY_FURNISHED">Đ��y đủ nội thất</option>
+                        <option value="FULLY_FURNISHED">Đầy đủ nội thất</option>
                       </select>
                     </div>
 

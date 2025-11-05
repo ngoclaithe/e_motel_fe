@@ -255,7 +255,7 @@ export default function AdminMotelsPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm">T���ng phòng</label>
+                  <label className="mb-1 block text-sm">Tổng phòng</label>
                   <input
                     type="number"
                     value={form.totalRooms || ""}

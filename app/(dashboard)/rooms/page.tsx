@@ -111,7 +111,7 @@ export default function RoomsPage() {
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {
-      push({ title: "L���i", description: "Vui lòng điền tất cả các trường bắt buộc", type: "error" });
+      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường bắt buộc", type: "error" });
       return;
     }
 
@@ -533,7 +533,7 @@ export default function RoomsPage() {
 
                 {/* Chính sách */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
-                  <h3 className="mb-4 text-sm font-semibold">Ch��nh sách phòng</h3>
+                  <h3 className="mb-4 text-sm font-semibold">Chính sách phòng</h3>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
