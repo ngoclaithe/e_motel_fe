@@ -120,7 +120,18 @@ export const motelService = {
   },
 
   getMyMotels: async (): Promise<MotelListResponse> => {
-    return api.get(`/api/v1/motels/my-motels`);
+    const response = await api.get(`/api/v1/motels/my-motels`);
+    // API returns array directly, wrap it in expected format
+    if (Array.isArray(response)) {
+      return {
+        data: response,
+        total: response.length,
+        page: 1,
+        limit: response.length,
+        totalPages: 1,
+      };
+    }
+    return response;
   },
 
   getMotel: async (id: string): Promise<Motel> => {
