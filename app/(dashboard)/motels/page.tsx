@@ -262,19 +262,30 @@ export default function MotelsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {motels.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-                <div>
-                  <div className="font-medium">{m.name}</div>
-                  <div className="text-xs text-zinc-500">{m.address}</div>
-                </div>
-                {m.totalRooms && (
-                  <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
-                    Tổng phòng: {m.totalRooms}
+              <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
+                {m.images && m.images.length > 0 && (
+                  <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5">
+                    <img
+                      src={m.images[0].url}
+                      alt={m.name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 )}
-                <div className="mt-3 flex gap-2">
-                  <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                  <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                <div className="p-4 flex flex-col flex-1">
+                  <div>
+                    <div className="font-medium">{m.name}</div>
+                    <div className="text-xs text-zinc-500">{m.address}</div>
+                  </div>
+                  {m.totalRooms && (
+                    <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                      Tổng phòng: {m.totalRooms}
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                    <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                  </div>
                 </div>
               </div>
             ))}
