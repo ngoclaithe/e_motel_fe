@@ -429,7 +429,7 @@ export default function MotelsPage() {
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
-                      src={typeof m.images[0] === 'string' ? m.images[0] : (m.images[0] as any)?.url || ''}
+                      src={typeof m.images[0] === 'string' ? m.images[0] : ((m.images[0] as Record<string, unknown>)?.url as string) || ''}
                       alt={m.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(m.id)}
@@ -510,7 +510,7 @@ export default function MotelsPage() {
                   <div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                       {viewingMotel.images.slice(0, 4).map((img, idx) => {
-                        const imgUrl = typeof img === 'string' ? img : (img as any)?.url || '';
+                        const imgUrl = typeof img === 'string' ? img : ((img as Record<string, unknown>)?.url as string) || '';
                         return (
                           <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-32">
                             <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
@@ -817,7 +817,7 @@ export default function MotelsPage() {
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={(form as any)[key] || false}
+                          checked={(form as Record<string, unknown>)[key] as boolean || false}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked } as MotelFormData))}
                           className="rounded"
                           disabled={uploading}
