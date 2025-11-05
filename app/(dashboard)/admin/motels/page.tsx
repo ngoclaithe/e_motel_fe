@@ -31,21 +31,34 @@ export default function AdminMotelsPage() {
     images: [],
   });
 
-  const filtered = motels.filter((m) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      m.name.toLowerCase().includes(q) ||
-      m.address.toLowerCase().includes(q) ||
-      (m.ownerEmail || "").toLowerCase().includes(q)
-    );
-  });
+  useEffect(() => {
+    fetchMotels();
+  }, [page, limit, query]);
+
+  const fetchMotels = async () => {
+    try {
+      setLoading(true);
+      const response = await motelService.listMotels({
+        page,
+        limit,
+        search: query || undefined,
+      });
+      setMotels(response.data || []);
+      setTotal(response.total || 0);
+      setTotalPages(response.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching motels:", error);
+      push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const save = () => {
     if (!form.name || !form.address || !form.ownerEmail) return;
     if (editing) {
       setMotels(motels.map((m) => (m.id === editing.id ? { ...editing, ...form } as Motel : m)));
-      push({ title: "Đã cập nhật", type: "success" });
+      push({ title: "Đã c��p nhật", type: "success" });
     } else {
       const item: Motel = {
         id: crypto.randomUUID(),
