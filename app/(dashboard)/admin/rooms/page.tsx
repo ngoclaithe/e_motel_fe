@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Room, RoomStatus, Motel } from "../../../../types";
+import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../../types";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
@@ -135,9 +135,9 @@ export default function AdminRoomsPage() {
           amenities: form.amenities || [],
           images: imageUrls.length > 0 ? imageUrls : form.images,
           motelId: form.motelId,
-          bathroomType: form.bathroomType as any,
+          bathroomType: form.bathroomType as BathroomType,
           hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as any,
+          furnishingStatus: form.furnishingStatus as FurnishingStatus,
           hasAirConditioner: form.hasAirConditioner || false,
           hasBalcony: form.hasBalcony || false,
           hasWindow: form.hasWindow || true,
@@ -176,9 +176,9 @@ export default function AdminRoomsPage() {
           amenities: form.amenities || [],
           images: imageUrls.length > 0 ? imageUrls : [],
           motelId: form.motelId,
-          bathroomType: form.bathroomType as any,
+          bathroomType: form.bathroomType as BathroomType,
           hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as any,
+          furnishingStatus: form.furnishingStatus as FurnishingStatus,
           hasAirConditioner: form.hasAirConditioner || false,
           hasBalcony: form.hasBalcony || false,
           hasWindow: form.hasWindow || true,
@@ -515,7 +515,7 @@ export default function AdminRoomsPage() {
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={(form as any)[key] || false}
+                          checked={(form as Record<string, unknown>)[key] as boolean || false}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
                           className="rounded"
                           disabled={uploading}

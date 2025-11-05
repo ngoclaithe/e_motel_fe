@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Motel, AlleyType, SecurityType } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useCurrentRole, useEnsureRole } from "../../../hooks/useAuth";
@@ -102,7 +102,6 @@ export default function MotelsPage() {
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<MotelFilterParams>({});
@@ -113,15 +112,9 @@ export default function MotelsPage() {
     } else if (tab === 'all') {
       fetchAllMotels();
     }
-  }, [tab, role]);
+  }, [tab, role, page, searchTerm, filters, fetchMyMotels, fetchAllMotels]);
 
-  useEffect(() => {
-    if (tab === 'all') {
-      fetchAllMotels();
-    }
-  }, [page, limit, searchTerm, filters]);
-
-  const fetchMyMotels = async () => {
+  const fetchMyMotels = useCallback(async () => {
     try {
       setLoading(true);
       const response = await motelService.getMyMotels();
@@ -132,14 +125,14 @@ export default function MotelsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [push]);
 
-  const fetchAllMotels = async () => {
+  const fetchAllMotels = useCallback(async () => {
     try {
       setLoading(true);
       const params: MotelFilterParams = {
         page,
-        limit,
+        limit: 12,
         search: searchTerm || undefined,
         ...filters,
       };
@@ -152,7 +145,7 @@ export default function MotelsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchTerm, filters, push]);
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -430,7 +423,7 @@ export default function MotelsPage() {
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
-                      src={typeof m.images[0] === 'string' ? m.images[0] : (m.images[0] as any)?.url || ''}
+                      src={typeof m.images[0] === 'string' ? m.images[0] : ((m.images[0] as Record<string, unknown>)?.url as string) || ''}
                       alt={m.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(m.id)}
@@ -509,25 +502,16 @@ export default function MotelsPage() {
               <div className="space-y-6">
                 {viewingMotel.images && viewingMotel.images.length > 0 && (
                   <div>
-                    <div className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-60">
-                      <img
-                        src={typeof viewingMotel.images[0] === 'string' ? viewingMotel.images[0] : (viewingMotel.images[0] as any)?.url || ''}
-                        alt={viewingMotel.name}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                      {viewingMotel.images.slice(0, 4).map((img, idx) => {
+                        const imgUrl = typeof img === 'string' ? img : ((img as Record<string, unknown>)?.url as string) || '';
+                        return (
+                          <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-32">
+                            <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        );
+                      })}
                     </div>
-                    {viewingMotel.images.length > 1 && (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
-                        {viewingMotel.images.slice(1, 5).map((img, idx) => {
-                          const imgUrl = typeof img === 'string' ? img : (img as any)?.url || '';
-                          return (
-                            <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-20">
-                              <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -687,7 +671,7 @@ export default function MotelsPage() {
                         value={form.description || ""}
                         onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Nhà trọ gần trường, giá rẻ, an ninh tốt, sạch sẽ"
+                        placeholder="Nhà trọ g���n trường, giá rẻ, an ninh tốt, sạch sẽ"
                         rows={2}
                         disabled={uploading}
                       />
@@ -788,7 +772,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Có chỗ gửi xe</span>
+                      <span className="text-sm">Có chỗ g���i xe</span>
                     </label>
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -808,7 +792,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Cho phép nấu ăn</span>
+                      <span className="text-sm">Cho ph��p nấu ăn</span>
                     </label>
                   </div>
                 </div>
@@ -827,7 +811,7 @@ export default function MotelsPage() {
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={(form as any)[key] || false}
+                          checked={(form as Record<string, unknown>)[key] as boolean || false}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked } as MotelFormData))}
                           className="rounded"
                           disabled={uploading}

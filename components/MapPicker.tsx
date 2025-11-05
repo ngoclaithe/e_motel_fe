@@ -8,9 +8,18 @@ interface MapPickerProps {
   onSelect: (lat: number, lng: number) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare global {
+  interface Window {
+    L: any;
+  }
+}
+
 export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const map = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const marker = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,7 +51,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
     };
 
     const initializeMap = () => {
-      const L = (window as any).L;
+      const L = window.L;
       if (!L || !mapContainer.current || map.current) return;
 
       const initialLat = latitude || 10.7769;
@@ -59,6 +68,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
         marker.current = L.marker([latitude, longitude]).addTo(map.current);
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map.current.on("click", (e: any) => {
         const { lat, lng } = e.latlng;
 
@@ -83,7 +93,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
         marker.current = null;
       }
     };
-  }, []);
+  }, [latitude, longitude, onSelect]);
 
   return (
     <div>
