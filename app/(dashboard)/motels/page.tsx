@@ -24,10 +24,35 @@ export default function MotelsPage() {
     totalRooms: 0,
     latitude: 10.7769,
     longitude: 106.6966,
+    alleyType: "MOTORBIKE",
+    alleyWidth: 0,
+    hasElevator: false,
+    hasParking: false,
+    securityType: "NONE",
+    has24hSecurity: false,
+    hasWifi: false,
+    hasAirConditioner: false,
+    hasWashingMachine: false,
+    hasKitchen: false,
+    hasRooftop: false,
+    allowPets: false,
+    allowCooking: true,
+    electricityCostPerKwh: 0,
+    waterCostPerCubicMeter: 0,
+    internetCost: 0,
+    parkingCost: 0,
+    paymentCycleMonths: 1,
+    depositMonths: 0,
+    contactPhone: "",
+    contactEmail: "",
+    contactZalo: "",
+    regulations: "",
+    nearbyPlaces: [],
     images: [],
   });
 
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -58,6 +83,23 @@ export default function MotelsPage() {
     }));
   };
 
+  const addNearbyPlace = () => {
+    if (nearbyPlaceInput.trim()) {
+      setForm((f) => ({
+        ...f,
+        nearbyPlaces: [...(f.nearbyPlaces || []), nearbyPlaceInput.trim()],
+      }));
+      setNearbyPlaceInput("");
+    }
+  };
+
+  const removeNearbyPlace = (index: number) => {
+    setForm((f) => ({
+      ...f,
+      nearbyPlaces: (f.nearbyPlaces || []).filter((_, i) => i !== index),
+    }));
+  };
+
   const save = async () => {
     if (!form.name || !form.address) {
       push({ title: "Lỗi", description: "Vui lòng điền tên và địa chỉ", type: "error" });
@@ -82,6 +124,30 @@ export default function MotelsPage() {
         totalRooms: form.totalRooms || 0,
         latitude: form.latitude || 10.7769,
         longitude: form.longitude || 106.6966,
+        alleyType: form.alleyType || "MOTORBIKE",
+        alleyWidth: form.alleyWidth || 0,
+        hasElevator: form.hasElevator || false,
+        hasParking: form.hasParking || false,
+        securityType: form.securityType || "NONE",
+        has24hSecurity: form.has24hSecurity || false,
+        hasWifi: form.hasWifi || false,
+        hasAirConditioner: form.hasAirConditioner || false,
+        hasWashingMachine: form.hasWashingMachine || false,
+        hasKitchen: form.hasKitchen || false,
+        hasRooftop: form.hasRooftop || false,
+        allowPets: form.allowPets || false,
+        allowCooking: form.allowCooking ?? true,
+        electricityCostPerKwh: form.electricityCostPerKwh || 0,
+        waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
+        internetCost: form.internetCost || 0,
+        parkingCost: form.parkingCost || 0,
+        paymentCycleMonths: form.paymentCycleMonths || 1,
+        depositMonths: form.depositMonths || 0,
+        contactPhone: form.contactPhone || "",
+        contactEmail: form.contactEmail || "",
+        contactZalo: form.contactZalo || "",
+        regulations: form.regulations || "",
+        nearbyPlaces: form.nearbyPlaces || [],
         images: imageUrls.length > 0 ? imageUrls : form.images || [],
       };
 
@@ -95,18 +161,7 @@ export default function MotelsPage() {
         push({ title: "Tạo nhà trọ thành công", type: "success" });
       }
 
-      setOpen(false);
-      setEditing(null);
-      setForm({
-        name: "",
-        address: "",
-        description: "",
-        totalRooms: 0,
-        latitude: 10.7769,
-        longitude: 106.6966,
-        images: [],
-    });
-    setImageFiles([]);
+      closeModal();
     } catch (error) {
       console.error(error);
       push({ title: "Lỗi", description: "Không thể lưu nhà trọ", type: "error" });
@@ -128,18 +183,11 @@ export default function MotelsPage() {
     setOpen(true);
   };
 
-  const resetFormImages = () => {
-    setForm((f) => ({
-      ...f,
-      images: [],
-    }));
-    setImageFiles([]);
-  };
-
   const closeModal = () => {
     setOpen(false);
     setEditing(null);
-    resetFormImages();
+    setImageFiles([]);
+    setNearbyPlaceInput("");
     setForm({
       name: "",
       address: "",
@@ -147,6 +195,30 @@ export default function MotelsPage() {
       totalRooms: 0,
       latitude: 10.7769,
       longitude: 106.6966,
+      alleyType: "MOTORBIKE",
+      alleyWidth: 0,
+      hasElevator: false,
+      hasParking: false,
+      securityType: "NONE",
+      has24hSecurity: false,
+      hasWifi: false,
+      hasAirConditioner: false,
+      hasWashingMachine: false,
+      hasKitchen: false,
+      hasRooftop: false,
+      allowPets: false,
+      allowCooking: true,
+      electricityCostPerKwh: 0,
+      waterCostPerCubicMeter: 0,
+      internetCost: 0,
+      parkingCost: 0,
+      paymentCycleMonths: 1,
+      depositMonths: 0,
+      contactPhone: "",
+      contactEmail: "",
+      contactZalo: "",
+      regulations: "",
+      nearbyPlaces: [],
       images: [],
     });
   };
@@ -182,57 +254,370 @@ export default function MotelsPage() {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
+          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
-              <h2 className="text-lg font-semibold">{editing ? "Cập nhật" : "Thêm nhà trọ"}</h2>
+              <h2 className="text-lg font-semibold">{editing ? "Cập nhật nhà trọ" : "Thêm nhà trọ"}</h2>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto px-6 py-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Tên nhà trọ <span className="text-red-500">*</span></label>
-                  <input
-                    value={form.name || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="Nhà trọ An Bình"
-                  />
+              <div className="space-y-6">
+                {/* Thông tin cơ bản */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Thông tin cơ bản</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Tên nhà trọ <span className="text-red-500">*</span></label>
+                      <input
+                        value={form.name || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="Nhà trọ Sinh Viên Hòa Bình"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Địa chỉ <span className="text-red-500">*</span></label>
+                      <input
+                        value={form.address || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="123 Nguyễn Văn Linh, Phường Hòa Khánh Nam"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Mô tả</label>
+                      <textarea
+                        value={form.description || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="Nhà trọ gần trường, giá rẻ, an ninh tốt, sạch sẽ"
+                        rows={2}
+                        disabled={uploading}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Địa chỉ <span className="text-red-500">*</span></label>
-                  <input
-                    value={form.address || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="123 Đường Nguyễn Văn Cừ, Quận 5, TP.HCM"
-                  />
+                {/* Chi tiết tòa nhà */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Chi tiết tòa nhà</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Tổng số phòng</label>
+                      <input
+                        type="number"
+                        value={form.totalRooms || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, totalRooms: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Loại hẻm</label>
+                      <select
+                        value={form.alleyType || "MOTORBIKE"}
+                        onChange={(e) => setForm((f) => ({ ...f, alleyType: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      >
+                        <option value="MOTORBIKE">Hẻm xe máy</option>
+                        <option value="CAR">Hẻm ô tô</option>
+                        <option value="BOTH">Cả hai</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Chiều rộng hẻm (m)</label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={form.alleyWidth || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, alleyWidth: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={form.hasElevator || false}
+                          onChange={(e) => setForm((f) => ({ ...f, hasElevator: e.target.checked }))}
+                          className="rounded"
+                          disabled={uploading}
+                        />
+                        <span className="text-sm">Có thang máy</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Mô tả</label>
+                {/* An toàn & Tiếp cận */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">An toàn & Tiếp cận</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Hệ thống bảo mật</label>
+                      <select
+                        value={form.securityType || "NONE"}
+                        onChange={(e) => setForm((f) => ({ ...f, securityType: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      >
+                        <option value="NONE">Không</option>
+                        <option value="CAMERA">Camera</option>
+                        <option value="GUARD">Bảo vệ</option>
+                        <option value="BOTH">Cả hai</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={form.has24hSecurity || false}
+                          onChange={(e) => setForm((f) => ({ ...f, has24hSecurity: e.target.checked }))}
+                          className="rounded"
+                          disabled={uploading}
+                        />
+                        <span className="text-sm">Bảo mật 24/7</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.hasParking || false}
+                        onChange={(e) => setForm((f) => ({ ...f, hasParking: e.target.checked }))}
+                        className="rounded"
+                        disabled={uploading}
+                      />
+                      <span className="text-sm">Có chỗ gửi xe</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.allowPets || false}
+                        onChange={(e) => setForm((f) => ({ ...f, allowPets: e.target.checked }))}
+                        className="rounded"
+                        disabled={uploading}
+                      />
+                      <span className="text-sm">Cho phép nuôi thú cưng</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.allowCooking ?? true}
+                        onChange={(e) => setForm((f) => ({ ...f, allowCooking: e.target.checked }))}
+                        className="rounded"
+                        disabled={uploading}
+                      />
+                      <span className="text-sm">Cho phép nấu ăn</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Tiện ích */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Tiện ích chung</h3>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {[
+                      { key: "hasWifi", label: "WiFi" },
+                      { key: "hasAirConditioner", label: "Điều hòa" },
+                      { key: "hasWashingMachine", label: "Máy giặt" },
+                      { key: "hasKitchen", label: "Bếp chung" },
+                      { key: "hasRooftop", label: "Sân thượng" },
+                    ].map(({ key, label }) => (
+                      <label key={key} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={(form as any)[key] || false}
+                          onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
+                          className="rounded"
+                          disabled={uploading}
+                        />
+                        <span className="text-sm">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Thông tin liên hệ */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Thông tin liên hệ</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Số điện thoại</label>
+                      <input
+                        value={form.contactPhone || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="0905123456"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Email</label>
+                      <input
+                        type="email"
+                        value={form.contactEmail || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, contactEmail: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="chutro@example.com"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Zalo</label>
+                      <input
+                        value={form.contactZalo || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, contactZalo: e.target.value }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        placeholder="0905123456"
+                        disabled={uploading}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chi phí & Điều khoản */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Chi phí & Điều khoản</h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Giá điện (đ/kWh)</label>
+                      <input
+                        type="number"
+                        value={form.electricityCostPerKwh || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, electricityCostPerKwh: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Giá nước (đ/m³)</label>
+                      <input
+                        type="number"
+                        value={form.waterCostPerCubicMeter || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, waterCostPerCubicMeter: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Giá internet (đ/tháng)</label>
+                      <input
+                        type="number"
+                        value={form.internetCost || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, internetCost: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Giá gửi xe (đ/tháng)</label>
+                      <input
+                        type="number"
+                        value={form.parkingCost || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, parkingCost: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Chu kỳ thanh toán (tháng)</label>
+                      <input
+                        type="number"
+                        value={form.paymentCycleMonths || 1}
+                        onChange={(e) => setForm((f) => ({ ...f, paymentCycleMonths: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-sm font-medium">Tiền cọc (tháng)</label>
+                      <input
+                        type="number"
+                        value={form.depositMonths || 0}
+                        onChange={(e) => setForm((f) => ({ ...f, depositMonths: Number(e.target.value) }))}
+                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                        disabled={uploading}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quy định */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Quy định nhà trọ</h3>
                   <textarea
-                    value={form.description || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    value={form.regulations || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, regulations: e.target.value }))}
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="Nhà trọ sạch sẽ, an ninh tốt, gần trường đại học và chợ."
-                    rows={2}
+                    placeholder="- Không gây ồn sau 22h&#10;- Giữ gìn vệ sinh chung&#10;- Không nuôi thú cưng"
+                    rows={3}
+                    disabled={uploading}
                   />
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Tổng số phòng</label>
-                  <input
-                    type="number"
-                    value={form.totalRooms || 0}
-                    onChange={(e) => setForm((f) => ({ ...f, totalRooms: parseInt(e.target.value) || 0 }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    placeholder="15"
+                {/* Địa điểm lân cận */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Địa điểm lân cận</h3>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      value={nearbyPlaceInput}
+                      onChange={(e) => setNearbyPlaceInput(e.target.value)}
+                      className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                      placeholder="VD: ĐH Bách Khoa 500m"
+                      disabled={uploading}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addNearbyPlace();
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={addNearbyPlace}
+                      disabled={uploading}
+                      className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10 disabled:opacity-50"
+                    >
+                      Thêm
+                    </button>
+                  </div>
+                  {form.nearbyPlaces && form.nearbyPlaces.length > 0 && (
+                    <div className="space-y-2">
+                      {form.nearbyPlaces.map((place, idx) => (
+                        <div key={idx} className="flex items-center justify-between rounded-lg bg-black/5 p-2 dark:bg-white/10">
+                          <span className="text-sm">{place}</span>
+                          <button
+                            onClick={() => removeNearbyPlace(idx)}
+                            disabled={uploading}
+                            className="text-red-600 hover:text-red-700 disabled:opacity-50"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Vị trí bản đồ */}
+                <div className="border-b border-black/10 pb-4 dark:border-white/15">
+                  <h3 className="mb-4 text-sm font-semibold">Vị trí trên bản đồ</h3>
+                  <MapPicker
+                    latitude={form.latitude || 10.7769}
+                    longitude={form.longitude || 106.6966}
+                    onSelect={(lat, lng) => {
+                      setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
+                    }}
                   />
                 </div>
 
+                {/* Hình ảnh */}
                 <div>
-                  <label className="mb-1 block text-sm font-medium">Hình ảnh nhà trọ</label>
+                  <h3 className="mb-4 text-sm font-semibold">Hình ảnh nhà trọ</h3>
                   <input
                     type="file"
                     accept="image/*"
@@ -244,7 +629,7 @@ export default function MotelsPage() {
                   {form.images && form.images.length > 0 && (
                     <div className="mt-3">
                       <div className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Đã chọn {form.images.length} hình ảnh</div>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                         {form.images.map((img, idx) => (
                           <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
                             <img src={img} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
@@ -252,6 +637,7 @@ export default function MotelsPage() {
                               type="button"
                               onClick={() => removeImage(idx)}
                               className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
+                              disabled={uploading}
                             >
                               ✕
                             </button>
@@ -260,17 +646,6 @@ export default function MotelsPage() {
                       </div>
                     </div>
                   )}
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Chọn vị trí trên bản đồ</label>
-                  <MapPicker
-                    latitude={form.latitude || 10.7769}
-                    longitude={form.longitude || 106.6966}
-                    onSelect={(lat, lng) => {
-                      setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
-                    }}
-                  />
                 </div>
               </div>
             </div>
@@ -289,7 +664,7 @@ export default function MotelsPage() {
                 disabled={uploading}
                 className="btn-primary disabled:opacity-50"
               >
-                {uploading ? "Đang tải lên..." : "L��u"}
+                {uploading ? "Đang tải lên..." : "Lưu"}
               </button>
             </div>
           </div>

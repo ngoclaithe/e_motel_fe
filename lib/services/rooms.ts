@@ -5,16 +5,47 @@ export interface CreateRoomRequest {
   number: string;
   area: number;
   price: number;
-  amenities: string[];
   motelId?: string;
+  bathroomType?: string;
+  hasWaterHeater?: boolean;
+  furnishingStatus?: string;
+  hasAirConditioner?: boolean;
+  hasBalcony?: boolean;
+  hasWindow?: boolean;
+  hasKitchen?: boolean;
+  hasRefrigerator?: boolean;
+  hasWashingMachine?: boolean;
+  hasWardrobe?: boolean;
+  hasBed?: boolean;
+  hasDesk?: boolean;
+  hasWifi?: boolean;
+  maxOccupancy?: number;
+  allowPets?: boolean;
+  allowCooking?: boolean;
+  allowOppositeGender?: boolean;
+  floor?: number;
+  direction?: string;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  paymentCycleMonths?: number;
+  depositMonths?: number;
+  description?: string;
+  amenities: string[];
+  availableFrom?: string;
   images?: string[];
 }
 
 export interface UpdateRoomRequest {
   price?: number;
   status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
-  amenities?: string[];
   tenantId?: string;
+  hasRefrigerator?: boolean;
+  hasWashingMachine?: boolean;
+  description?: string;
+  amenities?: string[];
   images?: string[];
 }
 
