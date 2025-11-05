@@ -312,6 +312,10 @@ export default function MotelsPage() {
     setForm(INITIAL_FORM);
   };
 
+  const handleImageError = (motelId: string) => {
+    setFailedImages((prev) => new Set(prev).add(motelId));
+  };
+
   const displayMotels = tab === 'my' ? motels : allMotels;
 
   return (
