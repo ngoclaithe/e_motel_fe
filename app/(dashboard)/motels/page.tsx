@@ -93,7 +93,14 @@ export default function MotelsPage() {
   };
 
   const removeImage = (index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    const images = form.images || [];
+    const image = images[index];
+
+    // If it's a new image (from file upload), also remove from imageFiles
+    if (image && typeof image === 'object' && 'type' in image && (image as any).type === 'new') {
+      setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    }
+
     setForm((f) => ({
       ...f,
       images: (f.images || []).filter((_, i) => i !== index),
