@@ -102,7 +102,6 @@ export default function MotelsPage() {
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<MotelFilterParams>({});
@@ -113,13 +112,13 @@ export default function MotelsPage() {
     } else if (tab === 'all') {
       fetchAllMotels();
     }
-  }, [tab, role]);
+  }, [tab, role, page, searchTerm, filters]);
 
   useEffect(() => {
     if (tab === 'all') {
       fetchAllMotels();
     }
-  }, [page, limit, searchTerm, filters]);
+  }, [page, searchTerm, filters, tab]);
 
   const fetchMyMotels = async () => {
     try {
