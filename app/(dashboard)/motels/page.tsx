@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useState, useEffect } from "react";
 import type { Motel } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
@@ -12,7 +11,12 @@ import { MapPicker } from "../../../components/MapPicker";
 export default function MotelsPage() {
   useEnsureRole(["landlord"]);
   const { push } = useToast();
-  const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
+  const [motels, setMotels] = useState<Motel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
