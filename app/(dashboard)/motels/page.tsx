@@ -77,9 +77,9 @@ export default function MotelsPage() {
       const newImageFiles = [...imageFiles, ...fileArray];
       setImageFiles(newImageFiles);
       const readers = fileArray.map((file) => {
-        return new Promise<string>((resolve) => {
+        return new Promise<{ type: 'new', url: string }>((resolve) => {
           const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
+          reader.onload = () => resolve({ type: 'new', url: String(reader.result) });
           reader.readAsDataURL(file);
         });
       });
