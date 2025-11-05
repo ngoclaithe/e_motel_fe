@@ -430,7 +430,7 @@ export default function MotelsPage() {
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
-                      src={m.images[0]}
+                      src={typeof m.images[0] === 'string' ? m.images[0] : (m.images[0] as any)?.url || ''}
                       alt={m.name}
                       className="w-full h-full object-cover"
                       onError={() => handleImageError(m.id)}
@@ -511,18 +511,21 @@ export default function MotelsPage() {
                   <div>
                     <div className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-60">
                       <img
-                        src={viewingMotel.images[0]}
+                        src={typeof viewingMotel.images[0] === 'string' ? viewingMotel.images[0] : (viewingMotel.images[0] as any)?.url || ''}
                         alt={viewingMotel.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     {viewingMotel.images.length > 1 && (
                       <div className="mt-2 grid grid-cols-4 gap-2">
-                        {viewingMotel.images.slice(1, 5).map((img, idx) => (
-                          <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-20">
-                            <img src={img} alt={`${idx + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
+                        {viewingMotel.images.slice(1, 5).map((img, idx) => {
+                          const imgUrl = typeof img === 'string' ? img : (img as any)?.url || '';
+                          return (
+                            <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-20">
+                              <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
