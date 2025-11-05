@@ -8,10 +8,19 @@ interface MapPickerProps {
   onSelect: (lat: number, lng: number) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare global {
+  interface Window {
+    L: any;
+  }
+}
+
 export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<Record<string, unknown> | null>(null);
-  const marker = useRef<Record<string, unknown> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const map = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const marker = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,7 +51,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
     };
 
     const initializeMap = () => {
-      const L = (window as Record<string, unknown>).L;
+      const L = window.L;
       if (!L || !mapContainer.current || map.current) return;
 
       const initialLat = latitude || 10.7769;
@@ -59,7 +68,8 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
         marker.current = L.marker([latitude, longitude]).addTo(map.current);
       }
 
-      map.current.on("click", (e: Record<string, unknown>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      map.current.on("click", (e: any) => {
         const { lat, lng } = e.latlng;
 
         if (marker.current) {
@@ -78,7 +88,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
 
     return () => {
       if (map.current) {
-        (map.current as Record<string, unknown>).remove?.();
+        map.current.remove();
         map.current = null;
         marker.current = null;
       }
@@ -99,7 +109,7 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
         )}
       </div>
       <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-        Nhấp vào bản đ�� để chọn vị trí. Tọa độ: {latitude.toFixed(6)}, {longitude.toFixed(6)}
+        Nhấp vào bản đồ để chọn vị trí. Tọa độ: {latitude.toFixed(6)}, {longitude.toFixed(6)}
       </p>
     </div>
   );
