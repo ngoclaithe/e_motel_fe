@@ -1,20 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Motel } from "../../../../types";
-import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
+import { motelService } from "../../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../../lib/cloudinary";
 
 export default function AdminMotelsPage() {
   useEnsureRole(["admin"]);
   const { push } = useToast();
-  const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
+  const [motels, setMotels] = useState<Motel[]>([]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [form, setForm] = useState<Partial<Motel>>({
     name: "",
     address: "",
