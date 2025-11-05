@@ -106,13 +106,15 @@ export default function MotelsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<MotelFilterParams>({});
 
-  useEffect(() => {
-    if (role === 'landlord' && tab === 'my') {
-      fetchMyMotels();
-    } else if (tab === 'all') {
-      fetchAllMotels();
-    }
-  }, [tab, role, page, searchTerm, filters, fetchMyMotels, fetchAllMotels]);
+  type BooleanAmenityKey = 'hasWifi' | 'hasAirConditioner' | 'hasWashingMachine' | 'hasKitchen' | 'hasRooftop';
+  const AMENITIES: { key: BooleanAmenityKey; label: string }[] = [
+    { key: 'hasWifi', label: 'WiFi' },
+    { key: 'hasAirConditioner', label: 'Điều hòa' },
+    { key: 'hasWashingMachine', label: 'Máy giặt' },
+    { key: 'hasKitchen', label: 'Bếp chung' },
+    { key: 'hasRooftop', label: 'Sân thượng' },
+  ];
+
 
   const fetchMyMotels = useCallback(async () => {
     try {
@@ -146,6 +148,14 @@ export default function MotelsPage() {
       setLoading(false);
     }
   }, [page, searchTerm, filters, push]);
+
+  useEffect(() => {
+    if (role === 'landlord' && tab === 'my') {
+      fetchMyMotels();
+    } else if (tab === 'all') {
+      fetchAllMotels();
+    }
+  }, [tab, role, page, searchTerm, filters, fetchMyMotels, fetchAllMotels]);
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -801,17 +811,11 @@ export default function MotelsPage() {
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Tiện ích chung</h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {[
-                      { key: "hasWifi", label: "WiFi" },
-                      { key: "hasAirConditioner", label: "Điều hòa" },
-                      { key: "hasWashingMachine", label: "Máy giặt" },
-                      { key: "hasKitchen", label: "Bếp chung" },
-                      { key: "hasRooftop", label: "Sân thượng" },
-                    ].map(({ key, label }) => (
+                    {AMENITIES.map(({ key, label }) => (
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={(form as Record<string, unknown>)[key] as boolean || false}
+                          checked={Boolean(form[key])}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked } as MotelFormData))}
                           className="rounded"
                           disabled={uploading}
