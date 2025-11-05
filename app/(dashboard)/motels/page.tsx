@@ -58,6 +58,25 @@ export default function MotelsPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
 
+  useEffect(() => {
+    fetchMotels();
+  }, [page, limit]);
+
+  const fetchMotels = async () => {
+    try {
+      setLoading(true);
+      const response = await motelService.getMyMotels({ page, limit });
+      setMotels(response.data || []);
+      setTotal(response.total || 0);
+      setTotalPages(response.totalPages || 1);
+    } catch (error) {
+      console.error("Error fetching motels:", error);
+      push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
       const fileArray = Array.from(files);
