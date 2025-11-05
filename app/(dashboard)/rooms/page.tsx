@@ -323,10 +323,12 @@ export default function RoomsPage() {
                 )}
               </div>
             )}
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-              <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
-            </div>
+            {role === 'landlord' && (
+              <div className="mt-3 flex gap-2">
+                <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+              </div>
+            )}
           </div>
         ))}
         {filtered.length === 0 && (
@@ -531,7 +533,7 @@ export default function RoomsPage() {
 
                 {/* Chính sách */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
-                  <h3 className="mb-4 text-sm font-semibold">Chính sách phòng</h3>
+                  <h3 className="mb-4 text-sm font-semibold">Ch��nh sách phòng</h3>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -566,7 +568,7 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Tiện ích & T��nh năng */}
+                {/* Tiện ích & Tính năng */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Tiện ích & Tính năng</h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
