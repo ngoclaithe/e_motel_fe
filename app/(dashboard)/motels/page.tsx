@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { Motel, AlleyType, SecurityType } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useCurrentRole, useEnsureRole } from "../../../hooks/useAuth";
@@ -798,7 +798,7 @@ export default function MotelsPage() {
                         className="rounded"
                         disabled={uploading}
                       />
-                      <span className="text-sm">Cho phép nấu ăn</span>
+                      <span className="text-sm">Cho ph��p nấu ăn</span>
                     </label>
                   </div>
                 </div>
