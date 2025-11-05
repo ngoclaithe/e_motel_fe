@@ -78,6 +78,10 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
 
   const res = await fetch(url, { credentials: "include", ...init, headers });
 
+  if (res.status === 304) {
+    return null;
+  }
+
   if (!res.ok) {
     const text = await res.text();
     let data: unknown = text;
