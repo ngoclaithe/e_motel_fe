@@ -119,10 +119,8 @@ export const motelService = {
     return api.get(`/api/v1/motels${queryString}`);
   },
 
-  getMyMotels: async (params: MotelFilterParams = {}): Promise<MotelListResponse> => {
-    const defaultParams = { page: 1, limit: 10, ...params };
-    const queryString = buildQueryString(defaultParams);
-    return api.get(`/api/v1/motels/my-motels${queryString}`);
+  getMyMotels: async (): Promise<MotelListResponse> => {
+    return api.get(`/api/v1/motels/my-motels`);
   },
 
   getMotel: async (id: string): Promise<Motel> => {

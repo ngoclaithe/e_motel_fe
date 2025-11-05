@@ -13,10 +13,6 @@ export default function MotelsPage() {
   const { push } = useToast();
   const [motels, setMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -60,15 +56,13 @@ export default function MotelsPage() {
 
   useEffect(() => {
     fetchMotels();
-  }, [page, limit]);
+  }, []);
 
   const fetchMotels = async () => {
     try {
       setLoading(true);
-      const response = await motelService.getMyMotels({ page, limit });
+      const response = await motelService.getMyMotels();
       setMotels(response.data || []);
-      setTotal(response.total || 0);
-      setTotalPages(response.totalPages || 1);
     } catch (error) {
       console.error("Error fetching motels:", error);
       push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
@@ -288,30 +282,6 @@ export default function MotelsPage() {
               <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Chưa có nhà trọ nào</div>
             )}
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black/40">
-              <div className="text-sm text-zinc-600 dark:text-zinc-400">
-                Trang {page} / {totalPages} • Tổng {total} nhà trọ
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  ← Trước
-                </button>
-                <button
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  Sau →
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -702,7 +672,7 @@ export default function MotelsPage() {
                               className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
                               disabled={uploading}
                             >
-                              ✕
+                              ��
                             </button>
                           </div>
                         ))}
