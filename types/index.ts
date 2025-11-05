@@ -1,30 +1,85 @@
 export type UserRole = "admin" | "landlord" | "tenant";
 
+export type AlleyType = "MOTORBIKE" | "CAR" | "BOTH";
+export type SecurityType = "CAMERA" | "GUARD" | "BOTH" | "NONE";
+
 export interface Motel {
   id: string;
   name: string;
   address: string;
-  logoUrl?: string;
   description?: string;
-  ownerEmail: string;
   totalRooms?: number;
   latitude?: number;
   longitude?: number;
+  alleyType?: AlleyType;
+  alleyWidth?: number;
+  hasElevator?: boolean;
+  hasParking?: boolean;
+  securityType?: SecurityType;
+  has24hSecurity?: boolean;
+  hasWifi?: boolean;
+  hasAirConditioner?: boolean;
+  hasWashingMachine?: boolean;
+  hasKitchen?: boolean;
+  hasRooftop?: boolean;
+  allowPets?: boolean;
+  allowCooking?: boolean;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  paymentCycleMonths?: number;
+  depositMonths?: number;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactZalo?: string;
+  regulations?: string;
+  nearbyPlaces?: string[];
   images?: string[];
   createdAt: string;
 }
 
 export type RoomStatus = "VACANT" | "OCCUPIED" | "MAINTENANCE";
+export type BathroomType = "PRIVATE" | "SHARED";
+export type FurnishingStatus = "UNFURNISHED" | "PARTIALLY_FURNISHED" | "FULLY_FURNISHED";
 
 export interface Room {
   id: string;
   number: string;
   area: number;
   price: number;
-  amenities: string[];
   motelId?: string;
   tenantId?: string;
   status: RoomStatus;
+  bathroomType?: BathroomType;
+  hasWaterHeater?: boolean;
+  furnishingStatus?: FurnishingStatus;
+  hasAirConditioner?: boolean;
+  hasBalcony?: boolean;
+  hasWindow?: boolean;
+  hasKitchen?: boolean;
+  hasRefrigerator?: boolean;
+  hasWashingMachine?: boolean;
+  hasWardrobe?: boolean;
+  hasBed?: boolean;
+  hasDesk?: boolean;
+  hasWifi?: boolean;
+  maxOccupancy?: number;
+  allowPets?: boolean;
+  allowCooking?: boolean;
+  allowOppositeGender?: boolean;
+  floor?: number;
+  direction?: string;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  paymentCycleMonths?: number;
+  depositMonths?: number;
+  description?: string;
+  amenities: string[];
+  availableFrom?: string;
   images?: string[];
   createdAt: string;
 }
