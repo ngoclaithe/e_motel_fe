@@ -289,7 +289,9 @@ export default function RoomsPage() {
             <option value="OCCUPIED">Đang thuê</option>
             <option value="MAINTENANCE">Bảo trì</option>
           </select>
-          <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
+          {role === 'landlord' && (
+            <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
+          )}
         </div>
       </div>
 
@@ -564,7 +566,7 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Tiện ích & Tính năng */}
+                {/* Tiện ích & T��nh năng */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Tiện ích & Tính năng</h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
