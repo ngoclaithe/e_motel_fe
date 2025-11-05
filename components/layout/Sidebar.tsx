@@ -1,16 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 import { useCurrentRole } from "../../hooks/useAuth";
+import type { UserRole } from "../../types";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const role = useCurrentRole();
+  const [mounted, setMounted] = useState(false);
 
-  const nav = (() => {
-    if (role === "landlord") {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const getNav = (r: UserRole | null) => {
+    if (r === "landlord") {
       return [
         { href: "/landlord", label: "Tổng quan" },
         { href: "/motels", label: "Nhà trọ" },
@@ -22,7 +29,7 @@ export default function Sidebar() {
         { href: "/profile", label: "Hồ sơ" },
       ];
     }
-    if (role === "tenant") {
+    if (r === "tenant") {
       return [
         { href: "/tenant", label: "Tổng quan" },
         { href: "/contracts", label: "Hợp đồng" },
@@ -32,7 +39,7 @@ export default function Sidebar() {
         { href: "/profile", label: "Hồ sơ" },
       ];
     }
-    if (role === "admin") {
+    if (r === "admin") {
       return [
         { href: "/admin", label: "Bảng điều khiển" },
         { href: "/admin/users", label: "Người dùng" },
@@ -44,8 +51,10 @@ export default function Sidebar() {
         { href: "/profile", label: "Hồ sơ" },
       ];
     }
-    return [] as { href: string; label: string }[];
-  })();
+    return [];
+  };
+
+  const nav = mounted ? getNav(role) : [];
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-black/10 px-4 py-6 dark:border-white/10 md:block">
