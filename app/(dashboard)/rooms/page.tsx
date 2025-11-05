@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import type { Room, RoomStatus, Motel } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
-import { useEnsureRole } from "../../../hooks/useAuth";
+import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
 
 const COMMON_AMENITIES = [
