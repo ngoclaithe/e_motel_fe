@@ -13,10 +13,6 @@ export default function MotelsPage() {
   const { push } = useToast();
   const [motels, setMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -60,15 +56,13 @@ export default function MotelsPage() {
 
   useEffect(() => {
     fetchMotels();
-  }, [page, limit]);
+  }, []);
 
   const fetchMotels = async () => {
     try {
       setLoading(true);
-      const response = await motelService.getMyMotels({ page, limit });
+      const response = await motelService.getMyMotels();
       setMotels(response.data || []);
-      setTotal(response.total || 0);
-      setTotalPages(response.totalPages || 1);
     } catch (error) {
       console.error("Error fetching motels:", error);
       push({ title: "Lỗi", description: "Không thể tải danh sách nhà trọ", type: "error" });
