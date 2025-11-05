@@ -54,45 +54,70 @@ export default function AdminMotelsPage() {
     }
   };
 
-  const save = () => {
-    if (!form.name || !form.address || !form.ownerEmail) return;
-    if (editing) {
-      setMotels(motels.map((m) => (m.id === editing.id ? { ...editing, ...form } as Motel : m)));
-      push({ title: "Đã c��p nhật", type: "success" });
-    } else {
-      const item: Motel = {
-        id: crypto.randomUUID(),
+  const save = async () => {
+    if (!form.name || !form.address) return;
+
+    try {
+      setUploading(true);
+      const imageUrls: string[] = [];
+
+      if (form.images && form.images.length > 0) {
+        for (const img of form.images) {
+          if (img.startsWith('http')) {
+            imageUrls.push(img);
+          }
+        }
+      }
+
+      const payload = {
         name: String(form.name),
         address: String(form.address),
-        ownerEmail: String(form.ownerEmail),
         description: form.description || "",
         totalRooms: form.totalRooms,
         latitude: form.latitude,
         longitude: form.longitude,
-        images: form.images || [],
-        createdAt: new Date().toISOString(),
+        images: imageUrls,
       };
-      setMotels([item, ...motels]);
-      push({ title: "Đã thêm nhà trọ", type: "success" });
+
+      if (editing) {
+        await motelService.updateMotel(editing.id, payload);
+        push({ title: "Đã cập nhật", type: "success" });
+      } else {
+        await motelService.createMotel(payload);
+        push({ title: "Đã thêm nhà trọ", type: "success" });
+      }
+
+      await fetchMotels();
+      setOpen(false);
+      setEditing(null);
+      setForm({
+        name: "",
+        address: "",
+        ownerEmail: "",
+        description: "",
+        totalRooms: undefined,
+        latitude: undefined,
+        longitude: undefined,
+        images: [],
+      });
+    } catch (error) {
+      console.error(error);
+      push({ title: "Lỗi", description: "Không thể lưu nhà trọ", type: "error" });
+    } finally {
+      setUploading(false);
     }
-    setOpen(false);
-    setEditing(null);
-    setForm({
-      name: "",
-      address: "",
-      ownerEmail: "",
-      description: "",
-      totalRooms: undefined,
-      latitude: undefined,
-      longitude: undefined,
-      images: [],
-    });
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Xóa nhà trọ này?")) return;
-    setMotels(motels.filter((m) => m.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+    try {
+      await motelService.deleteMotel(id);
+      push({ title: "Đã xóa", type: "info" });
+      await fetchMotels();
+    } catch (error) {
+      console.error(error);
+      push({ title: "Lỗi", description: "Không thể xóa nhà trọ", type: "error" });
+    }
   };
 
   const onImageFiles = (files: FileList | null) => {
