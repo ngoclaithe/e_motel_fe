@@ -509,25 +509,16 @@ export default function MotelsPage() {
               <div className="space-y-6">
                 {viewingMotel.images && viewingMotel.images.length > 0 && (
                   <div>
-                    <div className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-60">
-                      <img
-                        src={typeof viewingMotel.images[0] === 'string' ? viewingMotel.images[0] : (viewingMotel.images[0] as any)?.url || ''}
-                        alt={viewingMotel.name}
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                      {viewingMotel.images.slice(0, 4).map((img, idx) => {
+                        const imgUrl = typeof img === 'string' ? img : (img as any)?.url || '';
+                        return (
+                          <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-32">
+                            <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        );
+                      })}
                     </div>
-                    {viewingMotel.images.length > 1 && (
-                      <div className="mt-2 grid grid-cols-4 gap-2">
-                        {viewingMotel.images.slice(1, 5).map((img, idx) => {
-                          const imgUrl = typeof img === 'string' ? img : (img as any)?.url || '';
-                          return (
-                            <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-20">
-                              <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
                   </div>
                 )}
 
@@ -687,7 +678,7 @@ export default function MotelsPage() {
                         value={form.description || ""}
                         onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Nhà trọ gần trường, giá rẻ, an ninh tốt, sạch sẽ"
+                        placeholder="Nhà trọ g���n trường, giá rẻ, an ninh tốt, sạch sẽ"
                         rows={2}
                         disabled={uploading}
                       />
