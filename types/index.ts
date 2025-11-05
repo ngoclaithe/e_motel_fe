@@ -14,17 +14,18 @@ export interface Motel {
   createdAt: string;
 }
 
-export type RoomStatus = "vacant" | "occupied" | "maintenance";
+export type RoomStatus = "VACANT" | "OCCUPIED" | "MAINTENANCE";
 
 export interface Room {
   id: string;
-  motelId?: string;
-  name: string;
+  number: string;
   area: number;
   price: number;
+  amenities: string[];
+  motelId?: string;
+  tenantId?: string;
   status: RoomStatus;
   images?: string[];
-  notes?: string[];
   createdAt: string;
 }
 
