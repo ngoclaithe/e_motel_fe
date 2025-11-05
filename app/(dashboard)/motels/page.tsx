@@ -27,17 +27,7 @@ export default function MotelsPage() {
     images: [],
   });
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-
-  const handleLogoChange = (file?: File | null) => {
-    if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setForm((f) => ({ ...f, logoUrl: String(reader.result) }));
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleImagesChange = (files?: FileList | null) => {
     if (files) {
@@ -67,12 +57,7 @@ export default function MotelsPage() {
 
     setUploading(true);
     try {
-      let logoUrl = form.logoUrl;
       const imageUrls: string[] = [];
-
-      if (logoFile) {
-        logoUrl = await uploadToCloudinary(logoFile);
-      }
 
       if (imageFiles.length > 0) {
         for (const file of imageFiles) {
@@ -88,7 +73,6 @@ export default function MotelsPage() {
         totalRooms: form.totalRooms || 0,
         latitude: form.latitude || 10.7769,
         longitude: form.longitude || 106.6966,
-        logoUrl: logoUrl || "",
         images: imageUrls.length > 0 ? imageUrls : form.images || [],
       };
 
@@ -132,7 +116,6 @@ export default function MotelsPage() {
   const openEditModal = (motel: Motel) => {
     setEditing(motel);
     setForm(motel);
-    setLogoFile(null);
     setImageFiles([]);
     setOpen(true);
   };
@@ -149,7 +132,6 @@ export default function MotelsPage() {
       longitude: 106.6966,
       images: [],
     });
-    setLogoFile(null);
     setImageFiles([]);
   };
 
@@ -162,17 +144,9 @@ export default function MotelsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {motels.map((m) => (
           <div key={m.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-            <div className="flex items-center gap-3">
-              {m.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.logoUrl} alt={m.name} className="h-10 w-10 rounded-lg object-cover" />
-              ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black/10 text-xs font-semibold dark:bg-white/10">Logo</div>
-              )}
-              <div>
-                <div className="font-medium">{m.name}</div>
-                <div className="text-xs text-zinc-500">{m.address}</div>
-              </div>
+            <div>
+              <div className="font-medium">{m.name}</div>
+              <div className="text-xs text-zinc-500">{m.address}</div>
             </div>
             {m.totalRooms && (
               <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
@@ -250,20 +224,6 @@ export default function MotelsPage() {
                       setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
                     }}
                   />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Logo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleLogoChange(e.target.files?.[0])}
-                    className="w-full text-sm"
-                    disabled={uploading}
-                  />
-                  {form.logoUrl && logoFile && (
-                    <div className="mt-2 text-xs text-green-600">Logo sẵn sàng để tải lên</div>
-                  )}
                 </div>
 
                 <div>
