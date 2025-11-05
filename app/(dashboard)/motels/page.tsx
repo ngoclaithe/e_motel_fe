@@ -96,7 +96,6 @@ export default function MotelsPage() {
     const images = form.images || [];
     const image = images[index];
 
-    // If it's a new image (from file upload), also remove from imageFiles
     if (image && typeof image === 'object' && 'type' in image && (image as any).type === 'new') {
       setImageFiles((prev) => prev.filter((_, i) => i !== index));
     }
@@ -141,6 +140,12 @@ export default function MotelsPage() {
         }
       }
 
+      const existingImageUrls = (form.images || [])
+        .filter((img) => typeof img === 'object' && !(img as any).type)
+        .map((img) => (img as any).url);
+
+      const finalImageUrls = imageUrls.length > 0 ? imageUrls : existingImageUrls;
+
       const payload = {
         name: form.name,
         address: form.address,
@@ -172,7 +177,7 @@ export default function MotelsPage() {
         contactZalo: form.contactZalo || "",
         regulations: form.regulations || "",
         nearbyPlaces: form.nearbyPlaces || [],
-        images: imageUrls.length > 0 ? imageUrls : form.images || [],
+        images: finalImageUrls,
       };
 
       if (editing) {
@@ -272,8 +277,8 @@ export default function MotelsPage() {
               <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
                 {m.images && m.images.length > 0 && (
                   <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5">
-                    <img
-                      src={m.images[0].url}
+                    <img 
+                      src={m.images[0].url} 
                       alt={m.name}
                       className="w-full h-full object-cover"
                     />
@@ -598,7 +603,7 @@ export default function MotelsPage() {
                   </div>
                 </div>
 
-                {/* Quy đ���nh */}
+                {/* Quy định */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Quy định nhà trọ</h3>
                   <textarea
@@ -681,19 +686,22 @@ export default function MotelsPage() {
                     <div className="mt-3">
                       <div className="mb-2 text-xs font-medium text-zinc-600 dark:text-zinc-400">Đã chọn {form.images.length} hình ảnh</div>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {form.images.map((img, idx) => (
-                          <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
-                            <img src={img} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => removeImage(idx)}
-                              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
-                              disabled={uploading}
-                            >
-                              ��
-                            </button>
-                          </div>
-                        ))}
+                        {form.images.map((img, idx) => {
+                          const imgUrl = typeof img === 'string' ? img : (img && typeof img === 'object' ? (img as any).url : '');
+                          return (
+                            <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
+                              <img src={imgUrl} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(idx)}
+                                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition text-white text-lg font-bold hover:bg-black/70"
+                                disabled={uploading}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
