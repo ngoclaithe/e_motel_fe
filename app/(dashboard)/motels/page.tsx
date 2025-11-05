@@ -86,8 +86,8 @@ export default function MotelsPage() {
   useEnsureRole(["landlord", "tenant"]);
   const role = useCurrentRole();
   const { push } = useToast();
-  
-  const [tab, setTab] = useState<'my' | 'all'>('my');
+
+  const [tab, setTab] = useState<'my' | 'all'>(role === 'tenant' ? 'all' : 'my');
   const [motels, setMotels] = useState<Motel[]>([]);
   const [allMotels, setAllMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -97,6 +97,7 @@ export default function MotelsPage() {
   const [form, setForm] = useState<MotelFormData>(INITIAL_FORM);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -311,6 +312,10 @@ export default function MotelsPage() {
     setForm(INITIAL_FORM);
   };
 
+  const handleImageError = (motelId: string) => {
+    setFailedImages((prev) => new Set(prev).add(motelId));
+  };
+
   const displayMotels = tab === 'my' ? motels : allMotels;
 
   return (
@@ -421,15 +426,18 @@ export default function MotelsPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayMotels.map((m) => (
               <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
-                {m.images && m.images.length > 0 && (
-                  <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5">
-                    <img 
+                <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
+                  {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
+                    <img
                       src={m.images[0]}
                       alt={m.name}
                       className="w-full h-full object-cover"
+                      onError={() => handleImageError(m.id)}
                     />
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-sm text-zinc-400">Không có hình ảnh</div>
+                  )}
+                </div>
                 <div className="p-4 flex flex-col flex-1">
                   <div>
                     <div className="font-medium">{m.name}</div>
@@ -504,7 +512,7 @@ export default function MotelsPage() {
                         value={form.name || ""}
                         onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Nhà trọ Sinh Viên Hòa Bình"
+                        placeholder="Nhà trọ Sinh Vi��n Hòa Bình"
                         disabled={uploading}
                       />
                     </div>

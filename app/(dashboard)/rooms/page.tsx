@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import type { Room, RoomStatus, Motel } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
-import { useEnsureRole } from "../../../hooks/useAuth";
+import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
 
 const COMMON_AMENITIES = [
@@ -19,7 +19,8 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["landlord", "tenant"]);
+  const role = useCurrentRole();
   const { push } = useToast();
   const [rooms, setRooms] = useLocalStorage<Room[]>("emotel_rooms", []);
   const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
@@ -288,7 +289,9 @@ export default function RoomsPage() {
             <option value="OCCUPIED">Đang thuê</option>
             <option value="MAINTENANCE">Bảo trì</option>
           </select>
-          <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
+          {role === 'landlord' && (
+            <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
+          )}
         </div>
       </div>
 
@@ -320,10 +323,12 @@ export default function RoomsPage() {
                 )}
               </div>
             )}
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-              <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
-            </div>
+            {role === 'landlord' && (
+              <div className="mt-3 flex gap-2">
+                <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+              </div>
+            )}
           </div>
         ))}
         {filtered.length === 0 && (
@@ -331,7 +336,7 @@ export default function RoomsPage() {
         )}
       </div>
 
-      {open && (
+      {open && role === 'landlord' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
@@ -528,7 +533,7 @@ export default function RoomsPage() {
 
                 {/* Chính sách */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
-                  <h3 className="mb-4 text-sm font-semibold">Chính sách phòng</h3>
+                  <h3 className="mb-4 text-sm font-semibold">Ch��nh sách phòng</h3>
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
