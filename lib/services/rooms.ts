@@ -2,22 +2,20 @@ import { api } from "../api";
 import type { Room } from "../types";
 
 export interface CreateRoomRequest {
-  motelId: string;
-  name: string;
+  number: string;
   area: number;
   price: number;
-  status?: "vacant" | "occupied" | "maintenance";
+  amenities: string[];
+  motelId?: string;
   images?: string[];
-  notes?: string[];
 }
 
 export interface UpdateRoomRequest {
-  name?: string;
-  area?: number;
   price?: number;
-  status?: "vacant" | "occupied" | "maintenance";
+  status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
+  amenities?: string[];
+  tenantId?: string;
   images?: string[];
-  notes?: string[];
 }
 
 export interface RoomListResponse {
