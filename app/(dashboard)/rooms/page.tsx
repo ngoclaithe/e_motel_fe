@@ -520,7 +520,7 @@ export default function RoomsPage() {
                       <label key={key} className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={(form as any)[key] || false}
+                          checked={(form as Record<string, unknown>)[key] as boolean || false}
                           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.checked }))}
                           className="rounded"
                           disabled={uploading}
