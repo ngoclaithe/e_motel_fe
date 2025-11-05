@@ -176,14 +176,13 @@ export default function MotelsPage() {
 
       if (editing) {
         await motelService.updateMotel(editing.id, payload);
-        setMotels(motels.map((m) => (m.id === editing.id ? { ...editing, ...payload } as Motel : m)));
         push({ title: "Cập nhật thành công", type: "success" });
       } else {
-        const newMotel = await motelService.createMotel(payload);
-        setMotels([newMotel, ...motels]);
+        await motelService.createMotel(payload);
         push({ title: "Tạo nhà trọ thành công", type: "success" });
       }
 
+      await fetchMotels();
       closeModal();
     } catch (error) {
       console.error(error);
@@ -193,10 +192,16 @@ export default function MotelsPage() {
     }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Xóa nhà trọ này?")) return;
-    setMotels(motels.filter((m) => m.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+    try {
+      await motelService.deleteMotel(id);
+      push({ title: "Đã xóa", type: "info" });
+      await fetchMotels();
+    } catch (error) {
+      console.error(error);
+      push({ title: "Lỗi", description: "Không thể xóa nhà trọ", type: "error" });
+    }
   };
 
   const openEditModal = (motel: Motel) => {
