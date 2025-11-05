@@ -65,6 +65,11 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
 
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
+  // Disable caching to avoid 304 Not Modified issues
+  headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+  headers.set("Pragma", "no-cache");
+  headers.set("Expires", "0");
+
   // Default content-type for non-GET requests with a body
   const method = (init.method || "GET").toUpperCase();
   if (method !== "GET" && init.body && !headers.has("Content-Type")) {
