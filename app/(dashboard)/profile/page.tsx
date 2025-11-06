@@ -351,15 +351,6 @@ export default function ProfilePage() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
-        <h2 className="mb-4 text-lg font-semibold">Thao tác</h2>
-        <button
-          onClick={() => logout({ redirect: true })}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-        >
-          Đăng xuất
-        </button>
-      </div>
     </div>
   );
 }
