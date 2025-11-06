@@ -28,6 +28,8 @@ export default function RoomsPage() {
   const [loading, setLoading] = useState(false);
 
   const [status, setStatus] = useState<RoomStatus | "all">("all");
+  const [viewFilter, setViewFilter] = useState<'all' | 'mine'>('all');
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -105,8 +107,13 @@ export default function RoomsPage() {
   const loadRooms = async () => {
     setLoading(true);
     try {
-      const data = role === "landlord" || role === "admin" ? await roomService.myRooms() : await roomService.listAll();
-      setRooms(Array.isArray(data) ? data : []);
+      let data: unknown;
+      if (viewFilter === 'mine') {
+        data = await roomService.myRooms();
+      } else {
+        data = await roomService.listAll();
+      }
+      setRooms(Array.isArray(data) ? (data as Room[]) : []);
     } catch (e) {
       push({ title: "Lỗi", description: "Không thể tải danh sách phòng", type: "error" });
     } finally {
@@ -126,7 +133,7 @@ export default function RoomsPage() {
     loadRooms();
     loadMotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role]);
+  }, [role, viewFilter]);
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {
@@ -264,6 +271,21 @@ export default function RoomsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold">Phòng</h1>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewFilter('all')}
+              className={`rounded-lg px-3 py-1 text-sm ${viewFilter === 'all' ? 'bg-black/5 dark:bg-white/10' : ''}`}
+            >
+              Tất cả
+            </button>
+            <button
+              onClick={() => setViewFilter('mine')}
+              disabled={!(role === 'landlord' || role === 'admin')}
+              className={`rounded-lg px-3 py-1 text-sm ${viewFilter === 'mine' ? 'bg-black/5 dark:bg-white/10' : 'opacity-80'}`}
+            >
+              Của tôi
+            </button>
+          </div>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as RoomStatus | "all")}
@@ -285,7 +307,11 @@ export default function RoomsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((r) => (
-            <div key={r.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
+            <div
+              key={r.id}
+              onClick={() => setSelectedRoom(r)}
+              className="cursor-pointer rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <div className="text-base font-semibold">Phòng {r.number}</div>
@@ -297,24 +323,35 @@ export default function RoomsPage() {
                   {r.status === "MAINTENANCE" && "Bảo trì"}
                 </span>
               </div>
+              {r.images && r.images.length > 0 && (
+                <div className="mt-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={(r.images[0] as any)?.url || String(r.images[0] || '')} alt={`room-${r.id}`} className="w-full h-36 object-cover rounded-md" />
+                </div>
+              )}
               {r.amenities && r.amenities.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {r.amenities.slice(0, 2).map((amenity) => (
+                  {r.amenities.slice(0, 3).map((amenity) => (
                     <span key={amenity} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                       {amenity}
                     </span>
                   ))}
-                  {r.amenities.length > 2 && (
+                  {r.amenities.length > 3 && (
                     <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                      +{r.amenities.length - 2}
+                      +{r.amenities.length - 3}
                     </span>
                   )}
                 </div>
               )}
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-xs text-zinc-500">Tầng {r.floor ?? '-'}</div>
+                <div className="text-xs text-zinc-500">Sức chứa {r.maxOccupancy ?? '-'}</div>
+              </div>
+
               {(role === 'landlord' || role === 'admin') && (
                 <div className="mt-3 flex gap-2">
-                  <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                  <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                  <button onClick={(e) => { e.stopPropagation(); openEditModal(r); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                  <button onClick={(e) => { e.stopPropagation(); remove(r.id); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                 </div>
               )}
             </div>
@@ -322,6 +359,66 @@ export default function RoomsPage() {
           {filtered.length === 0 && (
             <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù hợp</div>
           )}
+        </div>
+      )}
+
+      {selectedRoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
+            <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
+              <h2 className="text-lg font-semibold">Chi tiết phòng {selectedRoom.number}</h2>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  {selectedRoom.images && selectedRoom.images.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2">
+                      {((selectedRoom.images || []) as any[]).slice(0,4).map((img, idx) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={idx} src={typeof img === 'string' ? img : img.url} alt={`img-${idx}`} className="w-full h-32 object-cover rounded-md" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="w-full h-32 rounded-md bg-black/5" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">Giá: {Number(selectedRoom.price).toLocaleString()}đ</div>
+                  <div className="text-xs text-zinc-500">Diện tích: {selectedRoom.area} m²</div>
+                  <div className="mt-2 text-xs">{selectedRoom.description}</div>
+
+                  {selectedRoom.motel && (
+                    <div className="mt-3 text-xs">
+                      <div className="font-medium">Nhà trọ: {selectedRoom.motel.name}</div>
+                      <div className="text-zinc-500">{selectedRoom.motel.address}</div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 text-xs">
+                    <div className="font-medium">Tiện nghi</div>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {(selectedRoom.amenities || []).map((a) => (
+                        <span key={a} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 text-xs">
+                    <div>Điện: {selectedRoom.electricityCostPerKwh ?? '-'} đ/kWh</div>
+                    <div>Nước: {selectedRoom.waterCostPerCubicMeter ?? '-'} đ/m³</div>
+                    <div>Internet: {selectedRoom.internetCost ?? '-'} đ/tháng</div>
+                    <div>Tiền gửi xe: {selectedRoom.parkingCost ?? '-'} đ/tháng</div>
+                  </div>
+
+                  <div className="mt-3 text-xs text-zinc-500">Có sẵn từ: {selectedRoom.availableFrom || '-'}</div>
+                  <div className="text-xs text-zinc-400">Tạo: {new Date(selectedRoom.createdAt).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex-shrink-0 border-t border-black/10 px-6 py-4 dark:border-white/15 flex justify-end gap-2">
+              <button onClick={() => setSelectedRoom(null)} className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10">Đóng</button>
+            </div>
+          </div>
         </div>
       )}
 
