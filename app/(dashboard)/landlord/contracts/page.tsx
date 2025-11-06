@@ -63,11 +63,16 @@ export default function LandlordContractsPage() {
     }
   };
 
-  // load once when component mounts
-  if (typeof window !== 'undefined' && motels.length === 0 && rooms.length === 0) {
-    // avoid calling in SSR
+  const dataLoadedRef = useRef(false);
+
+  // Load motels/rooms once when the create modal opens (or on first mount)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!open) return; // only load when modal is opened
+    if (dataLoadedRef.current) return;
+    dataLoadedRef.current = true;
     loadMyData();
-  }
+  }, [open]);
 
   const handlePhoneChange = (val: string) => {
     setTenantPhone(val);
@@ -221,7 +226,7 @@ Kỳ thanh toán: ${contract.paymentPeriod}
 
 GHI CHÚ
 ------
-${contract.notes || "Không có ghi chú"}
+${contract.notes || "Kh��ng có ghi chú"}
     `.trim();
   };
 
