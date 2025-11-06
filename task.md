@@ -1,48 +1,88 @@
-# Task: Cập nhật giao diện và service quản lý phòng trong E-Motel FE
+Task 2: Bổ sung Service user.ts và cập nhật form tạo hợp đồng
+Mục tiêu
 
----
+Tạo service user.ts gọi các endpoint của UserController (tiền tố /api/v1).
 
-## 1. Cập nhật trang **Profile Page**
-- **Bỏ hoàn toàn mục "Thao tác"** khỏi giao diện trang Profile.
-- **Xóa button "Đăng xuất"** nằm trong mục "Thao tác" (nếu có hiển thị riêng, ẩn hoặc remove khỏi DOM luôn).
+Thay đổi form tạo hợp đồng: nhập Số điện thoại người thuê thay vì email, gọi API tìm tenant theo số điện thoại và lấy tenantId.
 
----
+1. Tạo file service
 
-## 2. Cập nhật **Header**
-- **Loại bỏ nút chuyển đổi theme sáng/tối** khỏi phần header (ẩn hoặc xóa hẳn component switch theme).
+Đường dẫn:
+e_motel_fe/lib/services/user.ts
 
----
+Yêu cầu:
 
-## 3. Cập nhật **Service gọi API phòng (rooms.ts)**
+Tất cả request tới API có tiền tố /api/v1.
 
-File: `e_motel_fe/lib/services/rooms.ts`
+Gửi header Authorization: Bearer <access_token> cho các endpoint yêu cầu xác thực.
 
-Sửa lại các hàm để gọi đúng endpoint từ backend theo bảng sau:
+Các hàm nên viết dạng async trả về data.
 
-| Chức năng | Phương thức | Endpoint | Yêu cầu đăng nhập |
-|------------|-------------|-----------|-------------------|
-| Xem tất cả phòng | GET | `/rooms` | Không |
-| Xem phòng trống | GET | `/rooms/vacant` | Không |
-| Xem phòng độc lập (không thuộc motel) | GET | `/rooms/standalone` | Không |
-| Xem phòng theo nhà trọ | GET | `/rooms/motel/:motelId` | Không |
-| Xem chi tiết 1 phòng | GET | `/rooms/:id` | Không |
-| Tạo phòng mới | POST | `/rooms` | Có |
-| Xem tất cả phòng trong nhà trọ của tôi | GET | `/rooms/my-rooms` | Có |
-| Cập nhật thông tin phòng | PUT | `/rooms/:id` | Có |
-| Cập nhật trạng thái phòng | PUT | `/rooms/:id/status` | Có |
-| Xóa phòng | DELETE | `/rooms/:id` | Có |
+Danh sách hàm đề xuất:
 
-> **Lưu ý:**
-> - Tất cả các request cần đăng nhập phải gửi kèm **accessToken** (qua header Authorization).
-> - Dữ liệu phòng trong page `/rooms` phải **lấy từ service thật**, không dùng localStorage hay mock data trong trình duyệt.
+export async function getAllUsers(): Promise<any> {}
+export async function getLandlords(): Promise<any> {}
+export async function getTenants(): Promise<any> {}
+export async function getProfile(): Promise<any> {}
+export async function searchByPhone(phone: string): Promise<any> {}
+export async function getUserById(id: string): Promise<any> {}
+export async function updateUser(id: string, payload: any): Promise<any> {}
+export async function deleteUser(id: string): Promise<any> {}
 
----
+2. Danh sách endpoint
+Phương thức	Endpoint	Quyền	Chức năng
+GET	/api/v1/users	ADMIN	Lấy danh sách tất cả user
+GET	/api/v1/users/landlords	ADMIN	Lấy danh sách landlords
+GET	/api/v1/users/tenants	ADMIN, LANDLORD	Lấy danh sách tenants
+GET	/api/v1/users/profile	AUTH (JWT)	Lấy profile người dùng hiện tại
+GET	/api/v1/users/search/phone?phone={phone}	ADMIN, LANDLORD	Tìm user theo số điện thoại
+GET	/api/v1/users/:id	AUTH (JWT)	Lấy chi tiết user theo id
+PUT	/api/v1/users/:id	AUTH (JWT)	Cập nhật user
+DELETE	/api/v1/users/:id	ADMIN	Xóa user
+3. Cập nhật form tạo hợp đồng
 
-## 4. Cập nhật trang **/rooms**
-- Xóa mọi phần code lưu phòng tạm trong localStorage, Zustand hoặc state mock.
-- Dùng các hàm trong `rooms.ts` để fetch dữ liệu thực từ backend.
-- Đảm bảo:
-  - Render danh sách phòng từ API `/rooms` (public view).
-  - Khi user đăng nhập là landlord/admin, trang có thể hiển thị danh sách phòng từ `/rooms/my-rooms`.
+Vị trí file:
+e_motel_fe/app/(dashboard)/contracts/create/page.tsx
 
----
+Thay đổi:
+
+Input Email người thuê → Số điện thoại người thuê.
+
+Khi người dùng nhập số điện thoại, gọi:
+
+GET /api/v1/users/search/phone?phone={phone}
+
+
+qua userService.searchByPhone(phone).
+
+Luồng xử lý:
+
+Người dùng nhập số điện thoại.
+
+Gọi API tìm người thuê.
+
+Nếu tìm thấy → hiển thị thông tin, gán tenantId.
+
+Nếu không thấy → hiển thị thông báo lỗi.
+
+Payload mẫu khi tạo hợp đồng:
+
+{
+  "roomId": "c8b42e17-97a9-4dc2-8e2d-98d3e4a41a55",
+  "tenantId": "e5a713d1-1ac4-4f9b-9d79-67c3d3c1b210",
+  "startDate": "2025-11-10T00:00:00.000Z",
+  "endDate": "2026-11-10T00:00:00.000Z",
+  "deposit": 2500000,
+  "paymentCycle": 1,
+  "documentUrl": "https://example.com/contract.pdf"
+}
+
+4. UI / UX đề xuất
+
+Hiển thị spinner khi đang tìm kiếm.
+
+Validate định dạng số điện thoại.
+
+Nếu tìm thấy → hiển thị “Chọn người thuê này”.
+
+Nếu không → hiển thị “Không tìm thấy người thuê”.
