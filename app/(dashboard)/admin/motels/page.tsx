@@ -26,6 +26,7 @@ export default function AdminMotelsPage() {
     ownerEmail: "",
     description: "",
     totalRooms: undefined,
+    monthlyRent: undefined,
     latitude: undefined,
     longitude: undefined,
     images: [],
@@ -74,6 +75,7 @@ export default function AdminMotelsPage() {
         address: String(form.address),
         description: form.description || "",
         totalRooms: form.totalRooms,
+        monthlyRent: form.monthlyRent,
         latitude: form.latitude,
         longitude: form.longitude,
         images: imageUrls,
@@ -96,6 +98,7 @@ export default function AdminMotelsPage() {
         ownerEmail: "",
         description: "",
         totalRooms: undefined,
+        monthlyRent: undefined,
         latitude: undefined,
         longitude: undefined,
         images: [],
@@ -263,6 +266,15 @@ export default function AdminMotelsPage() {
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   />
                 </div>
+                <div>
+                  <label className="mb-1 block text-sm">Giá thuê tháng</label>
+                  <input
+                    type="number"
+                    value={form.monthlyRent || ""}
+                    onChange={(e) => setForm((f) => ({ ...f, monthlyRent: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-sm">Ảnh nhà trọ</label>
@@ -317,7 +329,7 @@ export default function AdminMotelsPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
+                <button type="button" onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", totalRooms: undefined, monthlyRent: undefined, images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
                 <button onClick={save} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? "Đang tải..." : "Lưu"}</button>
               </div>
             </div>
