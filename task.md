@@ -3,7 +3,9 @@ Mục tiêu
 
 Tạo service user.ts gọi các endpoint của UserController (tiền tố /api/v1).
 
-Thay đổi form tạo hợp đồng: nhập Số điện thoại người thuê thay vì email, gọi API tìm tenant theo số điện thoại và lấy tenantId.
+Cập nhật form tạo hợp đồng: nhập Số điện thoại người thuê thay vì email.
+
+Khi nhập số điện thoại, gọi API tìm tenant và gán tenantId tự động.
 
 1. Tạo file service
 
@@ -12,22 +14,23 @@ e_motel_fe/lib/services/user.ts
 
 Yêu cầu:
 
-Tất cả request tới API có tiền tố /api/v1.
+Mọi request đều dùng tiền tố /api/v1.
 
-Gửi header Authorization: Bearer <access_token> cho các endpoint yêu cầu xác thực.
+Với các endpoint cần xác thực, thêm header:
+Authorization: Bearer <access_token>
 
-Các hàm nên viết dạng async trả về data.
+Các hàm viết dạng async, trả về data.
 
-Danh sách hàm đề xuất:
+Đề xuất cấu trúc hàm:
 
-export async function getAllUsers(): Promise<any> {}
-export async function getLandlords(): Promise<any> {}
-export async function getTenants(): Promise<any> {}
-export async function getProfile(): Promise<any> {}
-export async function searchByPhone(phone: string): Promise<any> {}
-export async function getUserById(id: string): Promise<any> {}
-export async function updateUser(id: string, payload: any): Promise<any> {}
-export async function deleteUser(id: string): Promise<any> {}
+export async function getAllUsers() {}
+export async function getLandlords() {}
+export async function getTenants() {}
+export async function getProfile() {}
+export async function searchByPhone(phone: string) {}
+export async function getUserById(id: string) {}
+export async function updateUser(id: string, payload: any) {}
+export async function deleteUser(id: string) {}
 
 2. Danh sách endpoint
 Phương thức	Endpoint	Quyền	Chức năng
@@ -36,23 +39,20 @@ GET	/api/v1/users/landlords	ADMIN	Lấy danh sách landlords
 GET	/api/v1/users/tenants	ADMIN, LANDLORD	Lấy danh sách tenants
 GET	/api/v1/users/profile	AUTH (JWT)	Lấy profile người dùng hiện tại
 GET	/api/v1/users/search/phone?phone={phone}	ADMIN, LANDLORD	Tìm user theo số điện thoại
-GET	/api/v1/users/:id	AUTH (JWT)	Lấy chi tiết user theo id
+GET	/api/v1/users/:id	AUTH (JWT)	Lấy chi tiết user
 PUT	/api/v1/users/:id	AUTH (JWT)	Cập nhật user
 DELETE	/api/v1/users/:id	ADMIN	Xóa user
 3. Cập nhật form tạo hợp đồng
 
-Vị trí file:
+File:
 e_motel_fe/app/(dashboard)/contracts/create/page.tsx
 
 Thay đổi:
 
-Input Email người thuê → Số điện thoại người thuê.
+Trường nhập Email người thuê → Số điện thoại người thuê.
 
-Khi người dùng nhập số điện thoại, gọi:
-
-GET /api/v1/users/search/phone?phone={phone}
-
-
+Khi người dùng nhập số điện thoại, gọi API:
+/api/v1/users/search/phone?phone={phone}
 qua userService.searchByPhone(phone).
 
 Luồng xử lý:
@@ -63,7 +63,7 @@ Gọi API tìm người thuê.
 
 Nếu tìm thấy → hiển thị thông tin, gán tenantId.
 
-Nếu không thấy → hiển thị thông báo lỗi.
+Nếu không thấy → báo lỗi và không cho gửi form.
 
 Payload mẫu khi tạo hợp đồng:
 
