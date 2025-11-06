@@ -7,6 +7,7 @@ export * from "./bills";
 export * from "./feedbacks";
 export * from "./notifications";
 export * from "./reports";
+export * from "./user";
 
 export { authService } from "./auth";
 export { profileService } from "./profile";
@@ -17,3 +18,4 @@ export { billService } from "./bills";
 export { feedbackService } from "./feedbacks";
 export { notificationService } from "./notifications";
 export { reportService } from "./reports";
+export { userService } from "./user";

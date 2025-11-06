@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
+import { userService } from "../../../../lib/services";
 
 export default function LandlordContractsPage() {
   useEnsureRole(["landlord"]);
@@ -23,6 +24,47 @@ export default function LandlordContractsPage() {
     paymentPeriod: "monthly",
     notes: "",
   });
+
+  const [tenantPhone, setTenantPhone] = useState("");
+  const [searchingTenant, setSearchingTenant] = useState(false);
+  const [tenantCandidate, setTenantCandidate] = useState<any | null>(null);
+  const [tenantMessage, setTenantMessage] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const phoneSearchTimer = useRef<number | null>(null);
+
+  const isValidPhone = (val: string) => /^0\d{9,10}$/.test(val.trim());
+
+  const handlePhoneChange = (val: string) => {
+    setTenantPhone(val);
+    setTenantId(null);
+    setTenantCandidate(null);
+    setTenantMessage(null);
+
+    if (!isValidPhone(val)) {
+      if (phoneSearchTimer.current) window.clearTimeout(phoneSearchTimer.current);
+      return;
+    }
+
+    if (phoneSearchTimer.current) window.clearTimeout(phoneSearchTimer.current);
+    setSearchingTenant(true);
+    phoneSearchTimer.current = window.setTimeout(async () => {
+      try {
+        const found = await userService.searchByPhone(val.trim());
+        if (found && (found as any).id) {
+          setTenantCandidate(found);
+          setTenantMessage(null);
+        } else {
+          setTenantCandidate(null);
+          setTenantMessage("Không tìm thấy người thuê");
+        }
+      } catch {
+        setTenantCandidate(null);
+        setTenantMessage("Không tìm thấy người thuê");
+      } finally {
+        setSearchingTenant(false);
+      }
+    }, 400);
+  };
 
   const landlordEmail = (() => {
     try {
@@ -49,8 +91,8 @@ export default function LandlordContractsPage() {
   };
 
   const save = () => {
-    if (!form.roomId || !form.tenantEmail || !form.startDate || !form.endDate) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường", type: "error" });
+    if (!form.roomId || !tenantId || !form.startDate || !form.endDate) {
+      push({ title: "Lỗi", description: "Vui lòng nhập số điện thoại người thuê hợp lệ và chọn người thuê", type: "error" });
       return;
     }
 
@@ -92,6 +134,10 @@ export default function LandlordContractsPage() {
     }
     setOpen(false);
     setEditing(null);
+    setTenantPhone("");
+    setTenantCandidate(null);
+    setTenantMessage(null);
+    setTenantId(null);
     setForm({
       roomId: "",
       tenantEmail: "",
@@ -262,13 +308,40 @@ ${contract.notes || "Không có ghi chú"}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm">Email người thuê</label>
+                  <label className="mb-1 block text-sm">Số điện thoại người thuê</label>
                   <input
-                    type="email"
-                    value={form.tenantEmail || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, tenantEmail: e.target.value }))}
+                    type="tel"
+                    value={tenantPhone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    placeholder="Ví dụ: 0912345678"
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   />
+                  <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                    {searchingTenant && <span>Đang tìm...</span>}
+                    {!searchingTenant && tenantMessage && <span>{tenantMessage}</span>}
+                  </div>
+                  {tenantCandidate && (
+                    <div className="mt-2 rounded-lg border border-black/10 p-3 text-sm dark:border-white/15">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{tenantCandidate.fullName || tenantCandidate.email || tenantCandidate.phone}</div>
+                          <div className="text-xs text-zinc-500">{tenantCandidate.email || ""}</div>
+                          <div className="text-xs text-zinc-500">{tenantCandidate.phone || ""}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTenantId(tenantCandidate.id);
+                            setForm((f) => ({ ...f, tenantEmail: tenantCandidate.email || "" }));
+                            push({ title: "Đã chọn người thuê", type: "success" });
+                          }}
+                          className="btn-primary"
+                        >
+                          Chọn người thuê này
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
