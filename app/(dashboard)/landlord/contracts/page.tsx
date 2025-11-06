@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
@@ -563,7 +563,7 @@ ${contract.notes || "Không có ghi chú"}
               </div>
               {selectedContract.notes && (
                 <div>
-                  <span className="text-zinc-500">Ghi ch���</span>
+                  <span className="text-zinc-500">Ghi ch��</span>
                   <div className="mt-1 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/5">
                     {selectedContract.notes}
                   </div>
