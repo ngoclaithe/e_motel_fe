@@ -308,13 +308,40 @@ ${contract.notes || "Không có ghi chú"}
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm">Email người thuê</label>
+                  <label className="mb-1 block text-sm">Số điện thoại người thuê</label>
                   <input
-                    type="email"
-                    value={form.tenantEmail || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, tenantEmail: e.target.value }))}
+                    type="tel"
+                    value={tenantPhone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    placeholder="Ví dụ: 0912345678"
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   />
+                  <div className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                    {searchingTenant && <span>Đang tìm...</span>}
+                    {!searchingTenant && tenantMessage && <span>{tenantMessage}</span>}
+                  </div>
+                  {tenantCandidate && (
+                    <div className="mt-2 rounded-lg border border-black/10 p-3 text-sm dark:border-white/15">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{tenantCandidate.fullName || tenantCandidate.email || tenantCandidate.phone}</div>
+                          <div className="text-xs text-zinc-500">{tenantCandidate.email || ""}</div>
+                          <div className="text-xs text-zinc-500">{tenantCandidate.phone || ""}</div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTenantId(tenantCandidate.id);
+                            setForm((f) => ({ ...f, tenantEmail: tenantCandidate.email || "" }));
+                            push({ title: "Đã chọn người thuê", type: "success" });
+                          }}
+                          className="btn-primary"
+                        >
+                          Chọn người thuê này
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
