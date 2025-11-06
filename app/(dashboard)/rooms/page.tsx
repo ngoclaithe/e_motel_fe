@@ -149,37 +149,36 @@ export default function RoomsPage() {
         number: String(form.number),
         area: Number(form.area),
         price: Number(form.price),
-        status: form.status as RoomStatus,
         amenities: form.amenities || [],
         images: imageUrls.length > 0 ? imageUrls : (form.images || []),
         motelId: form.motelId,
         bathroomType: form.bathroomType as BathroomType,
-        hasWaterHeater: form.hasWaterHeater || false,
+        hasWaterHeater: form.hasWaterHeater ?? false,
         furnishingStatus: form.furnishingStatus as FurnishingStatus,
-        hasAirConditioner: form.hasAirConditioner || false,
-        hasBalcony: form.hasBalcony || false,
-        hasWindow: form.hasWindow || true,
-        hasKitchen: form.hasKitchen || false,
-        hasRefrigerator: form.hasRefrigerator || false,
-        hasWashingMachine: form.hasWashingMachine || false,
-        hasWardrobe: form.hasWardrobe || false,
-        hasBed: form.hasBed || true,
-        hasDesk: form.hasDesk || false,
-        hasWifi: form.hasWifi || false,
-        maxOccupancy: form.maxOccupancy || 1,
-        allowPets: form.allowPets || false,
+        hasAirConditioner: form.hasAirConditioner ?? false,
+        hasBalcony: form.hasBalcony ?? false,
+        hasWindow: form.hasWindow ?? true,
+        hasKitchen: form.hasKitchen ?? false,
+        hasRefrigerator: form.hasRefrigerator ?? false,
+        hasWashingMachine: form.hasWashingMachine ?? false,
+        hasWardrobe: form.hasWardrobe ?? false,
+        hasBed: form.hasBed ?? true,
+        hasDesk: form.hasDesk ?? false,
+        hasWifi: form.hasWifi ?? false,
+        maxOccupancy: form.maxOccupancy ?? 1,
+        allowPets: form.allowPets ?? false,
         allowCooking: form.allowCooking ?? true,
-        allowOppositeGender: form.allowOppositeGender || false,
-        floor: form.floor || 1,
-        electricityCostPerKwh: form.electricityCostPerKwh || 0,
-        waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
-        internetCost: form.internetCost || 0,
-        parkingCost: form.parkingCost || 0,
-        serviceFee: form.serviceFee || 0,
-        paymentCycleMonths: form.paymentCycleMonths || 1,
-        depositMonths: form.depositMonths || 0,
-        description: form.description || "",
-        availableFrom: form.availableFrom || "",
+        allowOppositeGender: form.allowOppositeGender ?? false,
+        floor: form.floor ?? 1,
+        electricityCostPerKwh: form.electricityCostPerKwh ?? 0,
+        waterCostPerCubicMeter: form.waterCostPerCubicMeter ?? 0,
+        internetCost: form.internetCost ?? 0,
+        parkingCost: form.parkingCost ?? 0,
+        serviceFee: form.serviceFee ?? 0,
+        paymentCycleMonths: form.paymentCycleMonths ?? 1,
+        depositMonths: form.depositMonths ?? 0,
+        description: form.description ?? "",
+        availableFrom: form.availableFrom ? `${form.availableFrom}T00:00:00.000Z` : undefined,
       };
 
       if (editing) {
@@ -193,8 +192,9 @@ export default function RoomsPage() {
       await loadRooms();
       closeModal();
     } catch (error) {
-      console.error(error);
-      push({ title: "Lỗi", description: "Không thể lưu phòng", type: "error" });
+      const err = error as any;
+      const detail = typeof err?.data === 'string' ? err.data : (err?.data?.message || err?.message || "Không thể lưu phòng");
+      push({ title: "Lỗi", description: detail, type: "error" });
     } finally {
       setUploading(false);
     }
