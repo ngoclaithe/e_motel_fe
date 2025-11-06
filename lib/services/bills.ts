@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Bill } from "../types";
+import type { Bill } from "../../types";
 
 export interface CreateBillRequest {
   tenantEmail: string;

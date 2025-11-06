@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Contract } from "../types";
+import type { Contract } from "../../types";
 
 export interface CreateContractRequest {
   tenantEmail: string;

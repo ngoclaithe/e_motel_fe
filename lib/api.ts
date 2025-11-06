@@ -8,15 +8,12 @@ function getToken(): string | null {
   try {
     const keys = ["emotel_token", "token", "access_token", "accessToken", "auth_token"];
 
-    // Check localStorage and sessionStorage
     for (const storage of [localStorage, sessionStorage]) {
       try {
-        // direct keys
         for (const k of keys) {
           const v = storage.getItem(k);
           if (typeof v === "string" && v.trim()) return sanitize(v);
         }
-        // nested session object
         const session = storage.getItem("emotel_session");
         if (session) {
           const obj = JSON.parse(session) as unknown;
@@ -29,11 +26,9 @@ function getToken(): string | null {
           }
         }
       } catch {
-        // ignore per-storage errors
       }
     }
 
-    // Check cookies as a fallback
     if (typeof document !== "undefined" && typeof document.cookie === "string" && document.cookie) {
       const cookieMap: Record<string, string> = {};
       document.cookie.split(";").forEach((entry) => {
@@ -50,12 +45,11 @@ function getToken(): string | null {
       }
     }
   } catch {
-    // ignore
   }
   return null;
 }
 
-async function request(path: string, init: RequestInit = {}): Promise<unknown> {
+async function request<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
   const base = getBaseUrl();
   const url = path.match(/^https?:\/\//i) ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 
@@ -65,7 +59,6 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
 
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  // Default content-type for non-GET requests with a body
   const method = (init.method || "GET").toUpperCase();
   if (method !== "GET" && init.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -79,7 +72,6 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
     try {
       data = JSON.parse(text);
     } catch {
-      // keep raw text
     }
     const err = new Error(res.statusText || "Request failed") as Record<string, unknown> & Error;
     err.status = res.status;
@@ -87,18 +79,33 @@ async function request(path: string, init: RequestInit = {}): Promise<unknown> {
     throw err;
   }
 
-  if (res.status === 204) return null;
+  if (res.status === 204) return null as T;
   const contentType = res.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
-    return res.json() as Promise<unknown>;
+    return res.json() as Promise<T>;
   }
-  return res.text() as Promise<string>;
+  return res.text() as Promise<T>;
 }
 
 export const api = {
   request,
-  get: (path: string, init?: RequestInit) => request(path, { ...(init || {}), method: "GET" }),
-  post: (path: string, body?: unknown, init?: RequestInit) => request(path, { ...(init || {}), method: "POST", body: body && typeof body === "string" ? body : JSON.stringify(body) }),
-  put: (path: string, body?: unknown, init?: RequestInit) => request(path, { ...(init || {}), method: "PUT", body: body && typeof body === "string" ? body : JSON.stringify(body) }),
-  del: (path: string, init?: RequestInit) => request(path, { ...(init || {}), method: "DELETE", ...(init || {}) }),
+  get: <T = unknown>(path: string, init?: RequestInit) => 
+    request<T>(path, { ...(init || {}), method: "GET" }),
+  
+  post: <T = unknown>(path: string, body?: unknown, init?: RequestInit) => 
+    request<T>(path, { 
+      ...(init || {}), 
+      method: "POST", 
+      body: body && typeof body === "string" ? body : JSON.stringify(body) 
+    }),
+  
+  put: <T = unknown>(path: string, body?: unknown, init?: RequestInit) => 
+    request<T>(path, { 
+      ...(init || {}), 
+      method: "PUT", 
+      body: body && typeof body === "string" ? body : JSON.stringify(body) 
+    }),
+  
+  del: <T = unknown>(path: string, init?: RequestInit) => 
+    request<T>(path, { ...(init || {}), method: "DELETE" }),
 };

@@ -26,7 +26,6 @@ export const userService = {
     const query = new URLSearchParams({ phone });
     const res = await api.get(`/api/v1/users/search/phone?${query.toString()}`);
 
-    // API may return an array of users; pick the first match and normalize fields
     try {
       if (Array.isArray(res)) {
         if (res.length === 0) return null;
@@ -51,7 +50,6 @@ export const userService = {
         };
       }
     } catch {
-      // fallthrough to null
     }
 
     return null;

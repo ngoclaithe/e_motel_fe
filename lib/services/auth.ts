@@ -5,12 +5,17 @@ export interface LoginRequest {
   password: string;
 }
 
+// export interface LoginResponse {
+//   token: string;
+//   user: {
+//     email: string;
+//     role: string;
+//   };
+// }
+
 export interface LoginResponse {
-  token: string;
-  user: {
-    email: string;
-    role: string;
-  };
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface RegisterRequest {

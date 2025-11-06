@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Feedback } from "../types";
+import type { Feedback } from "../../types";
 
 export interface CreateFeedbackRequest {
   title: string;

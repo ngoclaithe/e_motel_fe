@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Motel } from "../types";
+import type { Motel } from "../../types";
 
 export interface CreateMotelRequest {
   name: string;
@@ -116,12 +116,11 @@ export const motelService = {
   listMotels: async (params: MotelFilterParams = {}): Promise<MotelListResponse> => {
     const defaultParams = { page: 1, limit: 10, ...params };
     const queryString = buildQueryString(defaultParams);
-    return api.get(`/api/v1/motels${queryString}`);
+    return api.get<MotelListResponse>(`/api/v1/motels${queryString}`);
   },
 
   getMyMotels: async (): Promise<MotelListResponse> => {
-    const response = await api.get(`/api/v1/motels/my-motels`);
-    // API returns array directly, wrap it in expected format
+    const response = await api.get<Motel[] | MotelListResponse>(`/api/v1/motels/my-motels`); 
     if (Array.isArray(response)) {
       return {
         data: response,
@@ -135,18 +134,18 @@ export const motelService = {
   },
 
   getMotel: async (id: string): Promise<Motel> => {
-    return api.get(`/api/v1/motels/${id}`);
+    return api.get<Motel>(`/api/v1/motels/${id}`); 
   },
 
   createMotel: async (data: CreateMotelRequest): Promise<Motel> => {
-    return api.post("/api/v1/motels", data);
+    return api.post<Motel>("/api/v1/motels", data);
   },
 
   updateMotel: async (id: string, data: UpdateMotelRequest): Promise<Motel> => {
-    return api.put(`/api/v1/motels/${id}`, data);
+    return api.put<Motel>(`/api/v1/motels/${id}`, data);
   },
 
   deleteMotel: async (id: string): Promise<{ message: string }> => {
-    return api.del(`/api/v1/motels/${id}`);
+    return api.del<{ message: string }>(`/api/v1/motels/${id}`); 
   },
 };
