@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
