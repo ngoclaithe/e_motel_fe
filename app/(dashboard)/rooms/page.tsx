@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useEffect, useMemo, useState } from "react";
 import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
+import { roomService, motelService } from "../../../lib/services";
 
 const COMMON_AMENITIES = [
   "Cửa sổ lớn",
@@ -19,11 +19,14 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
-  useEnsureRole(["landlord", "tenant"]);
+  useEnsureRole(["landlord", "tenant", "admin"]);
   const role = useCurrentRole();
   const { push } = useToast();
-  const [rooms, setRooms] = useLocalStorage<Room[]>("emotel_rooms", []);
-  const [motels, setMotels] = useLocalStorage<Motel[]>("emotel_motels", []);
+
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [motels, setMotels] = useState<Motel[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [status, setStatus] = useState<RoomStatus | "all">("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Room | null>(null);
@@ -99,14 +102,31 @@ export default function RoomsPage() {
     }));
   };
 
-  const toggleAmenity = (amenity: string) => {
-    setForm((f) => ({
-      ...f,
-      amenities: (f.amenities || []).includes(amenity)
-        ? (f.amenities || []).filter((a) => a !== amenity)
-        : [...(f.amenities || []), amenity],
-    }));
+  const loadRooms = async () => {
+    setLoading(true);
+    try {
+      const data = role === "landlord" || role === "admin" ? await roomService.myRooms() : await roomService.listAll();
+      setRooms(Array.isArray(data) ? data : []);
+    } catch (e) {
+      push({ title: "Lỗi", description: "Không thể tải danh sách phòng", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const loadMotels = async () => {
+    try {
+      const res = await motelService.listMotels({ page: 1, limit: 100 });
+      const data = Array.isArray((res as any)?.data) ? (res as any).data : Array.isArray(res) ? (res as Motel[]) : [];
+      setMotels(data);
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadRooms();
+    loadMotels();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {
@@ -125,88 +145,52 @@ export default function RoomsPage() {
         }
       }
 
+      const basePayload = {
+        number: String(form.number),
+        area: Number(form.area),
+        price: Number(form.price),
+        status: form.status as RoomStatus,
+        amenities: form.amenities || [],
+        images: imageUrls.length > 0 ? imageUrls : (form.images || []),
+        motelId: form.motelId,
+        bathroomType: form.bathroomType as BathroomType,
+        hasWaterHeater: form.hasWaterHeater || false,
+        furnishingStatus: form.furnishingStatus as FurnishingStatus,
+        hasAirConditioner: form.hasAirConditioner || false,
+        hasBalcony: form.hasBalcony || false,
+        hasWindow: form.hasWindow || true,
+        hasKitchen: form.hasKitchen || false,
+        hasRefrigerator: form.hasRefrigerator || false,
+        hasWashingMachine: form.hasWashingMachine || false,
+        hasWardrobe: form.hasWardrobe || false,
+        hasBed: form.hasBed || true,
+        hasDesk: form.hasDesk || false,
+        hasWifi: form.hasWifi || false,
+        maxOccupancy: form.maxOccupancy || 1,
+        allowPets: form.allowPets || false,
+        allowCooking: form.allowCooking ?? true,
+        allowOppositeGender: form.allowOppositeGender || false,
+        floor: form.floor || 1,
+        electricityCostPerKwh: form.electricityCostPerKwh || 0,
+        waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
+        internetCost: form.internetCost || 0,
+        parkingCost: form.parkingCost || 0,
+        serviceFee: form.serviceFee || 0,
+        paymentCycleMonths: form.paymentCycleMonths || 1,
+        depositMonths: form.depositMonths || 0,
+        description: form.description || "",
+        availableFrom: form.availableFrom || "",
+      };
+
       if (editing) {
-        const updatedRoom: Room = {
-          ...editing,
-          number: String(form.number),
-          area: Number(form.area),
-          price: Number(form.price),
-          status: form.status as RoomStatus,
-          amenities: form.amenities || [],
-          images: imageUrls.length > 0 ? imageUrls : form.images,
-          motelId: form.motelId,
-          bathroomType: form.bathroomType as BathroomType,
-          hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as FurnishingStatus,
-          hasAirConditioner: form.hasAirConditioner || false,
-          hasBalcony: form.hasBalcony || false,
-          hasWindow: form.hasWindow || true,
-          hasKitchen: form.hasKitchen || false,
-          hasRefrigerator: form.hasRefrigerator || false,
-          hasWashingMachine: form.hasWashingMachine || false,
-          hasWardrobe: form.hasWardrobe || false,
-          hasBed: form.hasBed || true,
-          hasDesk: form.hasDesk || false,
-          hasWifi: form.hasWifi || false,
-          maxOccupancy: form.maxOccupancy || 1,
-          allowPets: form.allowPets || false,
-          allowCooking: form.allowCooking ?? true,
-          allowOppositeGender: form.allowOppositeGender || false,
-          floor: form.floor || 1,
-          electricityCostPerKwh: form.electricityCostPerKwh || 0,
-          waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
-          internetCost: form.internetCost || 0,
-          parkingCost: form.parkingCost || 0,
-          serviceFee: form.serviceFee || 0,
-          paymentCycleMonths: form.paymentCycleMonths || 1,
-          depositMonths: form.depositMonths || 0,
-          description: form.description || "",
-          availableFrom: form.availableFrom || "",
-        };
-        setRooms(rooms.map((r) => (r.id === editing.id ? updatedRoom : r)));
+        await roomService.updateRoom(editing.id, basePayload as any);
         push({ title: "Cập nhật phòng thành công", type: "success" });
       } else {
-        const newRoom: Room = {
-          id: crypto.randomUUID(),
-          number: String(form.number),
-          area: Number(form.area),
-          price: Number(form.price),
-          status: form.status as RoomStatus,
-          amenities: form.amenities || [],
-          images: imageUrls.length > 0 ? imageUrls : [],
-          motelId: form.motelId,
-          bathroomType: form.bathroomType as BathroomType,
-          hasWaterHeater: form.hasWaterHeater || false,
-          furnishingStatus: form.furnishingStatus as FurnishingStatus,
-          hasAirConditioner: form.hasAirConditioner || false,
-          hasBalcony: form.hasBalcony || false,
-          hasWindow: form.hasWindow || true,
-          hasKitchen: form.hasKitchen || false,
-          hasRefrigerator: form.hasRefrigerator || false,
-          hasWashingMachine: form.hasWashingMachine || false,
-          hasWardrobe: form.hasWardrobe || false,
-          hasBed: form.hasBed || true,
-          hasDesk: form.hasDesk || false,
-          hasWifi: form.hasWifi || false,
-          maxOccupancy: form.maxOccupancy || 1,
-          allowPets: form.allowPets || false,
-          allowCooking: form.allowCooking ?? true,
-          allowOppositeGender: form.allowOppositeGender || false,
-          floor: form.floor || 1,
-          electricityCostPerKwh: form.electricityCostPerKwh || 0,
-          waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
-          internetCost: form.internetCost || 0,
-          parkingCost: form.parkingCost || 0,
-          serviceFee: form.serviceFee || 0,
-          paymentCycleMonths: form.paymentCycleMonths || 1,
-          depositMonths: form.depositMonths || 0,
-          description: form.description || "",
-          availableFrom: form.availableFrom || "",
-          createdAt: new Date().toISOString(),
-        };
-        setRooms([newRoom, ...rooms]);
+        await roomService.createRoom(basePayload as any);
         push({ title: "Tạo phòng thành công", type: "success" });
       }
+
+      await loadRooms();
       closeModal();
     } catch (error) {
       console.error(error);
@@ -216,10 +200,15 @@ export default function RoomsPage() {
     }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Xóa phòng này?")) return;
-    setRooms(rooms.filter((r) => r.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+    try {
+      await roomService.deleteRoom(id);
+      await loadRooms();
+      push({ title: "Đã xóa", type: "info" });
+    } catch {
+      push({ title: "Lỗi", description: "Không thể xóa phòng", type: "error" });
+    }
   };
 
   const openEditModal = (room: Room) => {
@@ -285,54 +274,58 @@ export default function RoomsPage() {
             <option value="OCCUPIED">Đang thuê</option>
             <option value="MAINTENANCE">Bảo trì</option>
           </select>
-          {role === 'landlord' && (
+          {(role === 'landlord' || role === 'admin') && (
             <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((r) => (
-          <div key={r.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-base font-semibold">Phòng {r.number}</div>
-                <div className="mt-0.5 text-xs text-zinc-500">{r.area} m² • {r.price.toLocaleString()}đ</div>
+      {loading ? (
+        <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Đang tải...</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((r) => (
+            <div key={r.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-base font-semibold">Phòng {r.number}</div>
+                  <div className="mt-0.5 text-xs text-zinc-500">{r.area} m² • {Number(r.price).toLocaleString()}đ</div>
+                </div>
+                <span className="rounded-full px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-300" data-status={r.status}>
+                  {r.status === "VACANT" && "Trống"}
+                  {r.status === "OCCUPIED" && "Đang thuê"}
+                  {r.status === "MAINTENANCE" && "Bảo trì"}
+                </span>
               </div>
-              <span className="rounded-full px-2 py-0.5 text-xs text-zinc-700 dark:text-zinc-300" data-status={r.status}>
-                {r.status === "VACANT" && "Trống"}
-                {r.status === "OCCUPIED" && "Đang thuê"}
-                {r.status === "MAINTENANCE" && "Bảo trì"}
-              </span>
+              {r.amenities && r.amenities.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {r.amenities.slice(0, 2).map((amenity) => (
+                    <span key={amenity} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      {amenity}
+                    </span>
+                  ))}
+                  {r.amenities.length > 2 && (
+                    <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      +{r.amenities.length - 2}
+                    </span>
+                  )}
+                </div>
+              )}
+              {(role === 'landlord' || role === 'admin') && (
+                <div className="mt-3 flex gap-2">
+                  <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                  <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                </div>
+              )}
             </div>
-            {r.amenities && r.amenities.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1">
-                {r.amenities.slice(0, 2).map((amenity) => (
-                  <span key={amenity} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    {amenity}
-                  </span>
-                ))}
-                {r.amenities.length > 2 && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    +{r.amenities.length - 2}
-                  </span>
-                )}
-              </div>
-            )}
-            {role === 'landlord' && (
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => openEditModal(r)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                <button onClick={() => remove(r.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
-              </div>
-            )}
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù hợp</div>
-        )}
-      </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Không có phòng phù hợp</div>
+          )}
+        </div>
+      )}
 
-      {open && role === 'landlord' && (
+      {open && (role === 'landlord' || role === 'admin') && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
@@ -341,7 +334,6 @@ export default function RoomsPage() {
 
             <div className="flex-1 overflow-y-auto px-6 py-4">
               <div className="space-y-6">
-                {/* Thông tin cơ bản */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Thông tin cơ bản</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -445,7 +437,6 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Chi tiết phòng */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Chi tiết phòng</h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -516,7 +507,6 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Chính sách */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Chính sách phòng</h3>
                   <div className="space-y-2">
@@ -553,26 +543,6 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Tiện ích & Tính năng */}
-                <div className="border-b border-black/10 pb-4 dark:border-white/15">
-                  <h3 className="mb-4 text-sm font-semibold">Tiện ích & Tính năng</h3>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {COMMON_AMENITIES.map((amenity) => (
-                      <label key={amenity} className="flex items-center gap-2 cursor-pointer rounded-lg border border-black/10 p-2 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
-                        <input
-                          type="checkbox"
-                          checked={(form.amenities || []).includes(amenity)}
-                          onChange={() => toggleAmenity(amenity)}
-                          className="rounded"
-                          disabled={uploading}
-                        />
-                        <span className="text-sm">{amenity}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Chi phí & Điều khoản */}
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Chi phí & Điều khoản</h3>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -649,7 +619,6 @@ export default function RoomsPage() {
                   </div>
                 </div>
 
-                {/* Hình ảnh */}
                 <div>
                   <h3 className="mb-4 text-sm font-semibold">Hình ảnh phòng</h3>
                   <input
@@ -666,6 +635,7 @@ export default function RoomsPage() {
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                         {form.images.map((img, idx) => (
                           <div key={idx} className="group relative rounded-lg overflow-hidden bg-black/10 dark:bg-white/10">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={img} alt={`preview-${idx}`} className="w-full h-20 object-cover" />
                             <button
                               type="button"

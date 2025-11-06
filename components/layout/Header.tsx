@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ThemeToggle from "../theme/ThemeToggle";
 import { useCurrentRole, useAuth } from "../../hooks/useAuth";
 import type { UserRole } from "../../types";
 
@@ -37,7 +36,6 @@ export default function Header() {
             Vai trò: {label}
           </span>
         )}
-        <ThemeToggle />
         <button onClick={() => logout()} className="ml-2 rounded-lg border border-black/10 px-3 py-1 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Đăng xuất</button>
       </div>
     </header>
