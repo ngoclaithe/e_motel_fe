@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Room } from "../types";
+import type { Room } from "../../types";
 
 export interface CreateRoomRequest {
   number: string;
@@ -38,45 +38,90 @@ export interface CreateRoomRequest {
 }
 
 export interface UpdateRoomRequest {
+  number?: string;
+  area?: number;
   price?: number;
   status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
+  motelId?: string;
   tenantId?: string;
+  bathroomType?: string;
+  hasWaterHeater?: boolean;
+  furnishingStatus?: string;
+  hasAirConditioner?: boolean;
+  hasBalcony?: boolean;
+  hasWindow?: boolean;
+  hasKitchen?: boolean;
   hasRefrigerator?: boolean;
   hasWashingMachine?: boolean;
+  hasWardrobe?: boolean;
+  hasBed?: boolean;
+  hasDesk?: boolean;
+  hasWifi?: boolean;
+  maxOccupancy?: number;
+  allowPets?: boolean;
+  allowCooking?: boolean;
+  allowOppositeGender?: boolean;
+  floor?: number;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  paymentCycleMonths?: number;
+  depositMonths?: number;
   description?: string;
   amenities?: string[];
+  availableFrom?: string;
   images?: string[];
 }
 
-export interface RoomListResponse {
-  data: Room[];
-  total: number;
-  page: number;
-  limit: number;
+async function normalizeList(res: unknown): Promise<Room[]> {
+  if (Array.isArray(res)) return res as Room[];
+  if (res && typeof res === "object") {
+    const obj = res as Record<string, unknown>;
+    if (Array.isArray(obj.data)) return obj.data as Room[];
+    if (Array.isArray(obj.items)) return obj.items as Room[];
+  }
+  return [];
 }
 
 export const roomService = {
-  listRooms: async (page = 1, limit = 10, motelId?: string): Promise<RoomListResponse> => {
-    const query = new URLSearchParams();
-    query.append("page", page.toString());
-    query.append("limit", limit.toString());
-    if (motelId) query.append("motelId", motelId);
-    return api.get(`/api/v1/rooms?${query.toString()}`);
+  // Public
+  listAll: async (): Promise<Room[]> => {
+    const res = await api.get(`/rooms`);
+    return normalizeList(res);
   },
-
+  listVacant: async (): Promise<Room[]> => {
+    const res = await api.get(`/rooms/vacant`);
+    return normalizeList(res);
+  },
+  listStandalone: async (): Promise<Room[]> => {
+    const res = await api.get(`/rooms/standalone`);
+    return normalizeList(res);
+  },
+  listByMotel: async (motelId: string): Promise<Room[]> => {
+    const res = await api.get(`/rooms/motel/${motelId}`);
+    return normalizeList(res);
+  },
   getRoom: async (id: string): Promise<Room> => {
-    return api.get(`/api/v1/rooms/${id}`);
+    return api.get(`/rooms/${id}`) as Promise<Room>;
   },
 
+  // Auth required
   createRoom: async (data: CreateRoomRequest): Promise<Room> => {
-    return api.post("/api/v1/rooms", data);
+    return api.post(`/rooms`, data) as Promise<Room>;
   },
-
+  myRooms: async (): Promise<Room[]> => {
+    const res = await api.get(`/rooms/my-rooms`);
+    return normalizeList(res);
+  },
   updateRoom: async (id: string, data: UpdateRoomRequest): Promise<Room> => {
-    return api.put(`/api/v1/rooms/${id}`, data);
+    return api.put(`/rooms/${id}`, data) as Promise<Room>;
   },
-
-  deleteRoom: async (id: string): Promise<{ message: string }> => {
-    return api.del(`/api/v1/rooms/${id}`);
+  updateStatus: async (id: string, status: "VACANT" | "OCCUPIED" | "MAINTENANCE"): Promise<Room> => {
+    return api.put(`/rooms/${id}/status`, { status }) as Promise<Room>;
+  },
+  deleteRoom: async (id: string): Promise<{ message?: string } | null> => {
+    return api.del(`/rooms/${id}`) as Promise<{ message?: string } | null>;
   },
 };
