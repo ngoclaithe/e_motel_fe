@@ -91,13 +91,13 @@ export default function LandlordContractsPage() {
   };
 
   const save = () => {
-    if (!form.roomId || !form.tenantEmail || !form.startDate || !form.endDate) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường", type: "error" });
+    if (!form.roomId || !tenantId || !form.startDate || !form.endDate) {
+      push({ title: "Lỗi", description: "Vui lòng nhập số điện thoại người thuê hợp lệ và chọn người thuê", type: "error" });
       return;
     }
 
     if (new Date(form.startDate) >= new Date(form.endDate)) {
-      push({ title: "Lỗi", description: "Ngày kết thúc phải sau ngày b��t đầu", type: "error" });
+      push({ title: "Lỗi", description: "Ngày kết thúc phải sau ngày bắt đầu", type: "error" });
       return;
     }
 
@@ -147,7 +147,7 @@ export default function LandlordContractsPage() {
   };
 
   const remove = (id: string) => {
-    if (!confirm("Xóa hợp đồng này?")) return;
+    if (!confirm("Xóa hợp đồng n��y?")) return;
     setContracts(contracts.filter((c) => c.id !== id));
     push({ title: "Đã xóa", type: "info" });
   };
