@@ -6,6 +6,7 @@ export interface CreateMotelRequest {
   address: string;
   description?: string;
   totalRooms?: number;
+  monthlyRent?: number;
   latitude?: number;
   longitude?: number;
   alleyType?: string;
@@ -40,6 +41,7 @@ export interface UpdateMotelRequest {
   address?: string;
   description?: string;
   totalRooms?: number;
+  monthlyRent?: number;
   latitude?: number;
   longitude?: number;
   alleyType?: string;

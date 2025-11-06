@@ -74,6 +74,43 @@ export default function LandlordContractsPage() {
     loadMyData();
   }, [open]);
 
+  // Auto-load rental price and deposit when room/motel is selected
+  const handleRoomChange = (roomId: string) => {
+    setForm((f) => ({ ...f, roomId }));
+
+    if (!roomId) return;
+
+    const selectedRoom = rooms.find((r) => r.id === roomId);
+    if (selectedRoom) {
+      const rentalPrice = selectedRoom.price || 1000000;
+      const depositMonths = selectedRoom.depositMonths || 2;
+      setForm((f) => ({
+        ...f,
+        roomId,
+        monthlyPrice: rentalPrice,
+        deposit: rentalPrice * depositMonths,
+      }));
+    }
+  };
+
+  const handleMotelChange = (motelId: string) => {
+    setForm((f) => ({ ...f, roomId: motelId }));
+
+    if (!motelId) return;
+
+    const selectedMotel = motels.find((m) => m.id === motelId);
+    if (selectedMotel) {
+      const rentalPrice = selectedMotel.monthlyRent || 1000000;
+      const depositMonths = selectedMotel.depositMonths || 2;
+      setForm((f) => ({
+        ...f,
+        roomId: motelId,
+        monthlyPrice: rentalPrice,
+        deposit: rentalPrice * depositMonths,
+      }));
+    }
+  };
+
   const handlePhoneChange = (val: string) => {
     setTenantPhone(val);
     setTenantId(null);
@@ -354,7 +391,7 @@ ${contract.notes || "Kh��ng có ghi chú"}
                     {selectType === 'room' ? (
                       <select
                         value={form.roomId || ''}
-                        onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                        onChange={(e) => handleRoomChange(e.target.value)}
                         className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                       >
                         <option value="">-- Chọn phòng --</option>
@@ -366,13 +403,13 @@ ${contract.notes || "Kh��ng có ghi chú"}
                     ) : (
                       <select
                         value={form.roomId || ''}
-                        onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                        onChange={(e) => handleMotelChange(e.target.value)}
                         className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                       >
                         <option value="">-- Chọn nhà trọ --</option>
                         {loadingMotels && <option>Đang tải...</option>}
                         {!loadingMotels && motels.map((m) => (
-                          <option key={m.id} value={m.id}>{m.name}</option>
+                          <option key={m.id} value={m.id}>{m.name}{m.monthlyRent ? ` — ${Number(m.monthlyRent).toLocaleString()}đ` : ''}</option>
                         ))}
                       </select>
                     )}
