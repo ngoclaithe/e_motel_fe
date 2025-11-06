@@ -5,7 +5,7 @@ import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
-import { userService } from "../../../../lib/services";
+import { userService, motelService, roomService } from "../../../../lib/services";
 
 export default function LandlordContractsPage() {
   useEnsureRole(["landlord"]);
@@ -33,6 +33,41 @@ export default function LandlordContractsPage() {
   const phoneSearchTimer = useRef<number | null>(null);
 
   const isValidPhone = (val: string) => /^0\d{9,10}$/.test(val.trim());
+
+  // Motels and rooms for selection
+  const [selectType, setSelectType] = useState<'room' | 'motel'>('room');
+  const [motels, setMotels] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loadingMotels, setLoadingMotels] = useState(false);
+  const [loadingRooms, setLoadingRooms] = useState(false);
+
+  const loadMyData = async () => {
+    setLoadingMotels(true);
+    setLoadingRooms(true);
+    try {
+      const m = await motelService.getMyMotels();
+      setMotels(Array.isArray(m?.data) ? m.data : []);
+    } catch {
+      setMotels([]);
+    } finally {
+      setLoadingMotels(false);
+    }
+
+    try {
+      const r = await roomService.myRooms();
+      setRooms(Array.isArray(r) ? r : []);
+    } catch {
+      setRooms([]);
+    } finally {
+      setLoadingRooms(false);
+    }
+  };
+
+  // load once when component mounts
+  if (typeof window !== 'undefined' && motels.length === 0 && rooms.length === 0) {
+    // avoid calling in SSR
+    loadMyData();
+  }
 
   const handlePhoneChange = (val: string) => {
     setTenantPhone(val);
@@ -300,12 +335,43 @@ ${contract.notes || "Không có ghi chú"}
             <div className="space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm">Phòng</label>
-                  <input
-                    value={form.roomId || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  />
+                  <label className="mb-1 block text-sm">Phòng / Nhà trọ</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectType}
+                      onChange={(e) => setSelectType(e.target.value as 'room' | 'motel')}
+                      className="rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    >
+                      <option value="room">Phòng</option>
+                      <option value="motel">Nhà trọ</option>
+                    </select>
+
+                    {selectType === 'room' ? (
+                      <select
+                        value={form.roomId || ''}
+                        onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                        className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                      >
+                        <option value="">-- Chọn phòng --</option>
+                        {loadingRooms && <option>Đang tải...</option>}
+                        {!loadingRooms && rooms.map((r) => (
+                          <option key={r.id} value={r.id}>{r.number}{r.price ? ` — ${Number(r.price).toLocaleString()}đ` : ''}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <select
+                        value={form.roomId || ''}
+                        onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                        className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                      >
+                        <option value="">-- Chọn nhà trọ --</option>
+                        {loadingMotels && <option>Đang tải...</option>}
+                        {!loadingMotels && motels.map((m) => (
+                          <option key={m.id} value={m.id}>{m.name}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1 block text-sm">Số điện thoại người thuê</label>
@@ -497,7 +563,7 @@ ${contract.notes || "Không có ghi chú"}
               </div>
               {selectedContract.notes && (
                 <div>
-                  <span className="text-zinc-500">Ghi chú</span>
+                  <span className="text-zinc-500">Ghi ch���</span>
                   <div className="mt-1 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/5">
                     {selectedContract.notes}
                   </div>
