@@ -9,6 +9,7 @@ export interface Motel {
   address: string;
   description?: string;
   totalRooms?: number;
+  monthlyRent?: number;
   latitude?: number;
   longitude?: number;
   alleyType?: AlleyType;
