@@ -69,7 +69,6 @@ export interface Room {
   allowCooking?: boolean;
   allowOppositeGender?: boolean;
   floor?: number;
-  direction?: string;
   electricityCostPerKwh?: number;
   waterCostPerCubicMeter?: number;
   internetCost?: number;

@@ -54,7 +54,6 @@ export default function AdminRoomsPage() {
     allowCooking: true,
     allowOppositeGender: false,
     floor: 1,
-    direction: "",
     electricityCostPerKwh: 0,
     waterCostPerCubicMeter: 0,
     internetCost: 0,
@@ -153,7 +152,6 @@ export default function AdminRoomsPage() {
           allowCooking: form.allowCooking ?? true,
           allowOppositeGender: form.allowOppositeGender || false,
           floor: form.floor || 1,
-          direction: form.direction || "",
           electricityCostPerKwh: form.electricityCostPerKwh || 0,
           waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
           internetCost: form.internetCost || 0,
@@ -194,7 +192,6 @@ export default function AdminRoomsPage() {
           allowCooking: form.allowCooking ?? true,
           allowOppositeGender: form.allowOppositeGender || false,
           floor: form.floor || 1,
-          direction: form.direction || "",
           electricityCostPerKwh: form.electricityCostPerKwh || 0,
           waterCostPerCubicMeter: form.waterCostPerCubicMeter || 0,
           internetCost: form.internetCost || 0,
@@ -260,7 +257,6 @@ export default function AdminRoomsPage() {
       allowCooking: true,
       allowOppositeGender: false,
       floor: 1,
-      direction: "",
       electricityCostPerKwh: 0,
       waterCostPerCubicMeter: 0,
       internetCost: 0,
@@ -390,17 +386,6 @@ export default function AdminRoomsPage() {
                         value={form.floor || 1}
                         onChange={(e) => setForm((f) => ({ ...f, floor: Number(e.target.value) }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        disabled={uploading}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-medium">Hướng (VD: Đông Nam)</label>
-                      <input
-                        value={form.direction || ""}
-                        onChange={(e) => setForm((f) => ({ ...f, direction: e.target.value }))}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        placeholder="Đông Nam"
                         disabled={uploading}
                       />
                     </div>
