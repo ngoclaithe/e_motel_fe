@@ -134,6 +134,10 @@ export default function LandlordContractsPage() {
     }
     setOpen(false);
     setEditing(null);
+    setTenantPhone("");
+    setTenantCandidate(null);
+    setTenantMessage(null);
+    setTenantId(null);
     setForm({
       roomId: "",
       tenantEmail: "",
@@ -147,7 +151,7 @@ export default function LandlordContractsPage() {
   };
 
   const remove = (id: string) => {
-    if (!confirm("Xóa hợp đồng n��y?")) return;
+    if (!confirm("Xóa hợp đồng này?")) return;
     setContracts(contracts.filter((c) => c.id !== id));
     push({ title: "Đã xóa", type: "info" });
   };
