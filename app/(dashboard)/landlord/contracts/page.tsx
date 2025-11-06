@@ -25,6 +25,47 @@ export default function LandlordContractsPage() {
     notes: "",
   });
 
+  const [tenantPhone, setTenantPhone] = useState("");
+  const [searchingTenant, setSearchingTenant] = useState(false);
+  const [tenantCandidate, setTenantCandidate] = useState<any | null>(null);
+  const [tenantMessage, setTenantMessage] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const phoneSearchTimer = useRef<number | null>(null);
+
+  const isValidPhone = (val: string) => /^0\d{9,10}$/.test(val.trim());
+
+  const handlePhoneChange = (val: string) => {
+    setTenantPhone(val);
+    setTenantId(null);
+    setTenantCandidate(null);
+    setTenantMessage(null);
+
+    if (!isValidPhone(val)) {
+      if (phoneSearchTimer.current) window.clearTimeout(phoneSearchTimer.current);
+      return;
+    }
+
+    if (phoneSearchTimer.current) window.clearTimeout(phoneSearchTimer.current);
+    setSearchingTenant(true);
+    phoneSearchTimer.current = window.setTimeout(async () => {
+      try {
+        const found = await userService.searchByPhone(val.trim());
+        if (found && (found as any).id) {
+          setTenantCandidate(found);
+          setTenantMessage(null);
+        } else {
+          setTenantCandidate(null);
+          setTenantMessage("Không tìm thấy người thuê");
+        }
+      } catch {
+        setTenantCandidate(null);
+        setTenantMessage("Không tìm thấy người thuê");
+      } finally {
+        setSearchingTenant(false);
+      }
+    }, 400);
+  };
+
   const landlordEmail = (() => {
     try {
       const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
@@ -56,7 +97,7 @@ export default function LandlordContractsPage() {
     }
 
     if (new Date(form.startDate) >= new Date(form.endDate)) {
-      push({ title: "Lỗi", description: "Ngày kết thúc phải sau ngày bắt đầu", type: "error" });
+      push({ title: "Lỗi", description: "Ngày kết thúc phải sau ngày b��t đầu", type: "error" });
       return;
     }
 
