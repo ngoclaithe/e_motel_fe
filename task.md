@@ -23,25 +23,28 @@ Các hàm viết dạng async, trả về data.
 
 Đề xuất cấu trúc hàm:
 
-export async function getAllUsers() {}
-export async function getLandlords() {}
-export async function getTenants() {}
-export async function getProfile() {}
-export async function searchByPhone(phone: string) {}
-export async function getUserById(id: string) {}
-export async function updateUser(id: string, payload: any) {}
-export async function deleteUser(id: string) {}
+export async function getAllUsers(): Promise<any> {}
+export async function getLandlords(): Promise<any> {}
+export async function getTenants(): Promise<any> {}
+export async function getProfile(): Promise<any> {}
+export async function searchByPhone(phone: string): Promise<any> {}
+export async function getUserById(id: string): Promise<any> {}
+export async function updateUser(id: string, payload: any): Promise<any> {}
+export async function deleteUser(id: string): Promise<any> {}
+
 
 2. Danh sách endpoint
-Phương thức	Endpoint	Quyền	Chức năng
-GET	/api/v1/users	ADMIN	Lấy danh sách tất cả user
-GET	/api/v1/users/landlords	ADMIN	Lấy danh sách landlords
-GET	/api/v1/users/tenants	ADMIN, LANDLORD	Lấy danh sách tenants
-GET	/api/v1/users/profile	AUTH (JWT)	Lấy profile người dùng hiện tại
-GET	/api/v1/users/search/phone?phone={phone}	ADMIN, LANDLORD	Tìm user theo số điện thoại
-GET	/api/v1/users/:id	AUTH (JWT)	Lấy chi tiết user
-PUT	/api/v1/users/:id	AUTH (JWT)	Cập nhật user
-DELETE	/api/v1/users/:id	ADMIN	Xóa user
+| Phương thức | Endpoint                                   | Quyền           | Chức năng                       |
+| ----------: | ------------------------------------------ | --------------- | ------------------------------- |
+|         GET | `/api/v1/users`                            | ADMIN           | Lấy danh sách tất cả user       |
+|         GET | `/api/v1/users/landlords`                  | ADMIN           | Lấy danh sách landlords         |
+|         GET | `/api/v1/users/tenants`                    | ADMIN, LANDLORD | Lấy danh sách tenants           |
+|         GET | `/api/v1/users/profile`                    | AUTH (JWT)      | Lấy profile người dùng hiện tại |
+|         GET | `/api/v1/users/search/phone?phone={phone}` | ADMIN, LANDLORD | Tìm user theo số điện thoại     |
+|         GET | `/api/v1/users/:id`                        | AUTH (JWT)      | Lấy chi tiết user               |
+|         PUT | `/api/v1/users/:id`                        | AUTH (JWT)      | Cập nhật user                   |
+|      DELETE | `/api/v1/users/:id`                        |                 |                                 |
+
 3. Cập nhật form tạo hợp đồng
 
 File:
@@ -76,6 +79,7 @@ Payload mẫu khi tạo hợp đồng:
   "paymentCycle": 1,
   "documentUrl": "https://example.com/contract.pdf"
 }
+
 
 4. UI / UX đề xuất
 
