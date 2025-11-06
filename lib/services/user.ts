@@ -25,7 +25,36 @@ export const userService = {
     if (!phone) return null;
     const query = new URLSearchParams({ phone });
     const res = await api.get(`/api/v1/users/search/phone?${query.toString()}`);
-    return res as UserSearchResult | null;
+
+    // API may return an array of users; pick the first match and normalize fields
+    try {
+      if (Array.isArray(res)) {
+        if (res.length === 0) return null;
+        const u = res[0] as any;
+        return {
+          id: String(u.id),
+          role: u.role,
+          fullName: [u.firstName, u.lastName].filter(Boolean).join(" "),
+          phone: u.phoneNumber || u.phone || null,
+          email: u.email || null,
+        };
+      }
+
+      if (res && typeof res === "object") {
+        const u = res as any;
+        return {
+          id: String(u.id),
+          role: u.role,
+          fullName: u.fullName || [u.firstName, u.lastName].filter(Boolean).join(" "),
+          phone: u.phoneNumber || u.phone || null,
+          email: u.email || null,
+        };
+      }
+    } catch {
+      // fallthrough to null
+    }
+
+    return null;
   },
   getUserById: async (id: string): Promise<unknown> => {
     return api.get(`/api/v1/users/${id}`);
