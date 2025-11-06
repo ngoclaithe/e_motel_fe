@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
@@ -63,11 +63,16 @@ export default function LandlordContractsPage() {
     }
   };
 
-  // load once when component mounts
-  if (typeof window !== 'undefined' && motels.length === 0 && rooms.length === 0) {
-    // avoid calling in SSR
+  const dataLoadedRef = useRef(false);
+
+  // Load motels/rooms once when the create modal opens (or on first mount)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!open) return; // only load when modal is opened
+    if (dataLoadedRef.current) return;
+    dataLoadedRef.current = true;
     loadMyData();
-  }
+  }, [open]);
 
   const handlePhoneChange = (val: string) => {
     setTenantPhone(val);
@@ -221,7 +226,7 @@ Kỳ thanh toán: ${contract.paymentPeriod}
 
 GHI CHÚ
 ------
-${contract.notes || "Không có ghi chú"}
+${contract.notes || "Kh��ng có ghi chú"}
     `.trim();
   };
 
@@ -563,7 +568,7 @@ ${contract.notes || "Không có ghi chú"}
               </div>
               {selectedContract.notes && (
                 <div>
-                  <span className="text-zinc-500">Ghi ch���</span>
+                  <span className="text-zinc-500">Ghi ch��</span>
                   <div className="mt-1 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/5">
                     {selectedContract.notes}
                   </div>
