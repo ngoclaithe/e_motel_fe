@@ -167,7 +167,7 @@ export default function LandlordContractsPage() {
     return end < now;
   };
 
-  const save = () => {
+  const save = async () => {
     if (!form.roomId || !tenantId || !form.startDate || !form.endDate) {
       push({ title: "Lỗi", description: "Vui lòng nhập số điện thoại người thuê hợp lệ và chọn người thuê", type: "error" });
       return;
@@ -178,37 +178,40 @@ export default function LandlordContractsPage() {
       return;
     }
 
-    if (editing) {
-      setContracts(
-        contracts.map((c) =>
-          c.id === editing.id
-            ? {
-                ...editing,
-                ...form,
-                monthlyPrice: Number(form.monthlyPrice),
-                deposit: Number(form.deposit),
-              }
-            : c
-        )
-      );
-      push({ title: "Cập nhật thành công", type: "success" });
-    } else {
-      const newContract: Contract = {
-        id: crypto.randomUUID(),
-        landlordEmail,
-        roomId: String(form.roomId),
-        tenantEmail: String(form.tenantEmail),
-        startDate: String(form.startDate),
-        endDate: String(form.endDate),
-        monthlyPrice: Number(form.monthlyPrice),
-        deposit: Number(form.deposit),
-        paymentPeriod: String(form.paymentPeriod) as "monthly" | "quarterly" | "yearly",
-        notes: String(form.notes || ""),
-        createdAt: new Date().toISOString(),
-      };
-      setContracts([newContract, ...contracts]);
-      push({ title: "Tạo hợp đồng thành công", type: "success" });
+    try {
+      if (editing) {
+        const updated = await contractService.updateContract(editing.id, {
+          startDate: String(form.startDate),
+          endDate: String(form.endDate),
+          monthlyPrice: Number(form.monthlyPrice),
+          deposit: Number(form.deposit),
+          paymentPeriod: String(form.paymentPeriod) as "monthly" | "quarterly" | "yearly",
+          notes: String(form.notes || ""),
+        });
+        setContracts(
+          contracts.map((c) => (c.id === editing.id ? updated : c))
+        );
+        push({ title: "Cập nhật thành công", type: "success" });
+      } else {
+        const newContract = await contractService.createContract({
+          tenantEmail: String(form.tenantEmail),
+          roomId: String(form.roomId),
+          startDate: String(form.startDate),
+          endDate: String(form.endDate),
+          monthlyPrice: Number(form.monthlyPrice),
+          deposit: Number(form.deposit),
+          paymentPeriod: String(form.paymentPeriod) as "monthly" | "quarterly" | "yearly",
+          notes: String(form.notes || ""),
+        });
+        setContracts([newContract, ...contracts]);
+        push({ title: "Tạo hợp đồng thành công", type: "success" });
+      }
+    } catch (err) {
+      console.error("Failed to save contract:", err);
+      push({ title: "Không thể lưu hợp đồng", type: "error" });
+      return;
     }
+
     setOpen(false);
     setEditing(null);
     setTenantPhone("");
