@@ -526,7 +526,7 @@ ${contract.notes || "Kh��ng có ghi chú"}
                 >
                   Hủy
                 </button>
-                <button onClick={save} className="btn-primary">
+                <button onClick={() => save()} className="btn-primary">
                   Lưu
                 </button>
               </div>
