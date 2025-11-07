@@ -90,8 +90,19 @@ ${contract.notes || "Không có ghi chú"}
         <h1 className="text-xl font-semibold">Hợp đồng của tôi</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {tenantContracts.map((contract) => (
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-black/40">
+          Đang tải...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {tenantContracts.map((contract) => (
           <div
             key={contract.id}
             className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
@@ -159,12 +170,13 @@ ${contract.notes || "Không có ghi chú"}
             </div>
           </div>
         ))}
-        {tenantContracts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
-            Chưa có hợp đồng nào
-          </div>
-        )}
-      </div>
+          {tenantContracts.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
+              Chưa có hợp đồng nào
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
