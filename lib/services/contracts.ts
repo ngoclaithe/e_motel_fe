@@ -1,24 +1,41 @@
 import { api } from "../api";
-import type { Contract } from "../../types";
+import type { Contract, ContractType } from "../../types";
 
 export interface CreateContractRequest {
-  tenantEmail: string;
-  roomId: string;
+  type: ContractType;
+  roomId?: string;
+  motelId?: string;
+  tenantId: string;
   startDate: string;
   endDate: string;
-  monthlyPrice: number;
+  monthlyRent: number;
   deposit: number;
-  paymentPeriod: "monthly" | "quarterly" | "yearly";
-  notes?: string;
+  paymentCycleMonths: number;
+  paymentDay: number;
+  depositMonths: number;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  specialTerms?: string;
+  maxOccupants?: number;
 }
 
 export interface UpdateContractRequest {
   startDate?: string;
   endDate?: string;
-  monthlyPrice?: number;
+  monthlyRent?: number;
   deposit?: number;
-  paymentPeriod?: "monthly" | "quarterly" | "yearly";
-  notes?: string;
+  paymentCycleMonths?: number;
+  paymentDay?: number;
+  depositMonths?: number;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  specialTerms?: string;
 }
 
 export interface ContractListResponse {
