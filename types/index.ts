@@ -84,19 +84,36 @@ export interface Room {
   createdAt: string;
 }
 
+export type ContractType = "ROOM" | "MOTEL";
+
 export interface Contract {
   id: string;
-  landlordEmail: string;
+  type: ContractType;
   tenantId: string;
-  tenantEmail: string;
-  roomId: string;
+  roomId?: string | null;
+  motelId?: string | null;
   startDate: string;
   endDate: string;
-  monthlyPrice: number;
+  monthlyRent: number;
   deposit: number;
-  paymentPeriod: "monthly" | "quarterly" | "yearly";
-  notes?: string;
+  paymentCycleMonths: number;
+  paymentDay: number;
+  depositMonths: number;
+  electricityCostPerKwh?: number;
+  waterCostPerCubicMeter?: number;
+  internetCost?: number;
+  parkingCost?: number;
+  serviceFee?: number;
+  specialTerms?: string;
+  maxOccupants?: number;
+  hasWifi?: boolean;
+  hasParking?: boolean;
+  status?: string;
+  regulations?: string;
+  documentContent?: string;
+  documentUrl?: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Bill {
