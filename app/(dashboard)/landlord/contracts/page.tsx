@@ -5,7 +5,7 @@ import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Contract } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
-import { userService, motelService, roomService } from "../../../../lib/services";
+import { userService, motelService, roomService, contractService } from "../../../../lib/services";
 
 export default function LandlordContractsPage() {
   useEnsureRole(["landlord"]);
