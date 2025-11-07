@@ -16,7 +16,7 @@ export default function LandlordContractsPage() {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [form, setForm] = useState<Partial<Contract>>({
     roomId: "",
-    tenantEmail: "",
+    tenantId: "",
     startDate: new Date().toISOString().split("T")[0],
     endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)).toISOString().split("T")[0],
     monthlyPrice: 1000000,
@@ -194,7 +194,7 @@ export default function LandlordContractsPage() {
         push({ title: "Cập nhật thành công", type: "success" });
       } else {
         const newContract = await contractService.createContract({
-          tenantEmail: String(form.tenantEmail),
+          tenantId: String(form.tenantId),
           roomId: String(form.roomId),
           startDate: String(form.startDate),
           endDate: String(form.endDate),
@@ -220,7 +220,7 @@ export default function LandlordContractsPage() {
     setTenantId(null);
     setForm({
       roomId: "",
-      tenantEmail: "",
+      tenantId: "",
       startDate: new Date().toISOString().split("T")[0],
       endDate: new Date(new Date().setMonth(new Date().getMonth() + 12)).toISOString().split("T")[0],
       monthlyPrice: 1000000,
@@ -266,7 +266,7 @@ Kỳ thanh toán: ${contract.paymentPeriod}
 
 GHI CHÚ
 ------
-${contract.notes || "Kh��ng có ghi chú"}
+${contract.notes || "Không có ghi chú"}
     `.trim();
   };
 
@@ -608,7 +608,7 @@ ${contract.notes || "Kh��ng có ghi chú"}
               </div>
               {selectedContract.notes && (
                 <div>
-                  <span className="text-zinc-500">Ghi ch��</span>
+                  <span className="text-zinc-500">Ghi chú</span>
                   <div className="mt-1 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/5">
                     {selectedContract.notes}
                   </div>

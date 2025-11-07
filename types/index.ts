@@ -87,6 +87,7 @@ export interface Room {
 export interface Contract {
   id: string;
   landlordEmail: string;
+  tenantId: string;
   tenantEmail: string;
   roomId: string;
   startDate: string;

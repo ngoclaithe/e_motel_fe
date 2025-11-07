@@ -72,7 +72,7 @@ export default function ContractsPage() {
       push({ title: "Đã cập nhật hợp đồng", type: "success" });
     } catch (err) {
       console.error("Failed to update contract:", err);
-      push({ title: "Không thể cập nh��t hợp đồng", type: "error" });
+      push({ title: "Không thể cập nhật hợp đồng", type: "error" });
     }
   };
 
