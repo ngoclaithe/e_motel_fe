@@ -72,7 +72,7 @@ export default function ContractsPage() {
       push({ title: "Đã cập nhật hợp đồng", type: "success" });
     } catch (err) {
       console.error("Failed to update contract:", err);
-      push({ title: "Không thể cập nhật hợp đồng", type: "error" });
+      push({ title: "Không thể cập nh��t hợp đồng", type: "error" });
     }
   };
 
@@ -298,22 +298,30 @@ ${contract.notes || "Không có ghi chú"}
                 </div>
               )}
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex justify-between gap-2">
               <button
-                onClick={() => setSelectedContract(null)}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                onClick={() => handleDeleteContract(selectedContract.id)}
+                className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
               >
-                Đóng
+                Xóa
               </button>
-              <button
-                onClick={() => {
-                  downloadPDF(selectedContract);
-                  setSelectedContract(null);
-                }}
-                className="btn-primary"
-              >
-                Tải PDF
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContract(null)}
+                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={() => {
+                    downloadPDF(selectedContract);
+                    setSelectedContract(null);
+                  }}
+                  className="btn-primary"
+                >
+                  Tải PDF
+                </button>
+              </div>
             </div>
           </div>
         </div>
