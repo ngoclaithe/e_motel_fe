@@ -192,7 +192,7 @@ ${contract.notes || "Không có ghi chú"}
             </div>
             <div className="mt-4 flex gap-2">
               <button
-                onClick={() => setSelectedContract(contract)}
+                onClick={() => handleGetContractDetail(contract.id)}
                 className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
               >
                 Xem chi tiết
@@ -202,6 +202,12 @@ ${contract.notes || "Không có ghi chú"}
                 className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
               >
                 Tải PDF
+              </button>
+              <button
+                onClick={() => handleDeleteContract(contract.id)}
+                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
+              >
+                Xóa
               </button>
             </div>
           </div>
