@@ -50,6 +50,42 @@ export default function ContractsPage() {
     return end < now;
   };
 
+  const handleDeleteContract = async (id: string) => {
+    if (!confirm("Bạn chắc chắn muốn xóa hợp đồng này?")) return;
+
+    try {
+      await contractService.deleteContract(id);
+      setContracts(contracts.filter(c => c.id !== id));
+      setSelectedContract(null);
+      push({ title: "Đã xóa hợp đồng", type: "success" });
+    } catch (err) {
+      console.error("Failed to delete contract:", err);
+      push({ title: "Không thể xóa hợp đồng", type: "error" });
+    }
+  };
+
+  const handleUpdateContract = async (id: string, updates: any) => {
+    try {
+      const updated = await contractService.updateContract(id, updates);
+      setContracts(contracts.map(c => c.id === id ? updated : c));
+      setSelectedContract(updated);
+      push({ title: "Đã cập nhật hợp đồng", type: "success" });
+    } catch (err) {
+      console.error("Failed to update contract:", err);
+      push({ title: "Không thể cập nhật hợp đồng", type: "error" });
+    }
+  };
+
+  const handleGetContractDetail = async (id: string) => {
+    try {
+      const detail = await contractService.getContract(id);
+      setSelectedContract(detail);
+    } catch (err) {
+      console.error("Failed to fetch contract detail:", err);
+      push({ title: "Không thể lấy chi tiết hợp đồng", type: "error" });
+    }
+  };
+
   const downloadPDF = (contract: Contract) => {
     const element = document.createElement("a");
     const file = new Blob([generatePDFContent(contract)], { type: "text/plain" });
