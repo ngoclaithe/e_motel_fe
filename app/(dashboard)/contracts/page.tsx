@@ -50,6 +50,42 @@ export default function ContractsPage() {
     return end < now;
   };
 
+  const handleDeleteContract = async (id: string) => {
+    if (!confirm("Bạn chắc chắn muốn xóa hợp đồng này?")) return;
+
+    try {
+      await contractService.deleteContract(id);
+      setContracts(contracts.filter(c => c.id !== id));
+      setSelectedContract(null);
+      push({ title: "Đã xóa hợp đồng", type: "success" });
+    } catch (err) {
+      console.error("Failed to delete contract:", err);
+      push({ title: "Không thể xóa hợp đồng", type: "error" });
+    }
+  };
+
+  const handleUpdateContract = async (id: string, updates: any) => {
+    try {
+      const updated = await contractService.updateContract(id, updates);
+      setContracts(contracts.map(c => c.id === id ? updated : c));
+      setSelectedContract(updated);
+      push({ title: "Đã cập nhật hợp đồng", type: "success" });
+    } catch (err) {
+      console.error("Failed to update contract:", err);
+      push({ title: "Không thể cập nh��t hợp đồng", type: "error" });
+    }
+  };
+
+  const handleGetContractDetail = async (id: string) => {
+    try {
+      const detail = await contractService.getContract(id);
+      setSelectedContract(detail);
+    } catch (err) {
+      console.error("Failed to fetch contract detail:", err);
+      push({ title: "Không thể lấy chi tiết hợp đồng", type: "error" });
+    }
+  };
+
   const downloadPDF = (contract: Contract) => {
     const element = document.createElement("a");
     const file = new Blob([generatePDFContent(contract)], { type: "text/plain" });
@@ -156,7 +192,7 @@ ${contract.notes || "Không có ghi chú"}
             </div>
             <div className="mt-4 flex gap-2">
               <button
-                onClick={() => setSelectedContract(contract)}
+                onClick={() => handleGetContractDetail(contract.id)}
                 className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
               >
                 Xem chi tiết
@@ -166,6 +202,12 @@ ${contract.notes || "Không có ghi chú"}
                 className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
               >
                 Tải PDF
+              </button>
+              <button
+                onClick={() => handleDeleteContract(contract.id)}
+                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
+              >
+                Xóa
               </button>
             </div>
           </div>
@@ -256,22 +298,30 @@ ${contract.notes || "Không có ghi chú"}
                 </div>
               )}
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex justify-between gap-2">
               <button
-                onClick={() => setSelectedContract(null)}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                onClick={() => handleDeleteContract(selectedContract.id)}
+                className="rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
               >
-                Đóng
+                Xóa
               </button>
-              <button
-                onClick={() => {
-                  downloadPDF(selectedContract);
-                  setSelectedContract(null);
-                }}
-                className="btn-primary"
-              >
-                Tải PDF
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSelectedContract(null)}
+                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={() => {
+                    downloadPDF(selectedContract);
+                    setSelectedContract(null);
+                  }}
+                  className="btn-primary"
+                >
+                  Tải PDF
+                </button>
+              </div>
             </div>
           </div>
         </div>
