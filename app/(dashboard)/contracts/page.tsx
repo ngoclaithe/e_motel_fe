@@ -1,28 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useEffect, useState } from "react";
 import type { Contract } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
+import { contractService } from "../../../lib/services/contracts";
 
 export default function ContractsPage() {
   useEnsureRole(["tenant"]);
   const { push } = useToast();
-  const [contracts] = useLocalStorage<Contract[]>("emotel_contracts", []);
+  const { user } = useAuth();
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getTenantContracts = () => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      if (!session?.email) return [];
-      return contracts.filter((c) => c.tenantEmail === session.email);
-    } catch {
-      return [];
-    }
-  };
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await contractService.listContracts(1, 100);
+        setContracts(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch contracts:", err);
+        setError("Không thể tải danh sách hợp đồng");
+        setContracts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const tenantContracts = getTenantContracts();
+    fetchContracts();
+  }, []);
+
+  const tenantContracts = contracts.filter((c) => c.tenantEmail === user?.email);
 
   const isExpiringSoon = (endDate: string) => {
     const end = new Date(endDate);
