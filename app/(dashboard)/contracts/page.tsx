@@ -1,28 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useEffect, useState } from "react";
 import type { Contract } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
+import { useAuth } from "../../../hooks/useAuth";
+import { contractService } from "../../../lib/services/contracts";
 
 export default function ContractsPage() {
   useEnsureRole(["tenant"]);
   const { push } = useToast();
-  const [contracts] = useLocalStorage<Contract[]>("emotel_contracts", []);
+  const { user } = useAuth();
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getTenantContracts = () => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      if (!session?.email) return [];
-      return contracts.filter((c) => c.tenantEmail === session.email);
-    } catch {
-      return [];
-    }
-  };
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await contractService.listContracts(1, 100);
+        setContracts(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch contracts:", err);
+        setError("Không thể tải danh sách hợp đồng");
+        setContracts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const tenantContracts = getTenantContracts();
+    fetchContracts();
+  }, []);
+
+  const tenantContracts = contracts.filter((c) => c.tenantEmail === user?.email);
 
   const isExpiringSoon = (endDate: string) => {
     const end = new Date(endDate);
@@ -77,8 +90,19 @@ ${contract.notes || "Không có ghi chú"}
         <h1 className="text-xl font-semibold">Hợp đồng của tôi</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        {tenantContracts.map((contract) => (
+      {error && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/20 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center text-sm text-zinc-500 dark:border-white/10 dark:bg-black/40">
+          Đang tải...
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {tenantContracts.map((contract) => (
           <div
             key={contract.id}
             className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
@@ -146,12 +170,13 @@ ${contract.notes || "Không có ghi chú"}
             </div>
           </div>
         ))}
-        {tenantContracts.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
-            Chưa có hợp đồng nào
-          </div>
-        )}
-      </div>
+          {tenantContracts.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
+              Chưa có hợp đồng nào
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedContract && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
