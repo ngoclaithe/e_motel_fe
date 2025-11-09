@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEnsureRole } from "../../../hooks/useAuth";
 
 export default function TenantDashboard() {
-  useEnsureRole(["tenant"]);
+  useEnsureRole(["TENANT"]);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

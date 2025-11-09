@@ -7,7 +7,7 @@ import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
 
 export default function LandlordBillsPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["LANDLORD"]);
   const { push } = useToast();
   const [bills, setBills] = useLocalStorage<Bill[]>("emotel_bills", []);
   const [open, setOpen] = useState(false);

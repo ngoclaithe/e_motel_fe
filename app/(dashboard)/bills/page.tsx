@@ -7,7 +7,7 @@ import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 
 export default function BillsPage() {
-  useEnsureRole(["tenant"]);
+  useEnsureRole(["TENANT"]);
   const { push } = useToast();
   const [bills] = useLocalStorage<Bill[]>("emotel_bills", []);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
@@ -113,7 +113,7 @@ TRẠNG THÁI: ${bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toá
               <div>
                 {isPaid(bill.status) && (
                   <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Đã thanh toán
+                    Đã thanh to��n
                   </span>
                 )}
                 {isOverdue(bill.dueDate, bill.status) && (

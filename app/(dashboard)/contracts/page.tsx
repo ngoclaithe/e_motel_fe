@@ -8,7 +8,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { contractService } from "../../../lib/services/contracts";
 
 export default function ContractsPage() {
-  useEnsureRole(["tenant"]);
+  useEnsureRole(["TENANT"]);
   const { push } = useToast();
   const { user } = useAuth();
   const [contracts, setContracts] = useState<Contract[]>([]);
