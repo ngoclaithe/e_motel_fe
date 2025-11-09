@@ -14,6 +14,9 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [role, setRole] = useState<UserRole>("LANDLORD");
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +31,9 @@ export default function RegisterPage() {
       await authService.register({
         email,
         password,
+        firstName,
+        lastName,
+        phoneNumber,
         role,
       });
       push({ title: "Đăng ký thành công", description: "Vui lòng đăng nhập", type: "success" });
