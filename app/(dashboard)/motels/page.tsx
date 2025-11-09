@@ -99,6 +99,8 @@ export default function MotelsPage() {
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [viewingMotel, setViewingMotel] = useState<Motel | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -322,6 +324,8 @@ export default function MotelsPage() {
 
   const displayMotels = tab === 'my' ? motels : allMotels;
 
+  if (!mounted) return null;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -360,7 +364,7 @@ export default function MotelsPage() {
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
             }`}
           >
-            Tất cả
+            Tất c���
           </button>
         </div>
       )}
