@@ -87,8 +87,8 @@ export default function RegisterPage() {
         <div>
           <label className="mb-1 block text-sm font-medium">Vai trò</label>
           <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25">
-            <option value="landlord">Chủ trọ</option>
-            <option value="tenant">Người thuê</option>
+            <option value="LANDLORD">Chủ trọ</option>
+            <option value="TENANT">Người thuê</option>
           </select>
         </div>
         <button
@@ -99,7 +99,7 @@ export default function RegisterPage() {
           {loading ? "Đang xử lý..." : "Tạo tài khoản"}
         </button>
         <div className="text-center text-sm">
-          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? Đăng nhập</a>
+          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? ��ăng nhập</a>
         </div>
       </form>
     </div>
