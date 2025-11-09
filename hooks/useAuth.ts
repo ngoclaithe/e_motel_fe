@@ -24,11 +24,11 @@ async function fetchMe(): Promise<{ role?: string } | null> {
 
 export function routeForRole(role: UserRole): string {
   switch (role) {
-    case "admin":
+    case "ADMIN":
       return "/admin";
-    case "tenant":
+    case "TENANT":
       return "/tenant";
-    case "landlord":
+    case "LANDLORD":
     default:
       return "/landlord";
   }
