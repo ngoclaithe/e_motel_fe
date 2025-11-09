@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "../components/providers/ToastProvider";
-import type { UserRole } from "../types";
+import type { UserRole } from "../lib/services/auth";
 
 function normalizeRole(value: unknown): UserRole | null {
   if (!value || typeof value !== "string") return null;
