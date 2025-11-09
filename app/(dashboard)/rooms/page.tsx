@@ -34,6 +34,8 @@ export default function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const [form, setForm] = useState<Partial<Room>>({
     number: "",
