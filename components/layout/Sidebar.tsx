@@ -17,7 +17,7 @@ export default function Sidebar() {
   }, []);
 
   const getNav = (r: UserRole | null) => {
-    if (r === "landlord") {
+    if (r === "LANDLORD") {
       return [
         { href: "/landlord", label: "Tổng quan" },
         { href: "/motels", label: "Nhà trọ" },
@@ -29,17 +29,17 @@ export default function Sidebar() {
         { href: "/profile", label: "Hồ sơ" },
       ];
     }
-    if (r === "tenant") {
+    if (r === "TENANT") {
       return [
         { href: "/tenant", label: "Tổng quan" },
-        { href: "/contracts", label: "Hợp đồng" },
+        { href: "/contracts", label: "H��p đồng" },
         { href: "/bills", label: "Hóa đơn" },
         { href: "/feedbacks", label: "Sửa chữa" },
         { href: "/notifications", label: "Thông báo" },
         { href: "/profile", label: "Hồ sơ" },
       ];
     }
-    if (r === "admin") {
+    if (r === "ADMIN") {
       return [
         { href: "/admin", label: "Bảng điều khiển" },
         { href: "/admin/users", label: "Người dùng" },
