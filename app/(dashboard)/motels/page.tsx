@@ -83,11 +83,11 @@ const INITIAL_FORM: MotelFormData = {
 };
 
 export default function MotelsPage() {
-  useEnsureRole(["landlord", "tenant"]);
+  useEnsureRole(["LANDLORD", "TENANT"]);
   const role = useCurrentRole();
   const { push } = useToast();
 
-  const [tab, setTab] = useState<'my' | 'all'>(role === 'tenant' ? 'all' : 'my');
+  const [tab, setTab] = useState<'my' | 'all'>(role === "TENANT" ? 'all' : 'my');
   const [motels, setMotels] = useState<Motel[]>([]);
   const [allMotels, setAllMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -150,7 +150,7 @@ export default function MotelsPage() {
   }, [page, searchTerm, filters, push]);
 
   useEffect(() => {
-    if (role === 'landlord' && tab === 'my') {
+    if (role === "LANDLORD" && tab === 'my') {
       fetchMyMotels();
     } else if (tab === 'all') {
       fetchAllMotels();
@@ -326,7 +326,7 @@ export default function MotelsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nhà trọ</h1>
-        {role === 'landlord' && (
+        {role === "LANDLORD" && (
           <button onClick={() => setOpen(true)} disabled={loading} className="btn-primary disabled:opacity-50">
             Thêm nhà trọ
           </button>
@@ -334,7 +334,7 @@ export default function MotelsPage() {
       </div>
 
       {/* Tabs */}
-      {role === 'landlord' && (
+      {role === "LANDLORD" && (
         <div className="flex gap-4 border-b border-black/10 dark:border-white/15">
           <button
             onClick={() => {
@@ -453,13 +453,13 @@ export default function MotelsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex gap-2">
-                    {role === 'landlord' && tab === 'my' && (
+                    {role === "LANDLORD" && tab === 'my' && (
                       <>
                         <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                         <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                       </>
                     )}
-                    {role === 'tenant' && (
+                    {role === "TENANT" && (
                       <button onClick={() => setViewingMotel(m)} className="flex-1 rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xem chi tiết</button>
                     )}
                   </div>
