@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "../../../components/providers/ToastProvider";
-import type { UserRole } from "../../../types";
+import { authService } from "../../../lib/services/auth";
+import type { UserRole } from "../../../lib/services/auth";
 
 export default function RegisterPage() {
   const { push } = useToast();
@@ -13,26 +14,30 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [role, setRole] = useState<UserRole>("landlord");
+  const [role, setRole] = useState<UserRole>("LANDLORD");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
       push({ title: "Mật khẩu không khớp", type: "error" });
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      try {
-        const existing = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-        existing.push({ email, role, createdAt: new Date().toISOString() });
-        localStorage.setItem("emotel_users", JSON.stringify(existing));
-      } catch {}
+    try {
+      await authService.register({
+        email,
+        password,
+        role,
+      });
       push({ title: "Đăng ký thành công", description: "Vui lòng đăng nhập", type: "success" });
       router.push("/login");
-    }, 900);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Đăng ký thất bại. Vui lòng thử lại.";
+      push({ title: "Lỗi", description: errorMessage, type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,8 +87,8 @@ export default function RegisterPage() {
         <div>
           <label className="mb-1 block text-sm font-medium">Vai trò</label>
           <select value={role} onChange={(e) => setRole(e.target.value as UserRole)} className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25">
-            <option value="landlord">Chủ trọ</option>
-            <option value="tenant">Người thuê</option>
+            <option value="LANDLORD">Chủ trọ</option>
+            <option value="TENANT">Người thuê</option>
           </select>
         </div>
         <button
@@ -94,7 +99,7 @@ export default function RegisterPage() {
           {loading ? "Đang xử lý..." : "Tạo tài khoản"}
         </button>
         <div className="text-center text-sm">
-          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? Đăng nhập</a>
+          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? ��ăng nhập</a>
         </div>
       </form>
     </div>
