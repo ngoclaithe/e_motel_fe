@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "../../../components/providers/ToastProvider";
-import type { UserRole } from "../../../types";
+import { authService } from "../../../lib/services/auth";
+import type { UserRole } from "../../../lib/services/auth";
 
 export default function RegisterPage() {
   const { push } = useToast();
