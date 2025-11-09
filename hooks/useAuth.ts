@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "../components/providers/ToastProvider";
 import type { UserRole, LoginResponse } from "../lib/services/auth";
 
@@ -80,17 +80,30 @@ export function useCurrentRole() {
 
 export function useEnsureRole(allowed: UserRole[], fallback?: string) {
   const router = useRouter();
+  const pathname = usePathname();
   const role = useCurrentRole();
+
   useEffect(() => {
+    const toKey = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+
     if (role === null) {
-      router.replace("/login");
+      if (pathname !== "/login") {
+        router.replace("/login");
+      }
       return;
     }
-    if (!allowed.includes(role)) {
-      const to = fallback || routeForRole(role);
-      router.replace(to);
+
+    const current = toKey(role);
+    const allowedKeys = (allowed || []).map(toKey);
+
+    if (!allowedKeys.includes(current)) {
+      const target = fallback || routeForRole(role);
+      if (target !== pathname) {
+        router.replace(target);
+      }
     }
-  }, [role, allowed, fallback, router]);
+  }, [role, allowed, fallback, router, pathname]);
+
   return role;
 }
 
