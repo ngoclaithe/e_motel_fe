@@ -1,71 +1,42 @@
-import { IsEmail, IsNotEmpty, IsOptional, MinLength, IsEnum } from 'class-validator';
 import { api } from "../api";
 
-export type UserRole = "admin" | "landlord" | "tenant";
+export type UserRole = "ADMIN" | "LANDLORD" | "TENANT";
 
-export class LoginDto {
-  @IsEmail()
+// Request DTOs (for sending to backend)
+export interface LoginRequest {
   email: string;
-
-  @IsNotEmpty()
-  @MinLength(6)
   password: string;
 }
 
-export class RegisterDto {
-  @IsEmail()
+export interface RegisterRequest {
   email: string;
-
-  @IsNotEmpty()
-  @MinLength(6)
   password: string;
-
-  @IsOptional()
-  @IsEnum(["admin", "landlord", "tenant"] as const)
   role?: UserRole;
-
-  @IsOptional()
   firstName?: string;
-
-  @IsOptional()
   lastName?: string;
-
-  @IsOptional()
   phoneNumber?: string;
 }
 
-export class ForgotPasswordDto {
-  @IsEmail()
+export interface ForgotPasswordRequest {
   email: string;
 }
 
-export class ResetPasswordDto {
-  @IsEmail()
+export interface ResetPasswordRequest {
   email: string;
-
-  @IsNotEmpty()
   otp: string;
-
-  @IsNotEmpty()
-  @MinLength(6)
   newPassword: string;
 }
 
-export class ChangePasswordDto {
-  @IsNotEmpty()
+export interface ChangePasswordRequest {
   oldPassword: string;
-
-  @IsNotEmpty()
-  @MinLength(6)
   newPassword: string;
 }
 
-export class RefreshTokenDto {
-  @IsNotEmpty()
+export interface RefreshTokenRequest {
   refreshToken: string;
 }
 
-// Type definitions for API responses
+// Response types (from backend)
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
@@ -74,37 +45,37 @@ export interface LoginResponse {
 export interface RegisterResponse {
   id: string;
   email: string;
+  password: string;
+  role: UserRole;
   firstName?: string;
   lastName?: string;
-  role: UserRole;
+  phoneNumber?: string;
+  identityCard?: string | null;
+  avatar?: string | null;
+  refreshToken?: string | null;
+  resetPasswordOtp?: string | null;
+  resetPasswordExpires?: string | null;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface AuthResponse {
+export interface AuthMeResponse {
   id: string;
   email: string;
   role: UserRole;
-  firstName?: string;
-  lastName?: string;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ForgotPasswordResponse {
-  message: string;
-}
-
-export interface ResetPasswordResponse {
-  message: string;
-}
-
-export interface ChangePasswordResponse {
-  message: string;
-}
-
+// Service functions
 export const authService = {
-  login: async (data: LoginDto): Promise<LoginResponse> => {
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
     return api.post("/api/v1/auth/login", data);
   },
 
-  register: async (data: RegisterDto): Promise<RegisterResponse> => {
+  register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     return api.post("/api/v1/auth/register", data);
   },
 
@@ -112,23 +83,23 @@ export const authService = {
     return api.post("/api/v1/auth/logout", {});
   },
 
-  forgotPassword: async (data: ForgotPasswordDto): Promise<ForgotPasswordResponse> => {
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<{ message: string }> => {
     return api.post("/api/v1/auth/forgot-password", data);
   },
 
-  resetPassword: async (data: ResetPasswordDto): Promise<ResetPasswordResponse> => {
+  resetPassword: async (data: ResetPasswordRequest): Promise<{ message: string }> => {
     return api.post("/api/v1/auth/reset-password", data);
   },
 
-  changePassword: async (data: ChangePasswordDto): Promise<ChangePasswordResponse> => {
+  changePassword: async (data: ChangePasswordRequest): Promise<{ message: string }> => {
     return api.post("/api/v1/auth/change-password", data);
   },
 
-  refreshToken: async (data: RefreshTokenDto): Promise<LoginResponse> => {
+  refreshToken: async (data: RefreshTokenRequest): Promise<LoginResponse> => {
     return api.post("/api/v1/auth/refresh-token", data);
   },
 
-  me: async (): Promise<AuthResponse> => {
+  me: async (): Promise<AuthMeResponse> => {
     return api.get("/api/v1/auth/me");
   },
 };
