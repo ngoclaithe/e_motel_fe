@@ -14,7 +14,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [role, setRole] = useState<UserRole>("landlord");
+  const [role, setRole] = useState<UserRole>("LANDLORD");
   const [loading, setLoading] = useState(false);
 
   const onSubmit = (e: FormEvent) => {
