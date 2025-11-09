@@ -8,7 +8,7 @@ import { motelService } from "../../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../../lib/cloudinary";
 
 export default function AdminMotelsPage() {
-  useEnsureRole(["admin"]);
+  useEnsureRole(["ADMIN"]);
   const { push } = useToast();
   const [motels, setMotels] = useState<Motel[]>([]);
   const [query, setQuery] = useState("");
