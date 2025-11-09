@@ -34,6 +34,8 @@ export default function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const [form, setForm] = useState<Partial<Room>>({
     number: "",
@@ -266,6 +268,8 @@ export default function RoomsPage() {
     });
   };
 
+  if (!mounted) return null;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -422,7 +426,7 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {open && (role === 'landlord' || role === 'admin') && (
+      {(role === "LANDLORD" || role === "ADMIN") && open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
