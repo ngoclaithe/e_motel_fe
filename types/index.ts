@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "landlord" | "tenant";
+export type UserRole = "ADMIN" | "LANDLORD" | "TENANT";
 
 export type AlleyType = "MOTORBIKE" | "CAR" | "BOTH";
 export type SecurityType = "CAMERA" | "GUARD" | "BOTH" | "NONE";
