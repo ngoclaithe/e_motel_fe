@@ -137,7 +137,7 @@ export default function RegisterPage() {
           {loading ? "Đang xử lý..." : "Tạo tài khoản"}
         </button>
         <div className="text-center text-sm">
-          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? ��ăng nhập</a>
+          <a href="/login" className="text-foreground/90 underline-offset-4 hover:underline">Đã có tài khoản? Đăng nhập</a>
         </div>
       </form>
     </div>
