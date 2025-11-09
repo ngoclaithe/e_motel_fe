@@ -7,11 +7,8 @@ import type { UserRole, LoginResponse } from "../lib/services/auth";
 
 function normalizeRole(value: unknown): UserRole | null {
   if (!value || typeof value !== "string") return null;
-  const v = value.trim().toLowerCase();
-  if (v === "admin" || v === "landlord" || v === "tenant") return v as UserRole;
-  if (v === "landlord".toUpperCase()) return "landlord";
-  if (v === "tenant".toUpperCase()) return "tenant";
-  if (v === "admin".toUpperCase()) return "admin";
+  const v = value.trim().toUpperCase();
+  if (v === "ADMIN" || v === "LANDLORD" || v === "TENANT") return v as UserRole;
   return null;
 }
 
