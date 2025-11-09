@@ -426,7 +426,7 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {open && (role === 'landlord' || role === 'admin') && (
+      {(role === "LANDLORD" || role === "ADMIN") && open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">
