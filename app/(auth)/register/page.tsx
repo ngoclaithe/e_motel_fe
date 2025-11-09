@@ -17,23 +17,27 @@ export default function RegisterPage() {
   const [role, setRole] = useState<UserRole>("LANDLORD");
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
       push({ title: "Mật khẩu không khớp", type: "error" });
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      try {
-        const existing = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-        existing.push({ email, role, createdAt: new Date().toISOString() });
-        localStorage.setItem("emotel_users", JSON.stringify(existing));
-      } catch {}
+    try {
+      await authService.register({
+        email,
+        password,
+        role,
+      });
       push({ title: "Đăng ký thành công", description: "Vui lòng đăng nhập", type: "success" });
       router.push("/login");
-    }, 900);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Đăng ký thất bại. Vui lòng thử lại.";
+      push({ title: "Lỗi", description: errorMessage, type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
