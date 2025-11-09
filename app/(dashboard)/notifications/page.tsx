@@ -31,7 +31,7 @@ function getInitialNotifications(role: UserRole | null, userEmail: string | unde
 }
 
 export default function NotificationsPage() {
-  useEnsureRole(["tenant", "landlord", "admin"]);
+  useEnsureRole(["TENANT", "LANDLORD", "ADMIN"]);
   const role = useCurrentRole();
   const { getSession } = useAuth();
   const session = getSession();
