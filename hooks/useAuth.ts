@@ -114,9 +114,19 @@ export function useAuth() {
     setLoading(true);
     try {
       let loginResponse: Record<string, unknown> | null = null;
+
       try {
         loginResponse = await api.post("/api/v1/auth/login", { email, password });
-      } catch {}
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Email hoặc mật khẩu không đúng";
+        push({ title: "Lỗi đăng nhập", description: errorMessage, type: "error" });
+        return;
+      }
+
+      if (!loginResponse) {
+        push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
+        return;
+      }
 
       try {
         const pick = (obj: Record<string, unknown>, keys: string[]): string | null => {
@@ -161,8 +171,9 @@ export function useAuth() {
 
       push({ title: "Đăng nhập thành công", description: `Xin chào ${email}`, type: "success" });
       router.push(routeForRole(role!));
-    } catch {
-      push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Không thể đăng nhập. Vui lòng thử lại.";
+      push({ title: "Lỗi", description: errorMessage, type: "error" });
     } finally {
       setLoading(false);
     }
