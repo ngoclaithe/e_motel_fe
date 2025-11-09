@@ -19,7 +19,7 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
-  useEnsureRole(["landlord", "tenant", "admin"]);
+  useEnsureRole(["LANDLORD", "TENANT", "ADMIN"]);
   const role = useCurrentRole();
   const { push } = useToast();
 
@@ -280,7 +280,7 @@ export default function RoomsPage() {
             </button>
             <button
               onClick={() => setViewFilter('mine')}
-              disabled={!(role === 'landlord' || role === 'admin')}
+              disabled={!(role === "LANDLORD" || role === "ADMIN")}
               className={`rounded-lg px-3 py-1 text-sm ${viewFilter === 'mine' ? 'bg-black/5 dark:bg-white/10' : 'opacity-80'}`}
             >
               Của tôi
@@ -296,7 +296,7 @@ export default function RoomsPage() {
             <option value="OCCUPIED">Đang thuê</option>
             <option value="MAINTENANCE">Bảo trì</option>
           </select>
-          {(role === 'landlord' || role === 'admin') && (
+          {(role === "LANDLORD" || role === "ADMIN") && (
             <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
           )}
         </div>
@@ -348,7 +348,7 @@ export default function RoomsPage() {
                 <div className="text-xs text-zinc-500">Sức chứa {r.maxOccupancy ?? '-'}</div>
               </div>
 
-              {(role === 'landlord' || role === 'admin') && (
+              {(role === "LANDLORD" || role === "ADMIN") && (
                 <div className="mt-3 flex gap-2">
                   <button onClick={(e) => { e.stopPropagation(); openEditModal(r); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                   <button onClick={(e) => { e.stopPropagation(); remove(r.id); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
