@@ -20,7 +20,7 @@ function getCounts() {
 }
 
 export default function AdminDashboard() {
-  useEnsureRole(["admin"]);
+  useEnsureRole(["ADMIN"]);
   const [counts, setCounts] = useState(() => getCounts());
 
   useEffect(() => {
