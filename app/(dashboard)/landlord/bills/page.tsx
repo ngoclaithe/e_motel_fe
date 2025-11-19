@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import type { Bill } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
+import { userService, motelService, roomService, contractService } from "../../../../lib/services";
 
 export default function LandlordBillsPage() {
   useEnsureRole(["LANDLORD"]);
@@ -13,6 +14,8 @@ export default function LandlordBillsPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Bill | null>(null);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
   const [form, setForm] = useState<Partial<Bill>>({
     roomId: "",
     tenantEmail: "",
@@ -39,6 +42,38 @@ export default function LandlordBillsPage() {
   })();
 
   const landlordBills = bills.filter((b) => b.landlordEmail === landlordEmail);
+
+  useEffect(() => {
+    const loadRooms = async () => {
+      setLoadingRooms(true);
+      try {
+        const r = await roomService.myRooms();
+        setRooms(Array.isArray(r) ? r : []);
+      } catch {
+        setRooms([]);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+    loadRooms();
+  }, []);
+
+  const handleRoomChange = (roomId: string) => {
+    setForm((f) => ({ ...f, roomId }));
+
+    if (!roomId) return;
+
+    const selectedRoom = rooms.find((r) => r.id === roomId);
+    if (selectedRoom) {
+      const rentalPrice = selectedRoom.price || 1000000;
+      setForm((f) => ({
+        ...f,
+        roomId,
+        roomPrice: rentalPrice,
+        totalAmount: calculateTotal({ ...f, roomPrice: rentalPrice }),
+      }));
+    }
+  };
 
   const isPaid = (status: string) => status === "paid";
   const isOverdue = (dueDate: string, status: string) => {
@@ -265,11 +300,19 @@ TRẠNG THÁI: ${bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toá
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm">Phòng</label>
-                  <input
+                  <select
                     value={form.roomId || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, roomId: e.target.value }))}
+                    onChange={(e) => handleRoomChange(e.target.value)}
+                    disabled={loadingRooms}
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  />
+                  >
+                    <option value="">{loadingRooms ? "Đang tải..." : "Chọn phòng"}</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        {room.roomNumber || room.id} - {room.price?.toLocaleString()}đ
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="mb-1 block text-sm">Email người thuê</label>
