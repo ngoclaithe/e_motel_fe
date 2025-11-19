@@ -304,10 +304,17 @@ export default function LandlordContractsPage() {
     }
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Xóa hợp đồng này?")) return;
-    setContracts(contracts.filter((c) => c.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+
+    try {
+      await contractService.deleteContract(id);
+      setContracts(contracts.filter((c) => c.id !== id));
+      push({ title: "Đã xóa hợp đồng thành công", type: "success" });
+    } catch (error) {
+      push({ title: "Lỗi khi xóa hợp đồng", type: "error" });
+      console.error(error);
+    }
   };
 
   return (
@@ -414,21 +421,19 @@ export default function LandlordContractsPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleTypeChange("ROOM")}
-                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                      contractType === "ROOM"
+                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${contractType === "ROOM"
                         ? "bg-black text-white dark:bg-white dark:text-black"
                         : "border border-black/10 dark:border-white/15"
-                    }`}
+                      }`}
                   >
                     Thuê phòng
                   </button>
                   <button
                     onClick={() => handleTypeChange("MOTEL")}
-                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                      contractType === "MOTEL"
+                    className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${contractType === "MOTEL"
                         ? "bg-black text-white dark:bg-white dark:text-black"
                         : "border border-black/10 dark:border-white/15"
-                    }`}
+                      }`}
                   >
                     Thuê cả nhà trọ
                   </button>
