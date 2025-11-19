@@ -29,7 +29,7 @@ function download(filename: string, content: string) {
 }
 
 export default function AdminReportsPage() {
-  useEnsureRole(["admin"]);
+  useEnsureRole(["ADMIN"]);
   const [motels] = useLocalStorage<Motel[]>("emotel_motels", []);
   const [rooms] = useLocalStorage<Room[]>("emotel_rooms", []);
 

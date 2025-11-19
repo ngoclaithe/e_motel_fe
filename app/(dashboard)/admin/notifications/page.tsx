@@ -29,7 +29,7 @@ function writeNoti(items: NotificationItem[]) {
 }
 
 export default function AdminNotificationsPage() {
-  useEnsureRole(["admin"]);
+  useEnsureRole(["ADMIN"]);
   const { push } = useToast();
   const [items, setItems] = useState<NotificationItem[]>(() => readNoti());
   const [query, setQuery] = useState("");

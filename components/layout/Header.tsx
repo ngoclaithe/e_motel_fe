@@ -18,7 +18,7 @@ export default function Header() {
     setEmail(session?.email || null);
   }, [getSession]);
 
-  const label = role === "landlord" ? "Chủ trọ" : role === "tenant" ? "Người thuê" : role === "admin" ? "Quản trị" : null;
+  const label = role === "LANDLORD" ? "Chủ trọ" : role === "TENANT" ? "Người thuê" : role === "ADMIN" ? "Quản trị" : null;
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-black/10 bg-background/80 px-4 backdrop-blur-md dark:border-white/10">

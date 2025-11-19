@@ -7,7 +7,7 @@ import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
 
 export default function LandlordFeedbacksPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["LANDLORD"]);
   const { push } = useToast();
   const [feedbacks, setFeedbacks] = useLocalStorage<Feedback[]>("emotel_feedbacks", []);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);

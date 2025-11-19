@@ -83,11 +83,11 @@ const INITIAL_FORM: MotelFormData = {
 };
 
 export default function MotelsPage() {
-  useEnsureRole(["landlord", "tenant"]);
+  useEnsureRole(["LANDLORD", "TENANT"]);
   const role = useCurrentRole();
   const { push } = useToast();
 
-  const [tab, setTab] = useState<'my' | 'all'>(role === 'tenant' ? 'all' : 'my');
+  const [tab, setTab] = useState<'my' | 'all'>(role === "TENANT" ? 'all' : 'my');
   const [motels, setMotels] = useState<Motel[]>([]);
   const [allMotels, setAllMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
@@ -99,6 +99,8 @@ export default function MotelsPage() {
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [viewingMotel, setViewingMotel] = useState<Motel | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Pagination and filtering for "All Motels" tab
   const [page, setPage] = useState(1);
@@ -150,7 +152,7 @@ export default function MotelsPage() {
   }, [page, searchTerm, filters, push]);
 
   useEffect(() => {
-    if (role === 'landlord' && tab === 'my') {
+    if (role === "LANDLORD" && tab === 'my') {
       fetchMyMotels();
     } else if (tab === 'all') {
       fetchAllMotels();
@@ -322,11 +324,13 @@ export default function MotelsPage() {
 
   const displayMotels = tab === 'my' ? motels : allMotels;
 
+  if (!mounted) return null;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Nhà trọ</h1>
-        {role === 'landlord' && (
+        {role === "LANDLORD" && (
           <button onClick={() => setOpen(true)} disabled={loading} className="btn-primary disabled:opacity-50">
             Thêm nhà trọ
           </button>
@@ -334,7 +338,7 @@ export default function MotelsPage() {
       </div>
 
       {/* Tabs */}
-      {role === 'landlord' && (
+      {role === "LANDLORD" && (
         <div className="flex gap-4 border-b border-black/10 dark:border-white/15">
           <button
             onClick={() => {
@@ -360,7 +364,7 @@ export default function MotelsPage() {
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
             }`}
           >
-            Tất cả
+            Tất c���
           </button>
         </div>
       )}
@@ -453,13 +457,13 @@ export default function MotelsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex gap-2">
-                    {role === 'landlord' && tab === 'my' && (
+                    {role === "LANDLORD" && tab === 'my' && (
                       <>
                         <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                         <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                       </>
                     )}
-                    {role === 'tenant' && (
+                    {role === "TENANT" && (
                       <button onClick={() => setViewingMotel(m)} className="flex-1 rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xem chi tiết</button>
                     )}
                   </div>
@@ -642,7 +646,7 @@ export default function MotelsPage() {
         </div>
       )}
 
-      {role === 'landlord' && open && (
+      {role === "LANDLORD" && open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">

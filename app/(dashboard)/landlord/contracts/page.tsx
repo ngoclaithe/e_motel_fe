@@ -9,7 +9,7 @@ import { useEnsureRole } from "../../../../hooks/useAuth";
 import { userService, motelService, roomService, contractService } from "../../../../lib/services";
 
 export default function LandlordContractsPage() {
-  useEnsureRole(["landlord"]);
+  useEnsureRole(["LANDLORD"]);
   const router = useRouter();
   const { push } = useToast();
   const [contracts, setContracts] = useLocalStorage<Contract[]>("emotel_contracts", []);

@@ -33,7 +33,7 @@ function writeUsers(users: UserItem[]) {
 }
 
 export default function AdminUsersPage() {
-  useEnsureRole(["admin"]);
+  useEnsureRole(["ADMIN"]);
   const { push } = useToast();
   const [users, setUsers] = useState<UserItem[]>(() => readUsers());
   const [open, setOpen] = useState(false);

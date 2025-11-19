@@ -1,17 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "../components/providers/ToastProvider";
-import type { UserRole } from "../types";
+import type { UserRole, LoginResponse } from "../lib/services/auth";
 
 function normalizeRole(value: unknown): UserRole | null {
   if (!value || typeof value !== "string") return null;
-  const v = value.trim().toLowerCase();
-  if (v === "admin" || v === "landlord" || v === "tenant") return v as UserRole;
-  if (v === "landlord".toUpperCase()) return "landlord";
-  if (v === "tenant".toUpperCase()) return "tenant";
-  if (v === "admin".toUpperCase()) return "admin";
+  const v = value.trim().toUpperCase();
+  if (v === "ADMIN" || v === "LANDLORD" || v === "TENANT") return v as UserRole;
   return null;
 }
 
@@ -27,11 +24,11 @@ async function fetchMe(): Promise<{ role?: string } | null> {
 
 export function routeForRole(role: UserRole): string {
   switch (role) {
-    case "admin":
+    case "ADMIN":
       return "/admin";
-    case "tenant":
+    case "TENANT":
       return "/tenant";
-    case "landlord":
+    case "LANDLORD":
     default:
       return "/landlord";
   }
@@ -83,17 +80,30 @@ export function useCurrentRole() {
 
 export function useEnsureRole(allowed: UserRole[], fallback?: string) {
   const router = useRouter();
+  const pathname = usePathname();
   const role = useCurrentRole();
+
   useEffect(() => {
+    const toKey = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+
     if (role === null) {
-      router.replace("/login");
+      if (pathname !== "/login") {
+        router.replace("/login");
+      }
       return;
     }
-    if (!allowed.includes(role)) {
-      const to = fallback || routeForRole(role);
-      router.replace(to);
+
+    const current = toKey(role);
+    const allowedKeys = (allowed || []).map(toKey);
+
+    if (!allowedKeys.includes(current)) {
+      const target = fallback || routeForRole(role);
+      if (target !== pathname) {
+        router.replace(target);
+      }
     }
-  }, [role, allowed, fallback, router]);
+  }, [role, allowed, fallback, router, pathname]);
+
   return role;
 }
 
@@ -113,56 +123,45 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      let loginResponse: Record<string, unknown> | null = null;
+      let loginResponse: LoginResponse | null = null;
+
       try {
         loginResponse = await api.post("/api/v1/auth/login", { email, password });
-      } catch {}
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Email hoặc mật khẩu không đúng";
+        push({ title: "Lỗi đăng nhập", description: errorMessage, type: "error" });
+        return;
+      }
 
-      try {
-        const pick = (obj: Record<string, unknown>, keys: string[]): string | null => {
-          for (const k of keys) {
-            const v = obj && typeof obj === "object" ? (obj)[k as keyof typeof obj] : null;
-            if (typeof v === "string" && v.trim()) return v;
-          }
-          return null;
-        };
-        const nested = (obj: unknown): Record<string, unknown> | null =>
-          (obj && typeof obj === "object" ? (obj as Record<string, unknown>) : null);
-        const tokenRaw =
-          (loginResponse && (pick(loginResponse, ["token", "access_token", "accessToken", "auth_token"]) ||
-                             pick(nested(loginResponse?.data), ["token", "access_token", "accessToken", "auth_token"]) ||
-                             pick(nested(loginResponse?.result), ["token", "access_token", "accessToken", "auth_token"])) ) || null;
-        const token = typeof tokenRaw === "string" ? tokenRaw.replace(/^Bearer\s+/i, "").trim() : null;
+      if (!loginResponse?.accessToken) {
+        push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
+        return;
+      }
 
-        if (token) {
-          localStorage.setItem("emotel_token", token);
-          localStorage.setItem("emotel_session", JSON.stringify({ email, token }));
-        } else {
-          localStorage.setItem("emotel_session", JSON.stringify({ email }));
-        }
-      } catch {}
+      // Store tokens
+      localStorage.setItem("emotel_token", loginResponse.accessToken);
+      localStorage.setItem("emotel_session", JSON.stringify({ email, token: loginResponse.accessToken }));
+
+      if (loginResponse.refreshToken) {
+        localStorage.setItem("emotel_refresh_token", loginResponse.refreshToken);
+      }
 
       const me = await fetchMe();
       let role: UserRole | null = normalizeRole(me?.role);
 
       if (!role) {
-        try {
-          const users: Array<{ email: string; role?: string }> = JSON.parse(
-            localStorage.getItem("emotel_users") || "[]"
-          ) as Array<{ email: string; role?: string }>;
-          const found = users.find((u) => u.email === email);
-          role = normalizeRole(found?.role) || "landlord";
-        } catch {
-          role = "landlord";
-        }
+        role = "LANDLORD";
       }
 
-      try { if (role) localStorage.setItem("emotel_active_role", role); } catch {}
+      try {
+        if (role) localStorage.setItem("emotel_active_role", role);
+      } catch {}
 
       push({ title: "Đăng nhập thành công", description: `Xin chào ${email}`, type: "success" });
-      router.push(routeForRole(role!));
-    } catch {
-      push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
+      router.push(routeForRole(role));
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Không thể đăng nhập. Vui lòng thử lại.";
+      push({ title: "Lỗi", description: errorMessage, type: "error" });
     } finally {
       setLoading(false);
     }

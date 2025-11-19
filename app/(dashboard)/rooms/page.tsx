@@ -19,7 +19,7 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
-  useEnsureRole(["landlord", "tenant", "admin"]);
+  useEnsureRole(["LANDLORD", "TENANT", "ADMIN"]);
   const role = useCurrentRole();
   const { push } = useToast();
 
@@ -34,6 +34,8 @@ export default function RoomsPage() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   const [form, setForm] = useState<Partial<Room>>({
     number: "",
@@ -266,6 +268,8 @@ export default function RoomsPage() {
     });
   };
 
+  if (!mounted) return null;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -280,7 +284,7 @@ export default function RoomsPage() {
             </button>
             <button
               onClick={() => setViewFilter('mine')}
-              disabled={!(role === 'landlord' || role === 'admin')}
+              disabled={!(role === "LANDLORD" || role === "ADMIN")}
               className={`rounded-lg px-3 py-1 text-sm ${viewFilter === 'mine' ? 'bg-black/5 dark:bg-white/10' : 'opacity-80'}`}
             >
               Của tôi
@@ -296,7 +300,7 @@ export default function RoomsPage() {
             <option value="OCCUPIED">Đang thuê</option>
             <option value="MAINTENANCE">Bảo trì</option>
           </select>
-          {(role === 'landlord' || role === 'admin') && (
+          {(role === "LANDLORD" || role === "ADMIN") && (
             <button onClick={() => setOpen(true)} className="btn-primary">Thêm phòng</button>
           )}
         </div>
@@ -348,7 +352,7 @@ export default function RoomsPage() {
                 <div className="text-xs text-zinc-500">Sức chứa {r.maxOccupancy ?? '-'}</div>
               </div>
 
-              {(role === 'landlord' || role === 'admin') && (
+              {(role === "LANDLORD" || role === "ADMIN") && (
                 <div className="mt-3 flex gap-2">
                   <button onClick={(e) => { e.stopPropagation(); openEditModal(r); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
                   <button onClick={(e) => { e.stopPropagation(); remove(r.id); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
@@ -422,7 +426,7 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {open && (role === 'landlord' || role === 'admin') && (
+      {(role === "LANDLORD" || role === "ADMIN") && open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/40 flex flex-col">
             <div className="flex-shrink-0 border-b border-black/10 px-6 py-4 dark:border-white/15">

@@ -5,7 +5,7 @@ import { useEnsureRole, useAuth, useCurrentRole } from "../../../hooks/useAuth";
 import { useToast } from "../../../components/providers/ToastProvider";
 
 export default function ProfilePage() {
-  useEnsureRole(["tenant", "landlord", "admin"]);
+  useEnsureRole(["TENANT", "LANDLORD", "ADMIN"]);
   const { push } = useToast();
   const role = useCurrentRole();
   const { logout, getSession } = useAuth();
