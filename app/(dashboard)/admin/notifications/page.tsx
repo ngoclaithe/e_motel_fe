@@ -1,109 +1,124 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useEnsureRole } from "../../../../hooks/useAuth";
-import type { UserRole } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  message: string;
-  toRole?: UserRole | "all";
-  toEmail?: string;
-  createdAt: string;
-}
-
-function readNoti(): NotificationItem[] {
-  try {
-    const raw = localStorage.getItem("emotel_notifications");
-    const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeNoti(items: NotificationItem[]) {
-  try { localStorage.setItem("emotel_notifications", JSON.stringify(items)); } catch {}
-}
+import { notificationService, type Notification, type CreateNotificationDto } from "../../../../lib/services/notification";
 
 export default function AdminNotificationsPage() {
   useEnsureRole(["ADMIN"]);
   const { push } = useToast();
-  const [items, setItems] = useState<NotificationItem[]>(() => readNoti());
-  const [query, setQuery] = useState("");
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<Partial<NotificationItem>>({ title: "", message: "", toRole: "all" });
+  const [form, setForm] = useState<CreateNotificationDto>({
+    title: "",
+    message: "",
+    toRole: undefined,
+    toEmail: "",
+  });
 
-  useEffect(() => {
-    writeNoti(items);
-  }, [items]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((n) => n.title.toLowerCase().includes(q) || n.message.toLowerCase().includes(q));
-  }, [items, query]);
-
-  const create = () => {
-    if (!form.title || !form.message) return;
-    const toRole = form.toRole as UserRole | "all" | undefined;
-    const n: NotificationItem = {
-      id: crypto.randomUUID(),
-      title: String(form.title),
-      message: String(form.message),
-      toRole: toRole || "all",
-      toEmail: form.toEmail || "",
-      createdAt: new Date().toISOString(),
-    };
-    setItems([n, ...items]);
-    push({ title: "Đã tạo thông báo", type: "success" });
-    setOpen(false);
-    setForm({ title: "", message: "", toRole: "all" });
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await notificationService.getAllNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      push({ title: "Lỗi", description: "Không thể tải thông báo", type: "error" });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const remove = (id: string) => {
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const create = async () => {
+    if (!form.title || !form.message) {
+      push({ title: "Lỗi", description: "Vui lòng điền đầy đủ thông tin", type: "error" });
+      return;
+    }
+
+    try {
+      await notificationService.createNotification(form);
+      push({ title: "Đã tạo thông báo", type: "success" });
+      setOpen(false);
+      setForm({ title: "", message: "", toRole: undefined, toEmail: "" });
+      await fetchNotifications();
+    } catch (error: any) {
+      console.error(error);
+      push({ title: "Lỗi", description: error?.message || "Không thể tạo thông báo", type: "error" });
+    }
+  };
+
+  const remove = async (id: string) => {
     if (!confirm("Xóa thông báo này?")) return;
-    setItems(items.filter((i) => i.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+    try {
+      await notificationService.deleteNotification(id);
+      push({ title: "Đã xóa", type: "info" });
+      await fetchNotifications();
+    } catch (error: any) {
+      console.error(error);
+      push({ title: "Lỗi", description: error?.message || "Không thể xóa thông báo", type: "error" });
+    }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold">Thông báo</h1>
-        <div className="flex items-center gap-2">
-          <input
-            placeholder="Tìm thông báo"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-64 rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-          />
-          <button onClick={() => setOpen(true)} className="btn-primary">Tạo thông báo</button>
-        </div>
+        <h1 className="text-xl font-semibold">Quản lý thông báo</h1>
+        <button onClick={() => setOpen(true)} className="btn-primary" disabled={loading}>
+          Tạo thông báo
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((n) => (
-          <div key={n.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="font-medium">{n.title}</div>
-                <div className="mt-0.5 text-xs text-zinc-500">{new Date(n.createdAt).toLocaleString()}</div>
+      {loading && (
+        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center dark:border-white/10 dark:bg-black/40">
+          <div className="text-sm text-zinc-500">Đang tải...</div>
+        </div>
+      )}
+
+      {!loading && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {notifications.map((n) => (
+            <div key={n.id} className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-medium">{n.title}</div>
+                  <div className="mt-0.5 text-xs text-zinc-500">
+                    {new Date(n.createdAt).toLocaleString()}
+                  </div>
+                </div>
+                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  {n.toRole || "Tất cả"}
+                </span>
               </div>
-              <span className="badge-accent capitalize">{n.toEmail ? n.toEmail : (n.toRole || "all")}</span>
+              <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{n.message}</div>
+              {n.createdBy && (
+                <div className="mt-2 text-xs text-zinc-500">
+                  Tạo bởi: {n.createdBy.email}
+                </div>
+              )}
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => remove(n.id)}
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Xóa
+                </button>
+              </div>
             </div>
-            <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">{n.message}</div>
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => remove(n.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+          ))}
+          {notifications.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
+              Chưa có thông báo
             </div>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">Chưa có thông báo</div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -113,46 +128,55 @@ export default function AdminNotificationsPage() {
               <div>
                 <label className="mb-1 block text-sm">Tiêu đề</label>
                 <input
-                  value={form.title || ""}
+                  value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  placeholder="Thông báo quan trọng"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-sm">Nội dung</label>
                 <textarea
-                  value={form.message || ""}
+                  value={form.message}
                   onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
                   rows={4}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  placeholder="Nội dung thông báo..."
                 />
               </div>
               <div>
                 <label className="mb-1 block text-sm">Gửi tới</label>
                 <select
-                  value={form.toRole || "all"}
-                  onChange={(e) => setForm((f) => ({ ...f, toRole: e.target.value as UserRole | "all" }))}
+                  value={form.toRole || ""}
+                  onChange={(e) => setForm((f) => ({ ...f, toRole: e.target.value as any || undefined }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="admin">Quản trị</option>
-                  <option value="landlord">Chủ trọ</option>
-                  <option value="tenant">Người thuê</option>
+                  <option value="">Tất cả</option>
+                  <option value="ADMIN">Quản trị</option>
+                  <option value="LANDLORD">Chủ trọ</option>
+                  <option value="TENANT">Người thuê</option>
                 </select>
               </div>
               <div>
                 <label className="mb-1 block text-sm">Hoặc email cụ thể (tùy chọn)</label>
                 <input
                   type="email"
-                  value={form.toEmail || ""}
+                  value={form.toEmail}
                   onChange={(e) => setForm((f) => ({ ...f, toEmail: e.target.value }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   placeholder="user@example.com"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button onClick={() => setOpen(false)} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
-                <button onClick={create} className="btn-primary">Tạo</button>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Hủy
+                </button>
+                <button onClick={create} className="btn-primary">
+                  Tạo
+                </button>
               </div>
             </div>
           </div>

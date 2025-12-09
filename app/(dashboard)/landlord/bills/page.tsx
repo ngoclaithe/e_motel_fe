@@ -96,7 +96,7 @@ export default function LandlordBillsPage() {
 
   const handleMarkPaid = async (id: string) => {
     try {
-      await billService.payBill(id, { paymentMethod: "cash" });
+      await billService.markAsPaid(id);
       push({ title: "Đánh dấu đã thanh toán", type: "success" });
       fetchBills();
     } catch (err) {

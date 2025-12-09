@@ -8,6 +8,8 @@ export * from "./feedbacks";
 export * from "./notifications";
 export * from "./reports";
 export * from "./user";
+export type { Notification, CreateNotificationDto } from "./notification";
+export { notificationService } from "./notification";
 
 export { authService } from "./auth";
 export { profileService } from "./profile";
@@ -16,6 +18,6 @@ export { roomService } from "./rooms";
 export { contractService } from "./contracts";
 export { billService } from "./bills";
 export { feedbackService } from "./feedbacks";
-export { notificationService } from "./notifications";
+export { notificationService as oldNotificationService } from "./notifications";
 export { reportService } from "./reports";
 export { userService } from "./user";

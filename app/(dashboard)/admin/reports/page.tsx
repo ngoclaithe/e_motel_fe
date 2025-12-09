@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import type { Motel, Room } from "../../../../types";
-import { useLocalStorage } from "../../../../hooks/useLocalStorage";
 import { useEnsureRole } from "../../../../hooks/useAuth";
+import { userService } from "../../../../lib/services/user";
+import { motelService } from "../../../../lib/services/motels";
+import { roomService } from "../../../../lib/services/rooms";
 
 function toCSV<T extends Record<string, unknown>>(rows: T[]): string {
   if (!rows.length) return "";
@@ -30,8 +32,31 @@ function download(filename: string, content: string) {
 
 export default function AdminReportsPage() {
   useEnsureRole(["ADMIN"]);
-  const [motels] = useLocalStorage<Motel[]>("emotel_motels", []);
-  const [rooms] = useLocalStorage<Room[]>("emotel_rooms", []);
+  const [motels, setMotels] = useState<Motel[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [motelResponse, roomList, userList] = await Promise.all([
+          motelService.listMotels({ page: 1, limit: 100 }),
+          roomService.listAll(),
+          userService.getAllUsers(),
+        ]);
+        setMotels(motelResponse.data || []);
+        setRooms(roomList);
+        setUsers(Array.isArray(userList) ? userList : []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const stats = useMemo(() => {
     const totalRooms = rooms.length;
@@ -40,8 +65,8 @@ export default function AdminReportsPage() {
     const maintenance = rooms.filter((r) => r.status === "MAINTENANCE").length;
     const estimatedRevenue = rooms.filter((r) => r.status === "OCCUPIED").reduce((sum, r) => sum + (r.price || 0), 0);
     const occupancyRate = totalRooms ? Math.round((occupied / totalRooms) * 100) : 0;
-    return { totalMotels: motels.length, totalRooms, occupied, vacant, maintenance, estimatedRevenue, occupancyRate };
-  }, [motels, rooms]);
+    return { totalMotels: motels.length, totalRooms, occupied, vacant, maintenance, estimatedRevenue, occupancyRate, totalUsers: users.length };
+  }, [motels, rooms, users]);
 
   const exportMotels = () => {
     if (!motels.length) return;
@@ -52,10 +77,25 @@ export default function AdminReportsPage() {
     download("rooms.csv", toCSV(rooms as any[]));
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <h1 className="text-xl font-semibold">Báo cáo & Thống kê</h1>
+        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center dark:border-white/10 dark:bg-black/40">
+          <div className="text-sm text-zinc-500">Đang tải...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <h1 className="text-xl font-semibold">Báo cáo & Thống kê</h1>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
+          <div className="text-sm text-zinc-500">Người dùng</div>
+          <div className="mt-1 text-2xl font-semibold">{stats.totalUsers}</div>
+        </div>
         <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
           <div className="text-sm text-zinc-500">Nhà trọ</div>
           <div className="mt-1 text-2xl font-semibold">{stats.totalMotels}</div>
@@ -63,10 +103,6 @@ export default function AdminReportsPage() {
         <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
           <div className="text-sm text-zinc-500">Phòng</div>
           <div className="mt-1 text-2xl font-semibold">{stats.totalRooms}</div>
-        </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Tỉ lệ lấp đầy</div>
-          <div className="mt-1 text-2xl font-semibold">{stats.occupancyRate}%</div>
         </div>
       </div>
 
@@ -87,15 +123,12 @@ export default function AdminReportsPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Doanh thu ước tính (tháng)</div>
-          <div className="mt-1 text-2xl font-semibold">{stats.estimatedRevenue.toLocaleString()}đ</div>
+          <div className="text-sm text-zinc-500">Tỉ lệ lấp đầy</div>
+          <div className="mt-1 text-2xl font-semibold">{stats.occupancyRate}%</div>
         </div>
         <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Xuất dữ liệu</div>
-          <div className="mt-2 flex gap-2">
-            <button onClick={exportMotels} className="btn-primary">Export Motels CSV</button>
-            <button onClick={exportRooms} className="btn-primary">Export Rooms CSV</button>
-          </div>
+          <div className="text-sm text-zinc-500">Doanh thu ước tính (tháng)</div>
+          <div className="mt-1 text-2xl font-semibold">{stats.estimatedRevenue.toLocaleString()}đ</div>
         </div>
       </div>
     </div>

@@ -31,7 +31,9 @@ export default function RoomsPage() {
   const [viewFilter, setViewFilter] = useState<'all' | 'mine'>('all');
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [open, setOpen] = useState(false);
+
   const [editing, setEditing] = useState<Room | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -377,10 +379,22 @@ export default function RoomsPage() {
                 <div>
                   {selectedRoom.images && selectedRoom.images.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2">
-                      {((selectedRoom.images || []) as any[]).slice(0, 4).map((img, idx) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={idx} src={typeof img === 'string' ? img : img.url} alt={`img-${idx}`} className="w-full h-32 object-cover rounded-md" />
-                      ))}
+                      {((selectedRoom.images || []) as any[]).slice(0, 4).map((img, idx) => {
+                        const imgUrl = typeof img === 'string' ? img : img.url;
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => setViewingImage(imgUrl)}
+                            className="group relative cursor-pointer"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={imgUrl} alt={`img-${idx}`} className="w-full h-32 object-cover rounded-md transition-transform duration-300 group-hover:brightness-110" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors rounded-md">
+                              <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm">Xem</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="w-full h-32 rounded-md bg-black/5" />
@@ -772,6 +786,27 @@ export default function RoomsPage() {
                 {uploading ? "Đang tải lên..." : "Lưu"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {viewingImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <button
+              onClick={() => setViewingImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-red-400 transition-colors"
+            >
+              ✕ Đóng
+            </button>
+            <img
+              src={viewingImage}
+              alt="Full size"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

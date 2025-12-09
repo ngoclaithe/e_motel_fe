@@ -106,6 +106,13 @@ export const api = {
       body: body && typeof body === "string" ? body : JSON.stringify(body)
     }),
 
+  patch: <T = unknown>(path: string, body?: unknown, init?: RequestInit) =>
+    request<T>(path, {
+      ...(init || {}),
+      method: "PATCH",
+      body: body && typeof body === "string" ? body : JSON.stringify(body)
+    }),
+
   del: <T = unknown>(path: string, init?: RequestInit) =>
     request<T>(path, { ...(init || {}), method: "DELETE" }),
 

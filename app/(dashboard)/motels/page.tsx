@@ -99,6 +99,7 @@ export default function MotelsPage() {
   const [nearbyPlaceInput, setNearbyPlaceInput] = useState("");
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [viewingMotel, setViewingMotel] = useState<Motel | null>(null);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -346,8 +347,8 @@ export default function MotelsPage() {
               setPage(1);
             }}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === 'my'
-                ? 'border-black dark:border-white text-black dark:text-white'
-                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+              ? 'border-black dark:border-white text-black dark:text-white'
+              : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
               }`}
           >
             Của tôi
@@ -358,8 +359,8 @@ export default function MotelsPage() {
               setPage(1);
             }}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === 'all'
-                ? 'border-black dark:border-white text-black dark:text-white'
-                : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
+              ? 'border-black dark:border-white text-black dark:text-white'
+              : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
               }`}
           >
             Tất cả
@@ -431,7 +432,11 @@ export default function MotelsPage() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayMotels.map((m) => (
-              <div key={m.id} className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden dark:border-white/10 dark:bg-black/40 flex flex-col">
+              <div
+                key={m.id}
+                onClick={() => setViewingMotel(m)}
+                className="group cursor-pointer rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden transition-all hover:shadow-md dark:border-white/10 dark:bg-black/40 flex flex-col"
+              >
                 <div className="h-40 overflow-hidden bg-black/5 dark:bg-white/5 flex items-center justify-center">
                   {m.images && m.images.length > 0 && !failedImages.has(m.id) ? (
                     <img
@@ -457,12 +462,14 @@ export default function MotelsPage() {
                   <div className="mt-3 flex gap-2">
                     {role === "LANDLORD" && tab === 'my' && (
                       <>
-                        <button onClick={() => openEditModal(m)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
-                        <button onClick={() => remove(m.id)} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(m); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
+                        <button onClick={(e) => { e.stopPropagation(); remove(m.id); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xóa</button>
                       </>
                     )}
                     {role === "TENANT" && (
-                      <button onClick={() => setViewingMotel(m)} className="flex-1 rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Xem chi tiết</button>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                        Xem chi tiết →
+                      </div>
                     )}
                   </div>
                 </div>
@@ -518,8 +525,15 @@ export default function MotelsPage() {
                       {viewingMotel.images.slice(0, 4).map((img, idx) => {
                         const imgUrl = typeof img === 'string' ? img : ((img as Record<string, unknown>)?.url as string) || '';
                         return (
-                          <div key={idx} className="rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-32">
-                            <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover" />
+                          <div
+                            key={idx}
+                            onClick={() => setViewingImage(imgUrl)}
+                            className="group relative cursor-pointer rounded-lg overflow-hidden bg-black/5 dark:bg-white/5 h-32"
+                          >
+                            <img src={imgUrl} alt={`${idx + 1}`} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                              <span className="opacity-0 group-hover:opacity-100 text-white text-xs font-medium bg-black/50 px-2 py-1 rounded-full backdrop-blur-sm">Xem</span>
+                            </div>
                           </div>
                         );
                       })}
@@ -761,9 +775,7 @@ export default function MotelsPage() {
                         <option value="GUARD">Bảo vệ</option>
                         <option value="BOTH">Cả hai</option>
                       </select>
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                      <label className="mt-2 flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={form.has24hSecurity || false}
@@ -1056,6 +1068,28 @@ export default function MotelsPage() {
                 {uploading ? "Đang tải lên..." : "Lưu"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {viewingImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          onClick={() => setViewingImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <button
+              onClick={() => setViewingImage(null)}
+              className="absolute -top-10 right-0 text-white hover:text-red-400 transition-colors"
+            >
+              ✕ Đóng
+            </button>
+            <img
+              src={viewingImage}
+              alt="Full size"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
         </div>
       )}

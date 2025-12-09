@@ -64,7 +64,7 @@ export const billService = {
     return api.put(`/api/v1/bills/${id}`, data);
   },
 
-  payBill: async (id: string, data: PaymentRequest): Promise<PaymentResponse> => {
-    return api.post(`/api/v1/bills/${id}/pay`, data);
+  markAsPaid: async (id: string): Promise<Bill> => {
+    return api.put(`/api/v1/bills/${id}/pay`);
   },
 };

@@ -136,7 +136,7 @@ export default function ContractDetailPage() {
                 <div className="mt-1 font-medium">
                   {Math.round(
                     (new Date(contract.endDate).getTime() - new Date(contract.startDate).getTime()) /
-                      (1000 * 60 * 60 * 24 * 30)
+                    (1000 * 60 * 60 * 24 * 30)
                   )}{" "}
                   tháng
                 </div>
@@ -235,20 +235,6 @@ export default function ContractDetailPage() {
             </div>
           )}
 
-          {contract.documentContent && (
-            <div className="border-t border-black/10 pt-6 dark:border-white/15">
-              <h2 className="mb-4 font-semibold">Tài liệu hợp đồng</h2>
-              <div className="mb-4 max-h-96 overflow-y-auto rounded-lg border border-black/10 bg-black/5 p-4 text-xs dark:border-white/15 dark:bg-white/5">
-                <pre className="whitespace-pre-wrap font-mono text-xs">{contract.documentContent}</pre>
-              </div>
-              <button
-                onClick={downloadPDF}
-                className="rounded-lg bg-black px-4 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
-              >
-                Tải xuống văn bản
-              </button>
-            </div>
-          )}
         </div>
       </div>
 

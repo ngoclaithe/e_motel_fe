@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { billService } from "../../../lib/services";
+import PaymentQR from "../../../components/PaymentQR";
 
 export default function TenantBillsPage() {
   useEnsureRole(["TENANT"]);
@@ -12,6 +13,8 @@ export default function TenantBillsPage() {
   const [bills, setBills] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedBill, setSelectedBill] = useState<any | null>(null);
+  const [showPaymentQR, setShowPaymentQR] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState<any>(null);
 
   const userEmail = (() => {
     try {
@@ -46,14 +49,41 @@ export default function TenantBillsPage() {
     return tenantBills.filter((b: any) => !b.isPaid).reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
   };
 
-  const handlePay = async (billId: string) => {
-    try {
-      await billService.payBill(billId, { paymentMethod: "cash" });
-      push({ title: "Thanh toán thành công", type: "success" });
-      fetchBills();
-    } catch (err) {
-      push({ title: "Thanh toán thất bại", type: "error" });
+  const handleShowPayment = (bill: any) => {
+    // Debug logs
+    console.log("=== DEBUG PAYMENT INFO ===");
+    console.log("Full bill object:", bill);
+    console.log("Contract:", bill.contract);
+    console.log("Room:", bill.contract?.room);
+    console.log("Motel:", bill.contract?.motel);
+
+    // Get owner (landlord) from room or motel
+    const landlord = bill.contract?.room?.owner || bill.contract?.motel?.owner;
+
+    console.log("Bank info:", {
+      bankName: landlord?.bankName,
+      bankCode: landlord?.bankCode,
+      bankAccountNumber: landlord?.bankAccountNumber,
+    });
+
+    if (!landlord?.bankName || !landlord?.bankCode || !landlord?.bankAccountNumber) {
+      push({
+        title: "Thông tin thanh toán chưa đầy đủ",
+        description: "Chủ trọ chưa cập nhật thông tin ngân hàng",
+        type: "error"
+      });
+      return;
     }
+
+    setPaymentInfo({
+      billId: bill.id,
+      amount: bill.totalAmount,
+      bankName: landlord.bankName,
+      bankCode: landlord.bankCode,
+      accountNumber: landlord.bankAccountNumber,
+      landlordName: `${landlord.firstName || ""} ${landlord.lastName || ""}`.trim() || "Chủ trọ",
+    });
+    setShowPaymentQR(true);
   };
 
   const getContractInfo = (bill: any) => {
@@ -166,7 +196,7 @@ export default function TenantBillsPage() {
                         </button>
                         {!bill.isPaid && (
                           <button
-                            onClick={() => handlePay(bill.id)}
+                            onClick={() => handleShowPayment(bill)}
                             className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
                           >
                             Thanh toán
@@ -269,7 +299,7 @@ export default function TenantBillsPage() {
                   {!selectedBill.isPaid && (
                     <button
                       onClick={() => {
-                        handlePay(selectedBill.id);
+                        handleShowPayment(selectedBill);
                         setSelectedBill(null);
                       }}
                       className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
@@ -281,6 +311,22 @@ export default function TenantBillsPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Payment QR Modal */}
+        {showPaymentQR && paymentInfo && (
+          <PaymentQR
+            billId={paymentInfo.billId}
+            amount={paymentInfo.amount}
+            bankName={paymentInfo.bankName}
+            bankCode={paymentInfo.bankCode}
+            accountNumber={paymentInfo.accountNumber}
+            landlordName={paymentInfo.landlordName}
+            onClose={() => {
+              setShowPaymentQR(false);
+              setPaymentInfo(null);
+            }}
+          />
         )}
       </div>
     </div>

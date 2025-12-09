@@ -63,10 +63,12 @@ export const userService = {
   deleteUser: async (id: string): Promise<unknown> => {
     return api.del(`/api/v1/users/${id}`);
   },
-  updateProfile: async (payload: { firstName?: string; lastName?: string; phone?: string; address?: string }): Promise<unknown> => {
-    return api.put("/api/v1/users/profile", payload);
+  updateProfile: async (payload: { firstName?: string; lastName?: string; phoneNumber?: string; address?: string }): Promise<unknown> => {
+    // Get current user profile first to get the ID
+    const profile = await api.get("/api/v1/users/profile") as any;
+    return api.put(`/api/v1/users/${profile.id}`, payload);
   },
   changePassword: async (payload: { oldPassword: string; newPassword: string }): Promise<unknown> => {
-    return api.put("/api/v1/users/change-password", payload);
+    return api.post("/api/v1/auth/change-password", payload);
   },
 };
