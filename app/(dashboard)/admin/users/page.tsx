@@ -18,7 +18,7 @@ function readUsers(): UserItem[] {
     const valid = Array.isArray(arr) ? arr.filter((u) => u && u.email) : [];
     return valid.map((u) => ({
       email: String(u.email),
-      role: (u.role === "admin" || u.role === "tenant" || u.role === "landlord") ? u.role : "landlord",
+      role: (u.role === "ADMIN" || u.role === "TENANT" || u.role === "LANDLORD") ? u.role : "LANDLORD",
       createdAt: u.createdAt || new Date().toISOString(),
     }));
   } catch {
@@ -29,7 +29,7 @@ function readUsers(): UserItem[] {
 function writeUsers(users: UserItem[]) {
   try {
     localStorage.setItem("emotel_users", JSON.stringify(users));
-  } catch {}
+  } catch { }
 }
 
 export default function AdminUsersPage() {
@@ -38,7 +38,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserItem[]>(() => readUsers());
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<UserItem | null>(null);
-  const [form, setForm] = useState<UserItem>({ email: "", role: "landlord", createdAt: new Date().toISOString() });
+  const [form, setForm] = useState<UserItem>({ email: "", role: "LANDLORD", createdAt: new Date().toISOString() });
   const [query, setQuery] = useState("");
 
   useEffect(() => { writeUsers(users); }, [users]);
@@ -64,7 +64,7 @@ export default function AdminUsersPage() {
     }
     setOpen(false);
     setEditing(null);
-    setForm({ email: "", role: "landlord", createdAt: new Date().toISOString() });
+    setForm({ email: "", role: "LANDLORD", createdAt: new Date().toISOString() });
   };
 
   const remove = (email: string) => {
@@ -76,9 +76,9 @@ export default function AdminUsersPage() {
   const counts = useMemo(() => {
     return {
       total: users.length,
-      admin: users.filter((u) => u.role === "admin").length,
-      landlord: users.filter((u) => u.role === "landlord").length,
-      tenant: users.filter((u) => u.role === "tenant").length,
+      admin: users.filter((u) => u.role === "ADMIN").length,
+      landlord: users.filter((u) => u.role === "LANDLORD").length,
+      tenant: users.filter((u) => u.role === "TENANT").length,
     };
   }, [users]);
 
@@ -158,9 +158,9 @@ export default function AdminUsersPage() {
                   onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as UserRole }))}
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                 >
-                  <option value="admin">Quản trị</option>
-                  <option value="landlord">Chủ trọ</option>
-                  <option value="tenant">Người thuê</option>
+                  <option value="ADMIN">Quản trị</option>
+                  <option value="LANDLORD">Chủ trọ</option>
+                  <option value="TENANT">Người thuê</option>
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">

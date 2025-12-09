@@ -1,606 +1,480 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useLocalStorage } from "../../../../hooks/useLocalStorage";
-import type { Bill } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
-import { userService, motelService, roomService, contractService } from "../../../../lib/services";
+import { billService, contractService } from "../../../../lib/services";
 
 export default function LandlordBillsPage() {
   useEnsureRole(["LANDLORD"]);
   const { push } = useToast();
-  const [bills, setBills] = useLocalStorage<Bill[]>("emotel_bills", []);
+
+  const [bills, setBills] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Bill | null>(null);
-  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
-  const [form, setForm] = useState<Partial<Bill>>({
-    roomId: "",
-    tenantEmail: "",
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-    roomPrice: 1000000,
-    electricityUsage: 0,
-    electricityPrice: 0,
-    waterUsage: 0,
-    waterPrice: 0,
+  const [editing, setEditing] = useState<any | null>(null);
+  const [selectedBill, setSelectedBill] = useState<any | null>(null);
+
+  const [form, setForm] = useState({
+    contractId: "",
+    month: new Date().toISOString().split('T')[0],
+    electricityStart: 0,
+    electricityEnd: 0,
+    waterStart: 0,
+    waterEnd: 0,
+    electricityRate: 4000,
+    waterRate: 70000,
     otherFees: 0,
-    totalAmount: 1000000,
-    status: "unpaid",
-    dueDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split("T")[0],
   });
 
-  const landlordEmail = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      return session?.email || "";
-    } catch {
-      return "";
-    }
-  })();
-
-  const landlordBills = bills.filter((b) => b.landlordEmail === landlordEmail);
-
   useEffect(() => {
-    const loadRooms = async () => {
-      setLoadingRooms(true);
-      try {
-        const r = await roomService.myRooms();
-        setRooms(Array.isArray(r) ? r : []);
-      } catch {
-        setRooms([]);
-      } finally {
-        setLoadingRooms(false);
-      }
-    };
-    loadRooms();
+    fetchBills();
+    fetchContracts();
   }, []);
 
-  const handleRoomChange = (roomId: string) => {
-    setForm((f) => ({ ...f, roomId }));
-
-    if (!roomId) return;
-
-    const selectedRoom = rooms.find((r) => r.id === roomId);
-    if (selectedRoom) {
-      const rentalPrice = selectedRoom.price || 1000000;
-      setForm((f) => ({
-        ...f,
-        roomId,
-        roomPrice: rentalPrice,
-        totalAmount: calculateTotal({ ...f, roomPrice: rentalPrice }),
-      }));
+  const fetchBills = async () => {
+    try {
+      setIsLoading(true);
+      const response = await billService.listBills(1, 100);
+      const billsData = Array.isArray(response) ? response : (response.data || []);
+      setBills(billsData);
+    } catch (err) {
+      console.error("Failed to fetch bills:", err);
+      push({ title: "Không thể tải hóa đơn", type: "error" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const isPaid = (status: string) => status === "paid";
-  const isOverdue = (dueDate: string, status: string) => {
-    if (status === "paid") return false;
-    return new Date(dueDate) < new Date();
+  const fetchContracts = async () => {
+    try {
+      const response = await contractService.listContracts(1, 100);
+      const contractsData = Array.isArray(response) ? response : (response.data || []);
+      setContracts(contractsData);
+    } catch (err) {
+      console.error("Failed to fetch contracts:", err);
+    }
   };
 
-  const calculateTotal = (partial: Partial<Bill>) => {
-    const room = Number(partial.roomPrice || 0);
-    const electricity = Number(partial.electricityPrice || 0);
-    const water = Number(partial.waterPrice || 0);
-    const other = Number(partial.otherFees || 0);
-    return room + electricity + water + other;
-  };
-
-  const save = () => {
-    if (!form.roomId || !form.tenantEmail || !form.month || !form.year) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường bắt buộc", type: "error" });
+  const handleSubmit = async () => {
+    if (!form.contractId) {
+      push({ title: "Vui lòng chọn hợp đồng", type: "error" });
       return;
     }
 
-    const totalAmount = calculateTotal(form);
+    try {
+      if (editing) {
+        await billService.updateBill(editing.id, form);
+        push({ title: "Cập nhật hóa đơn thành công", type: "success" });
+      } else {
+        await billService.createBill(form);
+        push({ title: "Tạo hóa đơn thành công", type: "success" });
+      }
 
-    if (editing) {
-      setBills(
-        bills.map((b) =>
-          b.id === editing.id
-            ? {
-                ...editing,
-                ...form,
-                roomPrice: Number(form.roomPrice),
-                electricityPrice: Number(form.electricityPrice),
-                waterPrice: Number(form.waterPrice),
-                otherFees: Number(form.otherFees),
-                totalAmount,
-                month: Number(form.month),
-                year: Number(form.year),
-              }
-            : b
-        )
-      );
-      push({ title: "Cập nhật thành công", type: "success" });
-    } else {
-      const newBill: Bill = {
-        id: crypto.randomUUID(),
-        landlordEmail,
-        roomId: String(form.roomId),
-        tenantEmail: String(form.tenantEmail),
-        month: Number(form.month),
-        year: Number(form.year),
-        roomPrice: Number(form.roomPrice),
-        electricityUsage: Number(form.electricityUsage || 0),
-        electricityPrice: Number(form.electricityPrice),
-        waterUsage: Number(form.waterUsage || 0),
-        waterPrice: Number(form.waterPrice),
-        otherFees: Number(form.otherFees || 0),
-        totalAmount,
-        status: "unpaid",
-        dueDate: String(form.dueDate),
-        createdAt: new Date().toISOString(),
-      };
-      setBills([newBill, ...bills]);
-      push({ title: "Tạo hóa đơn thành công", type: "success" });
+      setOpen(false);
+      setEditing(null);
+      resetForm();
+      fetchBills();
+    } catch (err: any) {
+      console.error("Failed to save bill:", err);
+      push({ title: err.message || "Không thể lưu hóa đơn", type: "error" });
     }
-    setOpen(false);
-    setEditing(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc muốn xóa hóa đơn này?")) return;
+
+    try {
+      // await billService.deleteBill(id);
+      push({ title: "Chức năng xóa chưa được hỗ trợ", type: "error" });
+      // fetchBills();
+    } catch (err) {
+      push({ title: "Không thể xóa hóa đơn", type: "error" });
+    }
+  };
+
+  const handleMarkPaid = async (id: string) => {
+    try {
+      await billService.payBill(id, { paymentMethod: "cash" });
+      push({ title: "Đánh dấu đã thanh toán", type: "success" });
+      fetchBills();
+    } catch (err) {
+      push({ title: "Không thể cập nhật trạng thái", type: "error" });
+    }
+  };
+
+  const resetForm = () => {
     setForm({
-      roomId: "",
-      tenantEmail: "",
-      month: new Date().getMonth() + 1,
-      year: new Date().getFullYear(),
-      roomPrice: 1000000,
-      electricityUsage: 0,
-      electricityPrice: 0,
-      waterUsage: 0,
-      waterPrice: 0,
+      contractId: "",
+      month: new Date().toISOString().split('T')[0],
+      electricityStart: 0,
+      electricityEnd: 0,
+      waterStart: 0,
+      waterEnd: 0,
+      electricityRate: 4000,
+      waterRate: 70000,
       otherFees: 0,
-      totalAmount: 1000000,
-      status: "unpaid",
-      dueDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split("T")[0],
     });
   };
 
-  const remove = (id: string) => {
-    if (!confirm("Xóa hóa đơn này?")) return;
-    setBills(bills.filter((b) => b.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+  const openCreateModal = () => {
+    resetForm();
+    setEditing(null);
+    setOpen(true);
   };
 
-  const markAsPaid = (id: string) => {
-    setBills(bills.map((b) => (b.id === id ? { ...b, status: "paid" } : b)));
-    push({ title: "Đã cập nhật", type: "success" });
+  const openEditModal = (bill: any) => {
+    setEditing(bill);
+    setForm({
+      contractId: bill.contractId || "",
+      month: bill.month || new Date().toISOString().split('T')[0],
+      electricityStart: bill.electricityStart || 0,
+      electricityEnd: bill.electricityEnd || 0,
+      waterStart: bill.waterStart || 0,
+      waterEnd: bill.waterEnd || 0,
+      electricityRate: bill.electricityRate || 4000,
+      waterRate: bill.waterRate || 70000,
+      otherFees: bill.otherFees || 0,
+    });
+    setOpen(true);
   };
 
-  const downloadPDF = (bill: Bill) => {
-    const element = document.createElement("a");
-    const file = new Blob([generatePDFContent(bill)], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `bill-${bill.id}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    push({ title: "Đã tải xuống", type: "success" });
+  const calculateTotal = () => {
+    const electricityUsage = form.electricityEnd - form.electricityStart;
+    const waterUsage = form.waterEnd - form.waterStart;
+    const electricityCost = electricityUsage * form.electricityRate;
+    const waterCost = waterUsage * form.waterRate;
+    return electricityCost + waterCost + form.otherFees;
   };
 
-  const generatePDFContent = (bill: Bill) => {
-    return `
-HÓA ĐƠN THANH TOÁN
-================================
-ID: ${bill.id}
-Ngày tạo: ${new Date(bill.createdAt).toLocaleDateString("vi-VN")}
-
-THÔNG TIN CHUNG
------------
-Chủ trọ: ${bill.landlordEmail}
-Người thuê: ${bill.tenantEmail}
-Phòng: ${bill.roomId}
-Tháng: ${bill.month}/${bill.year}
-Hạn thanh toán: ${new Date(bill.dueDate).toLocaleDateString("vi-VN")}
-
-CHI TIẾT
-------
-Tiền phòng: ${bill.roomPrice?.toLocaleString()}đ
-Tiền điện (${bill.electricityUsage} kWh): ${bill.electricityPrice?.toLocaleString()}đ
-Tiền nước (${bill.waterUsage} m³): ${bill.waterPrice?.toLocaleString()}đ
-Phí khác: ${bill.otherFees?.toLocaleString() || "0"}đ
-
-CỘNG: ${bill.totalAmount?.toLocaleString()}đ
-
-TRẠNG THÁI: ${bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
-    `.trim();
+  const getContractInfo = (contractId: string) => {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract) return "N/A";
+    return `${contract.room?.number || contract.motel?.name || "N/A"} - ${contract.tenant?.firstName || ""} ${contract.tenant?.lastName || ""}`;
   };
+
+  const getStats = () => {
+    return {
+      total: bills.length,
+      paid: bills.filter(b => b.isPaid).length,
+      unpaid: bills.filter(b => !b.isPaid).length,
+      revenue: bills.filter(b => b.isPaid).reduce((sum, b) => sum + (b.totalAmount || 0), 0),
+    };
+  };
+
+  const stats = getStats();
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Quản lý hóa đơn</h1>
-        <button onClick={() => setOpen(true)} className="btn-primary">
-          Tạo hóa đơn
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {landlordBills.map((bill) => (
-          <div
-            key={bill.id}
-            className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
+    <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-50 p-6 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-400">
+              Quản Lý Hóa Đơn
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">Tạo và quản lý hóa đơn tiền phòng</p>
+          </div>
+          <button
+            onClick={openCreateModal}
+            className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                  Tháng {bill.month}/{bill.year}
-                </div>
-                <div className="mt-1 text-base font-semibold">{bill.totalAmount?.toLocaleString()}đ</div>
-                <div className="mt-1 text-xs text-zinc-500">{bill.tenantEmail}</div>
-                <div className="mt-0.5 text-xs text-zinc-500">Phòng: {bill.roomId}</div>
-              </div>
-              <div>
-                {isPaid(bill.status) && (
-                  <span className="inline-block rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Đã TT
-                  </span>
-                )}
-                {isOverdue(bill.dueDate, bill.status) && (
-                  <span className="inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                    Quá hạn
-                  </span>
-                )}
-                {!isPaid(bill.status) && !isOverdue(bill.dueDate, bill.status) && (
-                  <span className="inline-block rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    Chờ TT
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => setSelectedBill(bill)}
-                className="rounded-lg border border-black/10 px-2 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Chi tiết
-              </button>
-              <button
-                onClick={() => {
-                  setEditing(bill);
-                  setForm(bill);
-                  setOpen(true);
-                }}
-                className="rounded-lg border border-black/10 px-2 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Sửa
-              </button>
-              {bill.status === "unpaid" && (
-                <button
-                  onClick={() => markAsPaid(bill.id)}
-                  className="rounded-lg border border-black/10 px-2 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  ✓ TT
-                </button>
-              )}
-              <button
-                onClick={() => remove(bill.id)}
-                className="rounded-lg border border-black/10 px-2 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Xóa
-              </button>
+            <span className="relative z-10 flex items-center gap-2">
+              <span className="text-xl">+</span>
+              Tạo Hóa Đơn
+            </span>
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50 p-6 shadow-sm transition-all hover:shadow-md dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+            <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-blue-500/10 blur-2xl"></div>
+            <div className="relative">
+              <div className="text-sm text-zinc-600 dark:text-zinc-400">Tổng số</div>
+              <div className="mt-2 text-3xl font-bold text-zinc-900 dark:text-white">{stats.total}</div>
             </div>
           </div>
-        ))}
-        {landlordBills.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
-            Chưa có hóa đơn nào
+
+          <div className="group relative overflow-hidden rounded-2xl border border-emerald-200/50 bg-gradient-to-br from-emerald-50 to-green-50 p-6 shadow-sm transition-all hover:shadow-md dark:border-emerald-900/30 dark:from-emerald-950/30 dark:to-green-950/30">
+            <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-emerald-500/20 blur-2xl"></div>
+            <div className="relative">
+              <div className="text-sm text-emerald-700 dark:text-emerald-400">Đã thanh toán</div>
+              <div className="mt-2 text-3xl font-bold text-emerald-600 dark:text-emerald-500">{stats.paid}</div>
+            </div>
+          </div>
+
+          <div className="group relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-sm transition-all hover:shadow-md dark:border-amber-900/30 dark:from-amber-950/30 dark:to-orange-950/30">
+            <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-amber-500/20 blur-2xl"></div>
+            <div className="relative">
+              <div className="text-sm text-amber-700 dark:text-amber-400">Chưa thanh toán</div>
+              <div className="mt-2 text-3xl font-bold text-amber-600 dark:text-amber-500">{stats.unpaid}</div>
+            </div>
+          </div>
+
+          <div className="group relative overflow-hidden rounded-2xl border border-purple-200/50 bg-gradient-to-br from-purple-50 to-pink-50 p-6 shadow-sm transition-all hover:shadow-md dark:border-purple-900/30 dark:from-purple-950/30 dark:to-pink-950/30">
+            <div className="absolute right-0 top-0 h-20 w-20 translate-x-6 -translate-y-6 rounded-full bg-purple-500/20 blur-2xl"></div>
+            <div className="relative">
+              <div className="text-sm text-purple-700 dark:text-purple-400">Doanh thu</div>
+              <div className="mt-2 text-2xl font-bold text-purple-600 dark:text-purple-500">{stats.revenue.toLocaleString()}đ</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bills List */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-white"></div>
+          </div>
+        ) : bills.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/50 py-20 backdrop-blur-sm dark:border-zinc-800 dark:bg-black/20">
+            <div className="text-6xl mb-4">📄</div>
+            <p className="text-zinc-500">Chưa có hóa đơn nào</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {bills.map((bill) => (
+              <div
+                key={bill.id}
+                className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50/50 p-6 shadow-sm transition-all hover:shadow-lg hover:shadow-zinc-200/50 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950/50 dark:hover:shadow-zinc-900/50"
+              >
+                <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-2xl"></div>
+
+                <div className="relative flex items-start justify-between gap-6">
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-semibold text-zinc-900 dark:text-white">{getContractInfo(bill.contractId)}</div>
+                        <div className="mt-1 text-sm text-zinc-500">
+                          {new Date(bill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
+                        </div>
+                      </div>
+                      {bill.isPaid ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
+                          <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+                          Đã thanh toán
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
+                          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>
+                          Chưa thanh toán
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2 text-sm">
+                      <div className="rounded-lg bg-zinc-50/50 p-3 dark:bg-white/5">
+                        <div className="text-zinc-600 dark:text-zinc-400">⚡ Điện</div>
+                        <div className="mt-1 font-medium">{bill.electricityStart} → {bill.electricityEnd} ({bill.electricityEnd - bill.electricityStart} kWh)</div>
+                      </div>
+                      <div className="rounded-lg bg-zinc-50/50 p-3 dark:bg-white/5">
+                        <div className="text-zinc-600 dark:text-zinc-400">💧 Nước</div>
+                        <div className="mt-1 font-medium">{bill.waterStart} → {bill.waterEnd} ({bill.waterEnd - bill.waterStart} m³)</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline justify-between border-t border-zinc-200/50 pt-3 dark:border-zinc-800/50">
+                      <span className="text-sm text-zinc-600 dark:text-zinc-400">Tổng cộng</span>
+                      <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+                        {bill.totalAmount?.toLocaleString()}đ
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => setSelectedBill(bill)}
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                    >
+                      Chi tiết
+                    </button>
+                    <button
+                      onClick={() => openEditModal(bill)}
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                    >
+                      Sửa
+                    </button>
+                    {!bill.isPaid && (
+                      <button
+                        onClick={() => handleMarkPaid(bill.id)}
+                        className="rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-emerald-700 hover:to-green-700"
+                      >
+                        Đã trả
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create/Edit Modal - Simplified version for brevity */}
+        {open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
+              <div className="sticky top-0 z-10 border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+                    {editing ? "Sửa Hóa Đơn" : "Tạo Hóa Đơn Mới"}
+                  </h2>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <span className="text-2xl text-zinc-400">×</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Hợp đồng</label>
+                  <select
+                    value={form.contractId}
+                    onChange={(e) => setForm({ ...form, contractId: e.target.value })}
+                    disabled={!!editing}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900"
+                  >
+                    <option value="">-- Chọn hợp đồng --</option>
+                    {contracts.map((contract) => (
+                      <option key={contract.id} value={contract.id}>
+                        {contract.room?.number || contract.motel?.name || "N/A"} - {contract.tenant?.firstName} {contract.tenant?.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Tháng</label>
+                  <input
+                    type="date"
+                    value={form.month}
+                    onChange={(e) => setForm({ ...form, month: e.target.value })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Chỉ số điện đầu</label>
+                    <input
+                      type="number"
+                      value={form.electricityStart}
+                      onChange={(e) => setForm({ ...form, electricityStart: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Chỉ số điện cuối</label>
+                    <input
+                      type="number"
+                      value={form.electricityEnd}
+                      onChange={(e) => setForm({ ...form, electricityEnd: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Giá điện (đ/kWh)</label>
+                  <input
+                    type="number"
+                    value={form.electricityRate}
+                    onChange={(e) => setForm({ ...form, electricityRate: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Chỉ số nước đầu</label>
+                    <input
+                      type="number"
+                      value={form.waterStart}
+                      onChange={(e) => setForm({ ...form, waterStart: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">Chỉ số nước cuối</label>
+                    <input
+                      type="number"
+                      value={form.waterEnd}
+                      onChange={(e) => setForm({ ...form, waterEnd: Number(e.target.value) })}
+                      className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Giá nước (đ/m³)</label>
+                  <input
+                    type="number"
+                    value={form.waterRate}
+                    onChange={(e) => setForm({ ...form, waterRate: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Phí khác</label>
+                  <input
+                    type="number"
+                    value={form.otherFees}
+                    onChange={(e) => setForm({ ...form, otherFees: Number(e.target.value) })}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-blue-200/50 bg-gradient-to-br from-blue-50 to-purple-50 p-6 dark:border-blue-900/30 dark:from-blue-950/30 dark:to-purple-950/30">
+                  <div className="text-sm font-medium mb-3">Tổng kết</div>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600 dark:text-zinc-400">Điện: {form.electricityEnd - form.electricityStart} kWh</span>
+                      <span className="font-medium">{((form.electricityEnd - form.electricityStart) * form.electricityRate).toLocaleString()}đ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600 dark:text-zinc-400">Nước: {form.waterEnd - form.waterStart} m³</span>
+                      <span className="font-medium">{((form.waterEnd - form.waterStart) * form.waterRate).toLocaleString()}đ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600 dark:text-zinc-400">Phí khác</span>
+                      <span className="font-medium">{form.otherFees.toLocaleString()}đ</span>
+                    </div>
+                    <div className="border-t border-blue-200 pt-2 dark:border-blue-900">
+                      <div className="flex justify-between text-base">
+                        <span className="font-semibold">Tổng cộng</span>
+                        <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+                          {calculateTotal().toLocaleString()}đ
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
+                  >
+                    {editing ? "Cập nhật" : "Tạo"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
-            <div className="mb-4 text-lg font-semibold">
-              {editing ? "Cập nhật hóa đơn" : "Tạo hóa đơn"}
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm">Phòng</label>
-                  <select
-                    value={form.roomId || ""}
-                    onChange={(e) => handleRoomChange(e.target.value)}
-                    disabled={loadingRooms}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  >
-                    <option value="">{loadingRooms ? "Đang tải..." : "Chọn phòng"}</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        {room.roomNumber || room.id} - {room.price?.toLocaleString()}đ
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm">Email người thuê</label>
-                  <input
-                    type="email"
-                    value={form.tenantEmail || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, tenantEmail: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div>
-                  <label className="mb-1 block text-sm">Tháng</label>
-                  <select
-                    value={form.month || 1}
-                    onChange={(e) => setForm((f) => ({ ...f, month: Number(e.target.value) }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        Tháng {i + 1}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm">Năm</label>
-                  <input
-                    type="number"
-                    value={form.year || new Date().getFullYear()}
-                    onChange={(e) => setForm((f) => ({ ...f, year: Number(e.target.value) }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm">Hạn thanh toán</label>
-                  <input
-                    type="date"
-                    value={form.dueDate || ""}
-                    onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-                <div className="mb-3 text-sm font-medium">Chi tiết thanh toán</div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="mb-1 block text-xs">Tiền phòng (đ)</label>
-                    <input
-                      type="number"
-                      value={form.roomPrice ?? 0}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setForm((f) => ({
-                          ...f,
-                          roomPrice: val,
-                          totalAmount: calculateTotal({ ...f, roomPrice: val }),
-                        }));
-                      }}
-                      className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs">Điện (kWh)</label>
-                      <input
-                        type="number"
-                        value={form.electricityUsage ?? 0}
-                        onChange={(e) => setForm((f) => ({ ...f, electricityUsage: Number(e.target.value) }))}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs">Tiền điện (đ)</label>
-                      <input
-                        type="number"
-                        value={form.electricityPrice ?? 0}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setForm((f) => ({
-                            ...f,
-                            electricityPrice: val,
-                            totalAmount: calculateTotal({ ...f, electricityPrice: val }),
-                          }));
-                        }}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block text-xs">Nước (m³)</label>
-                      <input
-                        type="number"
-                        value={form.waterUsage ?? 0}
-                        onChange={(e) => setForm((f) => ({ ...f, waterUsage: Number(e.target.value) }))}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs">Tiền nước (đ)</label>
-                      <input
-                        type="number"
-                        value={form.waterPrice ?? 0}
-                        onChange={(e) => {
-                          const val = Number(e.target.value);
-                          setForm((f) => ({
-                            ...f,
-                            waterPrice: val,
-                            totalAmount: calculateTotal({ ...f, waterPrice: val }),
-                          }));
-                        }}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs">Phí khác (đ)</label>
-                    <input
-                      type="number"
-                      value={form.otherFees ?? 0}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setForm((f) => ({
-                          ...f,
-                          otherFees: val,
-                          totalAmount: calculateTotal({ ...f, otherFees: val }),
-                        }));
-                      }}
-                      className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                    />
-                  </div>
-                  <div className="border-t border-black/10 pt-3 dark:border-white/10">
-                    <div className="flex justify-between text-sm font-medium">
-                      <span>Tổng cộng</span>
-                      <span>{calculateTotal(form).toLocaleString()}đ</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    setEditing(null);
-                  }}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  Hủy
-                </button>
-                <button onClick={save} className="btn-primary">
-                  Lưu
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Chi tiết hóa đơn</h2>
-              <button
-                onClick={() => setSelectedBill(null)}
-                className="text-2xl font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              >
-                ×
-              </button>
-            </div>
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Mã hóa đơn</span>
-                  <div className="font-medium">{selectedBill.id}</div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Tháng / Năm</span>
-                  <div className="font-medium">
-                    {selectedBill.month}/{selectedBill.year}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Người thuê</span>
-                  <div className="font-medium">{selectedBill.tenantEmail}</div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Phòng</span>
-                  <div className="font-medium">{selectedBill.roomId}</div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-                <div className="mb-3 font-medium">Chi tiết thanh toán</div>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>Tiền phòng</span>
-                    <span>{selectedBill.roomPrice?.toLocaleString()}đ</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Điện ({selectedBill.electricityUsage} kWh)</span>
-                    <span>{selectedBill.electricityPrice?.toLocaleString()}đ</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Nước ({selectedBill.waterUsage} m³)</span>
-                    <span>{selectedBill.waterPrice?.toLocaleString()}đ</span>
-                  </div>
-                  {selectedBill.otherFees && selectedBill.otherFees > 0 && (
-                    <div className="flex justify-between">
-                      <span>Phí khác</span>
-                      <span>{selectedBill.otherFees?.toLocaleString()}đ</span>
-                    </div>
-                  )}
-                  <div className="border-t border-black/10 pt-2 font-medium dark:border-white/10">
-                    <div className="flex justify-between">
-                      <span>Cộng</span>
-                      <span>{selectedBill.totalAmount?.toLocaleString()}đ</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-zinc-500">Hạn thanh toán</span>
-                <div className="font-medium">
-                  {new Date(selectedBill.dueDate).toLocaleDateString("vi-VN")}
-                </div>
-              </div>
-
-              <div>
-                <span className="text-zinc-500">Trạng thái</span>
-                <div className="mt-1">
-                  {isPaid(selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      Đã thanh toán
-                    </span>
-                  )}
-                  {isOverdue(selectedBill.dueDate, selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                      Quá hạn
-                    </span>
-                  )}
-                  {!isPaid(selectedBill.status) && !isOverdue(selectedBill.dueDate, selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                      Chưa thanh toán
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedBill(null)}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Đóng
-              </button>
-              {selectedBill.status === "unpaid" && (
-                <button
-                  onClick={() => {
-                    markAsPaid(selectedBill.id);
-                    setSelectedBill(null);
-                  }}
-                  className="btn-primary"
-                >
-                  Đánh dấu đã thanh toán
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  downloadPDF(selectedBill);
-                  setSelectedBill(null);
-                }}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Tải PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,37 +1,38 @@
 import { api } from "../api";
-import type { Feedback } from "../../types";
+
+export type FeedbackStatus = "PENDING" | "IN_PROGRESS" | "RESOLVED";
+
+export interface Feedback {
+  id: string;
+  title: string;
+  description: string;
+  status: FeedbackStatus;
+  images: string[];
+  roomId: string;
+  userId: string;
+  room?: any;
+  user?: any;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface CreateFeedbackRequest {
   title: string;
   description: string;
-  category: "maintenance" | "cleaning" | "complaint" | "other";
-  priority: "low" | "normal" | "high" | "urgent";
+  roomId: string;
   images?: string[];
-  roomId?: string;
 }
 
 export interface UpdateFeedbackRequest {
-  status?: "pending" | "in_progress" | "completed";
-  priority?: "low" | "normal" | "high" | "urgent";
+  status?: FeedbackStatus;
   title?: string;
   description?: string;
-}
-
-export interface FeedbackListResponse {
-  data: Feedback[];
-  total: number;
-  page: number;
-  limit: number;
+  images?: string[];
 }
 
 export const feedbackService = {
-  listFeedbacks: async (page = 1, limit = 10, status?: string, motelId?: string): Promise<FeedbackListResponse> => {
-    const query = new URLSearchParams();
-    query.append("page", page.toString());
-    query.append("limit", limit.toString());
-    if (status) query.append("status", status);
-    if (motelId) query.append("motelId", motelId);
-    return api.get(`/api/v1/feedbacks?${query.toString()}`);
+  listFeedbacks: async (): Promise<Feedback[]> => {
+    return api.get("/api/v1/feedbacks");
   },
 
   getFeedback: async (id: string): Promise<Feedback> => {
@@ -46,7 +47,7 @@ export const feedbackService = {
     return api.put(`/api/v1/feedbacks/${id}`, data);
   },
 
-  deleteFeedback: async (id: string): Promise<{ message: string }> => {
+  deleteFeedback: async (id: string): Promise<void> => {
     return api.del(`/api/v1/feedbacks/${id}`);
   },
 };

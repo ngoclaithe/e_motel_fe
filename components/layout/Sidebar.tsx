@@ -32,7 +32,7 @@ export default function Sidebar() {
     if (r === "TENANT") {
       return [
         { href: "/tenant", label: "Tổng quan" },
-        { href: "/contracts", label: "H��p đồng" },
+        { href: "/contracts", label: "Hợp đồng" },
         { href: "/bills", label: "Hóa đơn" },
         { href: "/feedbacks", label: "Sửa chữa" },
         { href: "/notifications", label: "Thông báo" },

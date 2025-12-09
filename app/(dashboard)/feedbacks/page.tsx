@@ -1,350 +1,372 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
-import type { Feedback } from "../../../types";
+import { useState, useEffect } from "react";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
+import { feedbackService, type Feedback } from "../../../lib/services/feedbacks";
+import { roomService } from "../../../lib/services";
 
-export default function FeedbacksPage() {
-  useEnsureRole(["tenant"]);
+export default function TenantFeedbacksPage() {
+  useEnsureRole(["TENANT"]);
   const { push } = useToast();
-  const [feedbacks, setFeedbacks] = useLocalStorage<Feedback[]>("emotel_feedbacks", []);
+
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Feedback | null>(null);
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
-  const [form, setForm] = useState<Partial<Feedback>>({
+
+  const [form, setForm] = useState({
     title: "",
     description: "",
-    category: "maintenance",
-    priority: "normal",
-    images: [],
+    roomId: "",
   });
 
-  const getTenantEmail = () => {
+  const userEmail = (() => {
     try {
       const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
       return session?.email || "";
     } catch {
       return "";
     }
-  };
+  })();
 
-  const tenantEmail = getTenantEmail();
-  const tenantFeedbacks = feedbacks.filter((f) => f.tenantEmail === tenantEmail);
+  useEffect(() => {
+    fetchFeedbacks();
+    fetchRooms();
+  }, []);
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "Đang chờ";
-      case "in_progress":
-        return "Đang xử lý";
-      case "completed":
-        return "Hoàn thành";
-      default:
-        return status;
+  const fetchFeedbacks = async () => {
+    try {
+      setIsLoading(true);
+      const data = await feedbackService.listFeedbacks();
+      const ownFeedbacks = data.filter((f: Feedback) => f.user?.email === userEmail);
+      setFeedbacks(ownFeedbacks);
+    } catch (err) {
+      console.error("Failed to fetch feedbacks:", err);
+      push({ title: "Không thể tải yêu cầu", type: "error" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400";
-      case "in_progress":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
-      case "completed":
-        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
-      default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400";
+  const fetchRooms = async () => {
+    try {
+      const data = await roomService.myRooms();
+      setRooms(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch rooms:", err);
     }
   };
 
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case "low":
-        return "Thấp";
-      case "normal":
-        return "Bình thường";
-      case "high":
-        return "Cao";
-      case "urgent":
-        return "Khẩn cấp";
-      default:
-        return priority;
-    }
-  };
-
-  const save = () => {
-    if (!form.title || !form.description) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường", type: "error" });
+  const handleSubmit = async () => {
+    if (!form.title || !form.description || !form.roomId) {
+      push({ title: "Vui lòng điền đầy đủ thông tin", type: "error" });
       return;
     }
 
-    const newFeedback: Feedback = {
-      id: crypto.randomUUID(),
-      tenantEmail,
-      title: String(form.title),
-      description: String(form.description),
-      category: form.category || "maintenance",
-      priority: form.priority || "normal",
-      status: "pending",
-      images: form.images || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      if (editing) {
+        await feedbackService.updateFeedback(editing.id, {
+          title: form.title,
+          description: form.description,
+        });
+        push({ title: "Cập nhật yêu cầu thành công", type: "success" });
+      } else {
+        await feedbackService.createFeedback(form);
+        push({ title: "Tạo yêu cầu thành công", type: "success" });
+      }
 
-    setFeedbacks([newFeedback, ...feedbacks]);
-    push({ title: "Gửi yêu cầu thành công", type: "success" });
-    setOpen(false);
-    setForm({ title: "", description: "", category: "maintenance", priority: "normal", images: [] });
+      setOpen(false);
+      setEditing(null);
+      resetForm();
+      fetchFeedbacks();
+    } catch (err: any) {
+      console.error("Failed to save feedback:", err);
+      push({ title: err.message || "Không thể lưu yêu cầu", type: "error" });
+    }
   };
 
-  const onFile = (file?: File | null) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((f) => ({
-        ...f,
-        images: [...(f.images || []), String(reader.result)],
-      }));
-    };
-    reader.readAsDataURL(file);
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc muốn xóa yêu cầu này?")) return;
+
+    try {
+      await feedbackService.deleteFeedback(id);
+      push({ title: "Đã xóa yêu cầu", type: "success" });
+      fetchFeedbacks();
+    } catch (err) {
+      push({ title: "Không thể xóa yêu cầu", type: "error" });
+    }
   };
 
-  const removeImage = (index: number) => {
-    setForm((f) => ({
-      ...f,
-      images: f.images?.filter((_, i) => i !== index) || [],
-    }));
+  const resetForm = () => {
+    setForm({
+      title: "",
+      description: "",
+      roomId: "",
+    });
   };
 
-  const remove = (id: string) => {
-    if (!confirm("Xóa yêu cầu này?")) return;
-    setFeedbacks(feedbacks.filter((f) => f.id !== id));
-    push({ title: "Đã xóa", type: "info" });
+  const openCreateModal = () => {
+    resetForm();
+    setEditing(null);
+    setOpen(true);
+  };
+
+  const openEditModal = (feedback: Feedback) => {
+    if (feedback.status !== "PENDING") {
+      push({ title: "Chỉ có thể sửa yêu cầu đang chờ xử lý", type: "error" });
+      return;
+    }
+
+    setEditing(feedback);
+    setForm({
+      title: feedback.title,
+      description: feedback.description,
+      roomId: feedback.roomId,
+    });
+    setOpen(true);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>Chờ xử lý</span>;
+      case "IN_PROGRESS":
+        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-white"></span>Đang xử lý</span>;
+      case "RESOLVED":
+        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-white"></span>Đã giải quyết</span>;
+      default:
+        return null;
+    }
+  };
+
+  const getRoomName = (roomId: string) => {
+    const room = rooms.find(r => r.id === roomId);
+    return room?.number || roomId;
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Yêu cầu sửa chữa</h1>
-        <button onClick={() => setOpen(true)} className="btn-primary">
-          Gửi yêu cầu
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4">
-        {tenantFeedbacks.map((feedback) => (
-          <div
-            key={feedback.id}
-            className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
+    <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-50 p-6 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-400">
+              Yêu Cầu Sửa Chữa
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">Gửi yêu cầu sửa chữa và theo dõi tiến độ</p>
+          </div>
+          <button
+            onClick={openCreateModal}
+            className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-base font-semibold">{feedback.title}</div>
-                <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">
-                  {feedback.description}
+            <span className="relative z-10 flex items-center gap-2">
+              <span className="text-xl">+</span>
+              Tạo Yêu Cầu
+            </span>
+          </button>
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-white"></div>
+          </div>
+        ) : feedbacks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/50 py-20 backdrop-blur-sm dark:border-zinc-800 dark:bg-black/20">
+            <div className="text-6xl mb-4">🔧</div>
+            <p className="text-zinc-500">Chưa có yêu cầu nào</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {feedbacks.map((feedback) => (
+              <div
+                key={feedback.id}
+                className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50/50 p-6 shadow-sm transition-all hover:shadow-lg hover:shadow-zinc-200/50 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950/50 dark:hover:shadow-zinc-900/50"
+              >
+                <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-2xl"></div>
+
+                <div className="relative space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="font-semibold text-zinc-900 dark:text-white">{feedback.title}</div>
+                      <div className="mt-1 text-sm text-zinc-500">
+                        Phòng {getRoomName(feedback.roomId)}
+                      </div>
+                    </div>
+                    {getStatusBadge(feedback.status)}
+                  </div>
+
+                  <div className="rounded-lg bg-zinc-50/50 p-4 text-sm text-zinc-600 dark:bg-white/5 dark:text-zinc-400">
+                    {feedback.description}
+                  </div>
+
+                  <div className="text-xs text-zinc-400">
+                    {new Date(feedback.createdAt).toLocaleDateString("vi-VN")}
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => setSelectedFeedback(feedback)}
+                      className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                    >
+                      Chi tiết
+                    </button>
+                    {feedback.status === "PENDING" && (
+                      <>
+                        <button
+                          onClick={() => openEditModal(feedback)}
+                          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                        >
+                          Sửa
+                        </button>
+                        <button
+                          onClick={() => handleDelete(feedback.id)}
+                          className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-100 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/40"
+                        >
+                          Xóa
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(feedback.status)}`}>
-                    {getStatusLabel(feedback.status)}
-                  </span>
-                  <span className="inline-block rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-900/30 dark:text-gray-400">
-                    {getPriorityLabel(feedback.priority)}
-                  </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Create/Edit Modal */}
+        {open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-2xl rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
+              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
+                    {editing ? "Sửa Yêu Cầu" : "Tạo Yêu Cầu Mới"}
+                  </h2>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <span className="text-2xl text-zinc-400">×</span>
+                  </button>
                 </div>
-                <div className="mt-2 text-xs text-zinc-500">
-                  {new Date(feedback.createdAt).toLocaleDateString("vi-VN")}
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Phòng</label>
+                  <select
+                    value={form.roomId}
+                    onChange={(e) => setForm({ ...form, roomId: e.target.value })}
+                    disabled={!!editing}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900"
+                  >
+                    <option value="">-- Chọn phòng --</option>
+                    {rooms.map((room) => (
+                      <option key={room.id} value={room.id}>
+                        Phòng {room.number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Tiêu đề</label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    placeholder="VD: Điều hòa không hoạt động"
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Mô tả chi tiết</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    placeholder="Mô tả vấn đề cần sửa chữa..."
+                    rows={4}
+                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
+                  >
+                    {editing ? "Cập nhật" : "Tạo"}
+                  </button>
                 </div>
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => setSelectedFeedback(feedback)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Chi tiết
-              </button>
-              <button
-                onClick={() => remove(feedback.id)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs text-red-600 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Xóa
-              </button>
-            </div>
           </div>
-        ))}
-        {tenantFeedbacks.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
-            Chưa có yêu cầu nào
+        )}
+
+        {/* Detail Modal */}
+        {selectedFeedback && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-2xl rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
+              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Chi Tiết Yêu Cầu</h2>
+                  <button
+                    onClick={() => setSelectedFeedback(null)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <span className="text-2xl text-zinc-400">×</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <span className="text-sm text-zinc-500">Tiêu đề</span>
+                  <div className="mt-1 font-semibold">{selectedFeedback.title}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-zinc-500">Phòng</span>
+                  <div className="mt-1 font-semibold">Phòng {getRoomName(selectedFeedback.roomId)}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-zinc-500">Mô tả</span>
+                  <div className="mt-2 rounded-lg bg-zinc-50 p-4 dark:bg-white/5">{selectedFeedback.description}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-zinc-500">Trạng thái</span>
+                  <div className="mt-2">{getStatusBadge(selectedFeedback.status)}</div>
+                </div>
+                <div>
+                  <span className="text-sm text-zinc-500">Ngày tạo</span>
+                  <div className="mt-1 font-medium">{new Date(selectedFeedback.createdAt).toLocaleString("vi-VN")}</div>
+                </div>
+              </div>
+
+              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setSelectedFeedback(null)}
+                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
-            <div className="mb-4 text-lg font-semibold">Gửi yêu cầu sửa chữa</div>
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-sm">Tiêu đề</label>
-                <input
-                  value={form.title || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  placeholder="Ví dụ: Vòi nước bị rò rỉ"
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm">Mô tả chi tiết</label>
-                <textarea
-                  value={form.description || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="Mô tả vấn đề cần sửa chữa..."
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  rows={4}
-                />
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm">Loại</label>
-                  <select
-                    value={form.category || "maintenance"}
-                    onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  >
-                    <option value="maintenance">Sửa chữa</option>
-                    <option value="cleaning">Vệ sinh</option>
-                    <option value="complaint">Khiếu nại</option>
-                    <option value="other">Khác</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm">Độ ưu tiên</label>
-                  <select
-                    value={form.priority || "normal"}
-                    onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                  >
-                    <option value="low">Thấp</option>
-                    <option value="normal">Bình thường</option>
-                    <option value="high">Cao</option>
-                    <option value="urgent">Khẩn cấp</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm">Ảnh (tùy chọn)</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onFile(e.target.files?.[0])}
-                  className="w-full text-sm"
-                />
-                {form.images && form.images.length > 0 && (
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {form.images.map((img, i) => (
-                      <div key={i} className="relative">
-                        <img src={img} alt={`Upload ${i}`} className="h-20 w-full rounded-lg object-cover" />
-                        <button
-                          onClick={() => removeImage(i)}
-                          className="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    setForm({ title: "", description: "", category: "maintenance", priority: "normal", images: [] });
-                  }}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  Hủy
-                </button>
-                <button onClick={save} className="btn-primary">
-                  Gửi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedFeedback && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{selectedFeedback.title}</h2>
-              <button
-                onClick={() => setSelectedFeedback(null)}
-                className="text-2xl font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              >
-                ×
-              </button>
-            </div>
-            <div className="space-y-4 text-sm">
-              <div>
-                <span className="text-zinc-500">Mô tả</span>
-                <div className="mt-1 rounded-lg bg-black/5 p-3 dark:bg-white/5">
-                  {selectedFeedback.description}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Loại</span>
-                  <div className="font-medium">{selectedFeedback.category}</div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Độ ưu tiên</span>
-                  <div className="font-medium">{getPriorityLabel(selectedFeedback.priority)}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Trạng thái</span>
-                  <div className="mt-1">
-                    <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${getStatusColor(selectedFeedback.status)}`}>
-                      {getStatusLabel(selectedFeedback.status)}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Ngày gửi</span>
-                  <div className="font-medium">
-                    {new Date(selectedFeedback.createdAt).toLocaleDateString("vi-VN")}
-                  </div>
-                </div>
-              </div>
-
-              {selectedFeedback.images && selectedFeedback.images.length > 0 && (
-                <div>
-                  <span className="text-zinc-500">Ảnh minh họa</span>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {selectedFeedback.images.map((img, i) => (
-                      <img key={i} src={img} alt={`Feedback ${i}`} className="h-24 w-full rounded-lg object-cover" />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedFeedback(null)}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

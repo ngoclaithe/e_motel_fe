@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useEnsureRole, useAuth, useCurrentRole } from "../../../hooks/useAuth";
 import { useToast } from "../../../components/providers/ToastProvider";
+import { userService } from "../../../lib/services";
 
 export default function ProfilePage() {
   useEnsureRole(["TENANT", "LANDLORD", "ADMIN"]);
@@ -12,11 +13,12 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [form, setForm] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     phone: "",
     address: "",
-    avatar: "",
   });
 
   const [passwordForm, setPasswordForm] = useState({
@@ -28,112 +30,65 @@ export default function ProfilePage() {
   const session = getSession();
 
   useEffect(() => {
-    const loadUserData = () => {
-      try {
-        const users = JSON.parse(localStorage.getItem("emotel_users") || "[]") as Array<{
-          email: string;
-          fullName?: string;
-          phone?: string;
-          address?: string;
-          avatar?: string;
-        }>;
-        const currentUser = users.find((u) => u.email === session?.email);
-        if (currentUser) {
-          setForm({
-            fullName: currentUser.fullName || "",
-            phone: currentUser.phone || "",
-            address: currentUser.address || "",
-            avatar: currentUser.avatar || "",
-          });
-        }
-      } catch {}
-    };
     loadUserData();
-  }, [session?.email]);
+  }, []);
 
-  const saveProfile = () => {
-    if (!form.fullName) {
-      push({ title: "Lỗi", description: "Vui lòng nhập họ tên", type: "error" });
+  const loadUserData = async () => {
+    try {
+      setIsLoading(true);
+      const userData = await userService.getProfile() as any;
+      setForm({
+        firstName: userData.firstName || "",
+        lastName: userData.lastName || "",
+        phone: userData.phone || "",
+        address: userData.address || "",
+      });
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+      push({ title: "Không thể tải thông tin", type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!form.firstName || !form.lastName) {
+      push({ title: "Vui lòng nhập họ và tên", type: "error" });
       return;
     }
 
     try {
-      const users: Array<{
-        email: string;
-        fullName?: string;
-        phone?: string;
-        address?: string;
-        avatar?: string;
-      }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-      const updatedUsers: Array<{
-        email: string;
-        fullName?: string;
-        phone?: string;
-        address?: string;
-        avatar?: string;
-      }> = users.map((u) =>
-        u.email === session?.email
-          ? { ...u, ...form }
-          : u
-      );
-      localStorage.setItem("emotel_users", JSON.stringify(updatedUsers));
+      await userService.updateProfile(form);
       push({ title: "Cập nhật thành công", type: "success" });
       setIsEditing(false);
-    } catch {
-      push({ title: "Lỗi", description: "Không thể cập nhật hồ sơ", type: "error" });
+      loadUserData();
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      push({ title: "Không thể cập nhật hồ sơ", type: "error" });
     }
   };
 
-  const changePassword = () => {
+  const changePassword = async () => {
     if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      push({ title: "Lỗi", description: "Vui lòng điền tất cả các trường", type: "error" });
+      push({ title: "Vui lòng điền tất cả các trường", type: "error" });
       return;
     }
 
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      push({ title: "Lỗi", description: "Mật khẩu xác nhận không khớp", type: "error" });
+      push({ title: "Mật khẩu xác nhận không khớp", type: "error" });
       return;
     }
 
     if (passwordForm.newPassword.length < 6) {
-      push({ title: "Lỗi", description: "Mật khẩu phải có ít nhất 6 ký tự", type: "error" });
+      push({ title: "Mật khẩu phải có ít nhất 6 ký tự", type: "error" });
       return;
     }
 
     try {
-      const users: Array<{
-        email: string;
-        password?: string;
-        fullName?: string;
-        phone?: string;
-        address?: string;
-        avatar?: string;
-      }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-      const currentUser = users.find((u) => u.email === session?.email);
-
-      if (!currentUser) {
-        push({ title: "Lỗi", description: "Không tìm thấy người dùng", type: "error" });
-        return;
-      }
-
-      if (currentUser.password !== passwordForm.currentPassword) {
-        push({ title: "Lỗi", description: "Mật khẩu hiện tại không đúng", type: "error" });
-        return;
-      }
-
-      const updatedUsers: Array<{
-        email: string;
-        password?: string;
-        fullName?: string;
-        phone?: string;
-        address?: string;
-        avatar?: string;
-      }> = users.map((u) =>
-        u.email === session?.email
-          ? { ...u, password: passwordForm.newPassword }
-          : u
-      );
-      localStorage.setItem("emotel_users", JSON.stringify(updatedUsers));
+      await userService.changePassword({
+        oldPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
       push({ title: "Đổi mật khẩu thành công", type: "success" });
       setChangingPassword(false);
       setPasswordForm({
@@ -141,30 +96,28 @@ export default function ProfilePage() {
         newPassword: "",
         confirmPassword: "",
       });
-    } catch {
-      push({ title: "Lỗi", description: "Không thể đổi mật khẩu", type: "error" });
+    } catch (err: any) {
+      console.error("Failed to change password:", err);
+      push({ title: err.message || "Không thể đổi mật khẩu", type: "error" });
     }
-  };
-
-  const onFile = (file?: File | null) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, avatar: String(reader.result) }));
-    reader.readAsDataURL(file);
   };
 
   const getRoleLabel = () => {
     switch (role) {
-      case "admin":
+      case "ADMIN":
         return "Quản trị viên";
-      case "landlord":
+      case "LANDLORD":
         return "Chủ trọ";
-      case "tenant":
+      case "TENANT":
         return "Người thuê";
       default:
         return role;
     }
   };
+
+  if (isLoading) {
+    return <div className="text-center py-12">Đang tải...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -173,19 +126,10 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
           <div className="text-center">
-            {form.avatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={form.avatar}
-                alt="Avatar"
-                className="mx-auto mb-4 h-24 w-24 rounded-full object-cover"
-              />
-            ) : (
-              <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-black/10 text-sm font-semibold dark:bg-white/10">
-                {form.fullName?.charAt(0)?.toUpperCase() || "?"}
-              </div>
-            )}
-            <div className="text-lg font-semibold">{form.fullName || "Chưa cập nhật"}</div>
+            <div className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-black/10 text-2xl font-semibold dark:bg-white/10">
+              {form.firstName?.charAt(0)?.toUpperCase() || "?"}
+            </div>
+            <div className="text-lg font-semibold">{form.firstName} {form.lastName}</div>
             <div className="mt-1 text-sm text-zinc-500">{session?.email}</div>
             <div className="mt-2 inline-block rounded-full bg-black/10 px-3 py-1 text-xs font-medium dark:bg-white/10">
               {getRoleLabel()}
@@ -207,8 +151,12 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-3 text-sm">
                 <div>
-                  <span className="text-zinc-500">Họ tên</span>
-                  <div className="font-medium">{form.fullName || "Chưa cập nhật"}</div>
+                  <span className="text-zinc-500">Họ</span>
+                  <div className="font-medium">{form.firstName || "Chưa cập nhật"}</div>
+                </div>
+                <div>
+                  <span className="text-zinc-500">Tên</span>
+                  <div className="font-medium">{form.lastName || "Chưa cập nhật"}</div>
                 </div>
                 <div>
                   <span className="text-zinc-500">Email</span>
@@ -231,10 +179,18 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-sm">Họ tên</label>
+                  <label className="mb-1 block text-sm">Họ</label>
                   <input
-                    value={form.fullName}
-                    onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+                    value={form.firstName}
+                    onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm">Tên</label>
+                  <input
+                    value={form.lastName}
+                    onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   />
                 </div>
@@ -254,15 +210,6 @@ export default function ProfilePage() {
                     className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                   />
                 </div>
-                <div>
-                  <label className="mb-1 block text-sm">Avatar</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => onFile(e.target.files?.[0])}
-                    className="w-full text-sm"
-                  />
-                </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setIsEditing(false)}
@@ -270,7 +217,10 @@ export default function ProfilePage() {
                   >
                     Hủy
                   </button>
-                  <button onClick={saveProfile} className="btn-primary">
+                  <button
+                    onClick={saveProfile}
+                    className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                  >
                     Lưu
                   </button>
                 </div>
@@ -342,7 +292,10 @@ export default function ProfilePage() {
                 >
                   Hủy
                 </button>
-                <button onClick={changePassword} className="btn-primary">
+                <button
+                  onClick={changePassword}
+                  className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                >
                   Đổi mật khẩu
                 </button>
               </div>

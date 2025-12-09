@@ -4,17 +4,24 @@ import { useEffect, useState } from "react";
 import type { Contract } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
-import { useAuth } from "../../../hooks/useAuth";
 import { contractService } from "../../../lib/services/contracts";
 
 export default function ContractsPage() {
   useEnsureRole(["TENANT"]);
   const { push } = useToast();
-  const { user } = useAuth();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const userEmail = (() => {
+    try {
+      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
+      return session?.email || "";
+    } catch {
+      return "";
+    }
+  })();
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -22,7 +29,11 @@ export default function ContractsPage() {
         setIsLoading(true);
         setError(null);
         const response = await contractService.listContracts(1, 100);
-        setContracts(response.data || []);
+        console.log("📋 Contracts response:", response);
+        // Backend returns array directly, not wrapped in {data: [...]}
+        const contractsData = Array.isArray(response) ? response : (response.data || []);
+        console.log("📋 Contracts data:", contractsData);
+        setContracts(contractsData);
       } catch (err) {
         console.error("Failed to fetch contracts:", err);
         setError("Không thể tải danh sách hợp đồng");
@@ -35,7 +46,14 @@ export default function ContractsPage() {
     fetchContracts();
   }, []);
 
-  const tenantContracts = contracts.filter((c) => c.tenantEmail === user?.email);
+  // Filter contracts where tenant email matches current user
+  console.log("👤 Current user email:", userEmail);
+  console.log("📋 All contracts:", contracts);
+  const tenantContracts = contracts.filter((c: any) => {
+    console.log("🔍 Checking contract:", c.id, "tenant email:", c.tenant?.email, "matches:", c.tenant?.email === userEmail);
+    return c.tenant?.email === userEmail;
+  });
+  console.log("✅ Filtered tenant contracts:", tenantContracts);
 
   const isExpiringSoon = (endDate: string) => {
     const end = new Date(endDate);
@@ -106,17 +124,17 @@ Ngày tạo: ${new Date(contract.createdAt).toLocaleDateString("vi-VN")}
 
 THÔNG TIN
 --------
-Chủ trọ: ${contract.landlordEmail}
-Người thuê: ${contract.tenantEmail}
+
+
 Phòng: ${contract.roomId}
 Thời gian thuê: ${new Date(contract.startDate).toLocaleDateString("vi-VN")} - ${new Date(contract.endDate).toLocaleDateString("vi-VN")}
-Giá thuê: ${contract.monthlyPrice?.toLocaleString()}đ
+Giá thuê: ${contract.monthlyRent?.toLocaleString()}đ
 Tiền cọc: ${contract.deposit?.toLocaleString()}đ
-Kỳ thanh toán: ${contract.paymentPeriod}
+Kỳ thanh toán: ${contract.paymentCycleMonths} tháng
 
 GHI CHÚ
 ------
-${contract.notes || "Không có ghi chú"}
+${contract.specialTerms || "Không có ghi chú"}
     `.trim();
   };
 
@@ -139,79 +157,79 @@ ${contract.notes || "Không có ghi chú"}
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {tenantContracts.map((contract) => (
-          <div
-            key={contract.id}
-            className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-base font-semibold">{contract.roomId}</div>
-                <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  Chủ trọ: {contract.landlordEmail}
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-                  <div>
-                    <span className="text-zinc-500">Từ ngày</span>
-                    <div className="font-medium">
-                      {new Date(contract.startDate).toLocaleDateString("vi-VN")}
+            <div
+              key={contract.id}
+              className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="text-base font-semibold">{contract.roomId}</div>
+                  <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+                    <div>
+                      <span className="text-zinc-500">Từ ngày</span>
+                      <div className="font-medium">
+                        {new Date(contract.startDate).toLocaleDateString("vi-VN")}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Đến ngày</span>
+                      <div className="font-medium">
+                        {new Date(contract.endDate).toLocaleDateString("vi-VN")}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Giá thuê</span>
+                      <div className="font-medium">{contract.monthlyRent?.toLocaleString()}đ</div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Tiền cọc</span>
+                      <div className="font-medium">{contract.deposit?.toLocaleString()}đ</div>
                     </div>
                   </div>
-                  <div>
-                    <span className="text-zinc-500">Đến ngày</span>
-                    <div className="font-medium">
-                      {new Date(contract.endDate).toLocaleDateString("vi-VN")}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-zinc-500">Giá thuê</span>
-                    <div className="font-medium">{contract.monthlyPrice?.toLocaleString()}đ</div>
-                  </div>
-                  <div>
-                    <span className="text-zinc-500">Tiền cọc</span>
-                    <div className="font-medium">{contract.deposit?.toLocaleString()}đ</div>
-                  </div>
+                </div>
+                <div className="ml-4">
+                  {isExpired(contract.endDate) && (
+                    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                      Đã hết hạn
+                    </span>
+                  )}
+                  {isExpiringSoon(contract.endDate) && !isExpired(contract.endDate) && (
+                    <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                      Sắp hết hạn
+                    </span>
+                  )}
+                  {!isExpired(contract.endDate) && !isExpiringSoon(contract.endDate) && (
+                    <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      Còn hiệu lực
+                    </span>
+                  )}
                 </div>
               </div>
-              <div className="ml-4">
-                {isExpired(contract.endDate) && (
-                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                    Đã hết hạn
-                  </span>
-                )}
-                {isExpiringSoon(contract.endDate) && !isExpired(contract.endDate) && (
-                  <span className="inline-block rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
-                    Sắp hết hạn
-                  </span>
-                )}
-                {!isExpired(contract.endDate) && !isExpiringSoon(contract.endDate) && (
-                  <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Còn hiệu lực
-                  </span>
-                )}
+              <div className="mt-4 flex gap-2">
+                <button
+                  onClick={() => handleGetContractDetail(contract.id)}
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Xem chi tiết
+                </button>
+                <button
+                  onClick={() => downloadPDF(contract)}
+                  className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  Tải PDF
+                </button>
+                <button
+                  onClick={() => handleDeleteContract(contract.id)}
+                  className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  Xóa
+                </button>
               </div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => handleGetContractDetail(contract.id)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Xem chi tiết
-              </button>
-              <button
-                onClick={() => downloadPDF(contract)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Tải PDF
-              </button>
-              <button
-                onClick={() => handleDeleteContract(contract.id)}
-                className="rounded-lg border border-red-200 px-3 py-1.5 text-xs text-red-700 hover:bg-red-50 dark:border-red-900/30 dark:text-red-400 dark:hover:bg-red-900/20"
-              >
-                Xóa
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
           {tenantContracts.length === 0 && (
             <div className="rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
               Chưa có hợp đồng nào
@@ -248,11 +266,11 @@ ${contract.notes || "Không có ghi chú"}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-zinc-500">Chủ trọ</span>
-                  <div className="font-medium">{selectedContract.landlordEmail}</div>
+
                 </div>
                 <div>
                   <span className="text-zinc-500">Người thuê</span>
-                  <div className="font-medium">{selectedContract.tenantEmail}</div>
+
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -262,7 +280,7 @@ ${contract.notes || "Không có ghi chú"}
                 </div>
                 <div>
                   <span className="text-zinc-500">Kỳ thanh toán</span>
-                  <div className="font-medium">{selectedContract.paymentPeriod}</div>
+                  <div className="font-medium">{selectedContract.paymentCycleMonths} tháng</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -282,18 +300,18 @@ ${contract.notes || "Không có ghi chú"}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <span className="text-zinc-500">Giá thuê (tháng)</span>
-                  <div className="font-medium">{selectedContract.monthlyPrice?.toLocaleString()}đ</div>
+                  <div className="font-medium">{selectedContract.monthlyRent?.toLocaleString()}đ</div>
                 </div>
                 <div>
                   <span className="text-zinc-500">Tiền cọc</span>
                   <div className="font-medium">{selectedContract.deposit?.toLocaleString()}đ</div>
                 </div>
               </div>
-              {selectedContract.notes && (
+              {selectedContract.specialTerms && (
                 <div>
                   <span className="text-zinc-500">Ghi chú</span>
                   <div className="mt-1 rounded-lg bg-black/5 p-3 text-sm dark:bg-white/5">
-                    {selectedContract.notes}
+                    {selectedContract.specialTerms}
                   </div>
                 </div>
               )}

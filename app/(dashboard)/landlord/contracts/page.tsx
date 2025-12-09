@@ -422,8 +422,8 @@ export default function LandlordContractsPage() {
                   <button
                     onClick={() => handleTypeChange("ROOM")}
                     className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${contractType === "ROOM"
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "border border-black/10 dark:border-white/15"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "border border-black/10 dark:border-white/15"
                       }`}
                   >
                     Thuê phòng
@@ -431,8 +431,8 @@ export default function LandlordContractsPage() {
                   <button
                     onClick={() => handleTypeChange("MOTEL")}
                     className={`flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${contractType === "MOTEL"
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "border border-black/10 dark:border-white/15"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "border border-black/10 dark:border-white/15"
                       }`}
                   >
                     Thuê cả nhà trọ
@@ -835,12 +835,26 @@ export default function LandlordContractsPage() {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={() => setSelectedContract(null)}
                 className="rounded-lg border border-black/10 px-4 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
               >
                 Đóng
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await contractService.downloadContract(selectedContract.id);
+                    push({ title: "Đang tải xuống hợp đồng...", type: "success" });
+                  } catch (error) {
+                    push({ title: "Không thể tải hợp đồng", type: "error" });
+                    console.error(error);
+                  }
+                }}
+                className="rounded-lg bg-black px-4 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+              >
+                Tải về hợp đồng
               </button>
             </div>
           </div>

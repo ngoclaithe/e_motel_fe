@@ -89,23 +89,48 @@ async function request<T = unknown>(path: string, init: RequestInit = {}): Promi
 
 export const api = {
   request,
-  get: <T = unknown>(path: string, init?: RequestInit) => 
+  get: <T = unknown>(path: string, init?: RequestInit) =>
     request<T>(path, { ...(init || {}), method: "GET" }),
-  
-  post: <T = unknown>(path: string, body?: unknown, init?: RequestInit) => 
-    request<T>(path, { 
-      ...(init || {}), 
-      method: "POST", 
-      body: body && typeof body === "string" ? body : JSON.stringify(body) 
+
+  post: <T = unknown>(path: string, body?: unknown, init?: RequestInit) =>
+    request<T>(path, {
+      ...(init || {}),
+      method: "POST",
+      body: body && typeof body === "string" ? body : JSON.stringify(body)
     }),
-  
-  put: <T = unknown>(path: string, body?: unknown, init?: RequestInit) => 
-    request<T>(path, { 
-      ...(init || {}), 
-      method: "PUT", 
-      body: body && typeof body === "string" ? body : JSON.stringify(body) 
+
+  put: <T = unknown>(path: string, body?: unknown, init?: RequestInit) =>
+    request<T>(path, {
+      ...(init || {}),
+      method: "PUT",
+      body: body && typeof body === "string" ? body : JSON.stringify(body)
     }),
-  
-  del: <T = unknown>(path: string, init?: RequestInit) => 
+
+  del: <T = unknown>(path: string, init?: RequestInit) =>
     request<T>(path, { ...(init || {}), method: "DELETE" }),
+
+  downloadBlob: async (path: string, filename: string): Promise<void> => {
+    const base = getBaseUrl();
+    const url = path.match(/^https?:\/\//i) ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
+
+    const token = getToken();
+    const headers = new Headers();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    const res = await fetch(url, { credentials: "include", headers });
+
+    if (!res.ok) {
+      throw new Error(`Failed to download: ${res.statusText}`);
+    }
+
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(blobUrl);
+  },
 };

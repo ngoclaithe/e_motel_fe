@@ -164,7 +164,7 @@ export default function MotelsPage() {
       const fileArray = Array.from(files);
       const newImageFiles = [...imageFiles, ...fileArray];
       setImageFiles(newImageFiles);
-      
+
       const readers = fileArray.map((file) => {
         return new Promise<MotelFormImage>((resolve) => {
           const reader = new FileReader();
@@ -172,7 +172,7 @@ export default function MotelsPage() {
           reader.readAsDataURL(file);
         });
       });
-      
+
       Promise.all(readers).then((dataUrls) => {
         setForm((f) => ({
           ...f,
@@ -345,11 +345,10 @@ export default function MotelsPage() {
               setTab('my');
               setPage(1);
             }}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'my'
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === 'my'
                 ? 'border-black dark:border-white text-black dark:text-white'
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
+              }`}
           >
             Của tôi
           </button>
@@ -358,13 +357,12 @@ export default function MotelsPage() {
               setTab('all');
               setPage(1);
             }}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === 'all'
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === 'all'
                 ? 'border-black dark:border-white text-black dark:text-white'
                 : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
-            }`}
+              }`}
           >
-            Tất c���
+            Tất cả
           </button>
         </div>
       )}

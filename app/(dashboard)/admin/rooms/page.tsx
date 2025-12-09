@@ -448,7 +448,7 @@ export default function AdminRoomsPage() {
                       <label className="mb-1 block text-sm font-medium">Kiểu phòng tắm</label>
                       <select
                         value={form.bathroomType || "PRIVATE"}
-                        onChange={(e) => setForm((f) => ({ ...f, bathroomType: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, bathroomType: e.target.value as BathroomType }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >
@@ -461,7 +461,7 @@ export default function AdminRoomsPage() {
                       <label className="mb-1 block text-sm font-medium">Tình trạng nội thất</label>
                       <select
                         value={form.furnishingStatus || "PARTIALLY_FURNISHED"}
-                        onChange={(e) => setForm((f) => ({ ...f, furnishingStatus: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, furnishingStatus: e.target.value as FurnishingStatus }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >

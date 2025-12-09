@@ -1,283 +1,288 @@
 "use client";
 
-import { useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
-import type { Bill } from "../../../types";
+import { useState, useEffect } from "react";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
+import { billService } from "../../../lib/services";
 
-export default function BillsPage() {
+export default function TenantBillsPage() {
   useEnsureRole(["TENANT"]);
   const { push } = useToast();
-  const [bills] = useLocalStorage<Bill[]>("emotel_bills", []);
-  const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 
-  const getTenantBills = () => {
+  const [bills, setBills] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedBill, setSelectedBill] = useState<any | null>(null);
+
+  const userEmail = (() => {
     try {
       const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      if (!session?.email) return [];
-      return bills.filter((b) => b.tenantEmail === session.email);
+      return session?.email || "";
     } catch {
-      return [];
+      return "";
+    }
+  })();
+
+  useEffect(() => {
+    fetchBills();
+  }, []);
+
+  const fetchBills = async () => {
+    try {
+      setIsLoading(true);
+      const response = await billService.listBills(1, 100);
+      const billsData = Array.isArray(response) ? response : (response.data || []);
+      setBills(billsData);
+    } catch (err) {
+      console.error("Failed to fetch bills:", err);
+      push({ title: "Không thể tải hóa đơn", type: "error" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const tenantBills = getTenantBills().sort(
-    (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
-  );
-
-  const isPaid = (status: string) => status === "paid";
-  const isOverdue = (dueDate: string, status: string) => {
-    if (status === "paid") return false;
-    return new Date(dueDate) < new Date();
-  };
+  const tenantBills = bills.filter((b: any) => b.contract?.tenant?.email === userEmail);
 
   const getTotalUnpaid = () => {
-    return tenantBills.filter((b) => b.status === "unpaid").reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+    return tenantBills.filter((b: any) => !b.isPaid).reduce((sum: number, b: any) => sum + (b.totalAmount || 0), 0);
   };
 
-  const pay = () => {
-    push({ title: "Đang xử lý thanh toán", description: "Hóa đơn sẽ được cập nhật sau khi thanh toán", type: "info" });
-    setSelectedBill(null);
+  const handlePay = async (billId: string) => {
+    try {
+      await billService.payBill(billId, { paymentMethod: "cash" });
+      push({ title: "Thanh toán thành công", type: "success" });
+      fetchBills();
+    } catch (err) {
+      push({ title: "Thanh toán thất bại", type: "error" });
+    }
   };
 
-  const downloadPDF = (bill: Bill) => {
-    const element = document.createElement("a");
-    const file = new Blob([generatePDFContent(bill)], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `bill-${bill.id}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    push({ title: "Đã tải xuống", type: "success" });
-  };
-
-  const generatePDFContent = (bill: Bill) => {
-    return `
-HÓA ĐƠN THANH TOÁN
-================================
-ID: ${bill.id}
-Ngày tạo: ${new Date(bill.createdAt).toLocaleDateString("vi-VN")}
-
-THÔNG TIN CHUNG
------------
-Chủ trọ: ${bill.landlordEmail}
-Người thuê: ${bill.tenantEmail}
-Phòng: ${bill.roomId}
-Tháng: ${bill.month}/${bill.year}
-Hạn thanh toán: ${new Date(bill.dueDate).toLocaleDateString("vi-VN")}
-
-CHI TIẾT
-------
-Tiền phòng: ${bill.roomPrice?.toLocaleString()}đ
-Tiền điện (${bill.electricityUsage} kWh): ${bill.electricityPrice?.toLocaleString()}đ
-Tiền nước (${bill.waterUsage} m³): ${bill.waterPrice?.toLocaleString()}đ
-Phí khác: ${bill.otherFees?.toLocaleString() || "0"}đ
-
-CỘNG: ${bill.totalAmount?.toLocaleString()}đ
-
-TRẠNG THÁI: ${bill.status === "paid" ? "Đã thanh toán" : "Chưa thanh toán"}
-    `.trim();
+  const getContractInfo = (bill: any) => {
+    const contract = bill.contract;
+    if (!contract) return "N/A";
+    return contract.room?.number || contract.motel?.name || "N/A";
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Hóa đơn</h1>
-      </div>
-
-      {getTotalUnpaid() > 0 && (
-        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900/50 dark:bg-yellow-900/20">
-          <div className="text-sm font-medium text-yellow-900 dark:text-yellow-200">
-            Còn nợ: {getTotalUnpaid().toLocaleString()}đ
+    <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-50 p-6 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
+      <div className="mx-auto max-w-6xl space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-400">
+              Hóa Đơn
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">Quản lý hóa đơn tiền phòng của bạn</p>
           </div>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {tenantBills.map((bill) => (
-          <div
-            key={bill.id}
-            className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-black/40"
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                  Tháng {bill.month}/{bill.year}
-                </div>
-                <div className="mt-1 text-xl font-semibold">{bill.totalAmount?.toLocaleString()}đ</div>
-                <div className="mt-2 text-xs text-zinc-500">
-                  Hạn: {new Date(bill.dueDate).toLocaleDateString("vi-VN")}
-                </div>
-              </div>
-              <div>
-                {isPaid(bill.status) && (
-                  <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    Đã thanh to��n
-                  </span>
-                )}
-                {isOverdue(bill.dueDate, bill.status) && (
-                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                    Quá hạn
-                  </span>
-                )}
-                {!isPaid(bill.status) && !isOverdue(bill.dueDate, bill.status) && (
-                  <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    Chưa thanh toán
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => setSelectedBill(bill)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Chi tiết
-              </button>
-              {bill.status === "unpaid" && (
-                <button
-                  onClick={() => pay(bill)}
-                  className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                >
-                  Thanh toán
-                </button>
-              )}
-              <button
-                onClick={() => downloadPDF(bill)}
-                className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Tải PDF
-              </button>
-            </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-white"></div>
           </div>
-        ))}
-        {tenantBills.length === 0 && (
-          <div className="col-span-full rounded-2xl border border-dashed border-black/15 p-8 text-center text-sm text-zinc-500 dark:border-white/15">
-            Chưa có hóa đơn nào
+        ) : (
+          <>
+            {/* Unpaid Summary */}
+            {getTotalUnpaid() > 0 && (
+              <div className="group relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-lg shadow-amber-100/50 transition-all hover:shadow-xl dark:border-amber-900/30 dark:from-amber-950/30 dark:to-orange-950/30 dark:shadow-amber-900/20">
+                <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-amber-200/20 blur-2xl dark:bg-amber-800/20"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-2xl">
+                      ⚠️
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-amber-900 dark:text-amber-200">Tổng còn nợ</div>
+                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{getTotalUnpaid().toLocaleString()}đ</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bills Grid */}
+            {tenantBills.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/50 py-20 backdrop-blur-sm dark:border-zinc-800 dark:bg-black/20">
+                <div className="text-6xl mb-4">📄</div>
+                <p className="text-zinc-500">Chưa có hóa đơn nào</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {tenantBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50/50 p-6 shadow-sm transition-all hover:shadow-lg hover:shadow-zinc-200/50 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950/50 dark:hover:shadow-zinc-900/50"
+                  >
+                    <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-2xl"></div>
+
+                    <div className="relative space-y-4">
+                      {/* Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-semibold text-zinc-900 dark:text-white">Phòng {getContractInfo(bill)}</div>
+                          <div className="mt-1 text-sm text-zinc-500">
+                            {new Date(bill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
+                          </div>
+                        </div>
+                        {bill.isPaid ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
+                            Đã thanh toán
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>
+                            Chưa thanh toán
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Usage Details */}
+                      <div className="space-y-2 rounded-xl bg-zinc-50/50 p-4 text-sm dark:bg-white/5">
+                        <div className="flex justify-between">
+                          <span className="text-zinc-600 dark:text-zinc-400">⚡ Điện</span>
+                          <span className="font-medium">{bill.electricityEnd - bill.electricityStart} kWh</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-zinc-600 dark:text-zinc-400">💧 Nước</span>
+                          <span className="font-medium">{bill.waterEnd - bill.waterStart} m³</span>
+                        </div>
+                      </div>
+
+                      {/* Total Amount */}
+                      <div className="flex items-baseline justify-between border-t border-zinc-200/50 pt-4 dark:border-zinc-800/50">
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400">Tổng cộng</span>
+                        <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+                          {bill.totalAmount?.toLocaleString()}đ
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => setSelectedBill(bill)}
+                          className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                        >
+                          Chi tiết
+                        </button>
+                        {!bill.isPaid && (
+                          <button
+                            onClick={() => handlePay(bill.id)}
+                            className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
+                          >
+                            Thanh toán
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Detail Modal */}
+        {selectedBill && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
+              {/* Modal Header */}
+              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Chi Tiết Hóa Đơn</h2>
+                  <button
+                    onClick={() => setSelectedBill(null)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  >
+                    <span className="text-2xl text-zinc-400">×</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <span className="text-sm text-zinc-500">Phòng</span>
+                    <div className="mt-1 font-semibold">Phòng {getContractInfo(selectedBill)}</div>
+                  </div>
+                  <div>
+                    <span className="text-sm text-zinc-500">Tháng</span>
+                    <div className="mt-1 font-semibold">{new Date(selectedBill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}</div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+                  <div className="mb-4 font-semibold">Chi tiết sử dụng</div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600 dark:text-zinc-400">Điện: {selectedBill.electricityStart} → {selectedBill.electricityEnd}</span>
+                      <span className="font-semibold">{((selectedBill.electricityEnd - selectedBill.electricityStart) * selectedBill.electricityRate).toLocaleString()}đ</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-600 dark:text-zinc-400">Nước: {selectedBill.waterStart} → {selectedBill.waterEnd}</span>
+                      <span className="font-semibold">{((selectedBill.waterEnd - selectedBill.waterStart) * selectedBill.waterRate).toLocaleString()}đ</span>
+                    </div>
+                    {selectedBill.otherFees > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-zinc-600 dark:text-zinc-400">Phí khác</span>
+                        <span className="font-semibold">{selectedBill.otherFees.toLocaleString()}đ</span>
+                      </div>
+                    )}
+                    <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
+                      <div className="flex justify-between text-base">
+                        <span className="font-semibold">Tổng cộng</span>
+                        <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
+                          {selectedBill.totalAmount?.toLocaleString()}đ
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-sm text-zinc-500">Trạng thái</span>
+                  <div className="mt-2">
+                    {selectedBill.isPaid ? (
+                      <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
+                        <span className="h-2 w-2 rounded-full bg-white"></span>
+                        Đã thanh toán
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
+                        <span className="h-2 w-2 animate-pulse rounded-full bg-white"></span>
+                        Chưa thanh toán
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setSelectedBill(null)}
+                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                  >
+                    Đóng
+                  </button>
+                  {!selectedBill.isPaid && (
+                    <button
+                      onClick={() => {
+                        handlePay(selectedBill.id);
+                        setSelectedBill(null);
+                      }}
+                      className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
+                    >
+                      Thanh toán ngay
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {selectedBill && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-black/40">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Chi tiết hóa đơn</h2>
-              <button
-                onClick={() => setSelectedBill(null)}
-                className="text-2xl font-bold text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              >
-                ×
-              </button>
-            </div>
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Mã hóa đơn</span>
-                  <div className="font-medium">{selectedBill.id}</div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Tháng / Năm</span>
-                  <div className="font-medium">
-                    {selectedBill.month}/{selectedBill.year}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-zinc-500">Phòng</span>
-                  <div className="font-medium">{selectedBill.roomId}</div>
-                </div>
-                <div>
-                  <span className="text-zinc-500">Hạn thanh toán</span>
-                  <div className="font-medium">
-                    {new Date(selectedBill.dueDate).toLocaleDateString("vi-VN")}
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-black/10 p-4 dark:border-white/10">
-                <div className="mb-3 font-medium">Chi tiết thanh toán</div>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span>Tiền phòng</span>
-                    <span>{selectedBill.roomPrice?.toLocaleString()}đ</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Điện ({selectedBill.electricityUsage} kWh)</span>
-                    <span>{selectedBill.electricityPrice?.toLocaleString()}đ</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Nước ({selectedBill.waterUsage} m³)</span>
-                    <span>{selectedBill.waterPrice?.toLocaleString()}đ</span>
-                  </div>
-                  {selectedBill.otherFees && selectedBill.otherFees > 0 && (
-                    <div className="flex justify-between">
-                      <span>Phí khác</span>
-                      <span>{selectedBill.otherFees?.toLocaleString()}đ</span>
-                    </div>
-                  )}
-                  <div className="border-t border-black/10 pt-2 font-medium dark:border-white/10">
-                    <div className="flex justify-between">
-                      <span>Cộng</span>
-                      <span>{selectedBill.totalAmount?.toLocaleString()}đ</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-zinc-500">Trạng thái</span>
-                <div className="mt-1">
-                  {isPaid(selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      Đã thanh toán
-                    </span>
-                  )}
-                  {isOverdue(selectedBill.dueDate, selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                      Quá hạn
-                    </span>
-                  )}
-                  {!isPaid(selectedBill.status) && !isOverdue(selectedBill.dueDate, selectedBill.status) && (
-                    <span className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                      Chưa thanh toán
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedBill(null)}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Đóng
-              </button>
-              {selectedBill.status === "unpaid" && (
-                <button
-                  onClick={() => {
-                    pay(selectedBill);
-                  }}
-                  className="btn-primary"
-                >
-                  Thanh toán ngay
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  downloadPDF(selectedBill);
-                  setSelectedBill(null);
-                }}
-                className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-              >
-                Tải PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -45,11 +45,11 @@ export default function AdminReportsPage() {
 
   const exportMotels = () => {
     if (!motels.length) return;
-    download("motels.csv", toCSV(motels));
+    download("motels.csv", toCSV(motels as any[]));
   };
   const exportRooms = () => {
     if (!rooms.length) return;
-    download("rooms.csv", toCSV(rooms));
+    download("rooms.csv", toCSV(rooms as any[]));
   };
 
   return (

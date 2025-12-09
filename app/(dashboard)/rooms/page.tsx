@@ -128,7 +128,7 @@ export default function RoomsPage() {
       const res = await motelService.listMotels({ page: 1, limit: 100 });
       const data = Array.isArray((res as any)?.data) ? (res as any).data : Array.isArray(res) ? (res as Motel[]) : [];
       setMotels(data);
-    } catch {}
+    } catch { }
   };
 
   useEffect(() => {
@@ -377,7 +377,7 @@ export default function RoomsPage() {
                 <div>
                   {selectedRoom.images && selectedRoom.images.length > 0 ? (
                     <div className="grid grid-cols-1 gap-2">
-                      {((selectedRoom.images || []) as any[]).slice(0,4).map((img, idx) => (
+                      {((selectedRoom.images || []) as any[]).slice(0, 4).map((img, idx) => (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img key={idx} src={typeof img === 'string' ? img : img.url} alt={`img-${idx}`} className="w-full h-32 object-cover rounded-md" />
                       ))}
@@ -391,10 +391,10 @@ export default function RoomsPage() {
                   <div className="text-xs text-zinc-500">Diện tích: {selectedRoom.area} m²</div>
                   <div className="mt-2 text-xs">{selectedRoom.description}</div>
 
-                  {selectedRoom.motel && (
+                  {(selectedRoom as any).motel && (
                     <div className="mt-3 text-xs">
-                      <div className="font-medium">Nhà trọ: {selectedRoom.motel.name}</div>
-                      <div className="text-zinc-500">{selectedRoom.motel.address}</div>
+                      <div className="font-medium">Nhà trọ: {(selectedRoom as any).motel.name}</div>
+                      <div className="text-zinc-500">{(selectedRoom as any).motel.address}</div>
                     </div>
                   )}
 
@@ -545,7 +545,7 @@ export default function RoomsPage() {
                       <label className="mb-1 block text-sm font-medium">Kiểu phòng tắm</label>
                       <select
                         value={form.bathroomType || "PRIVATE"}
-                        onChange={(e) => setForm((f) => ({ ...f, bathroomType: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, bathroomType: e.target.value as BathroomType }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >
@@ -558,7 +558,7 @@ export default function RoomsPage() {
                       <label className="mb-1 block text-sm font-medium">Tình trạng nội thất</label>
                       <select
                         value={form.furnishingStatus || "PARTIALLY_FURNISHED"}
-                        onChange={(e) => setForm((f) => ({ ...f, furnishingStatus: e.target.value }))}
+                        onChange={(e) => setForm((f) => ({ ...f, furnishingStatus: e.target.value as FurnishingStatus }))}
                         className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                         disabled={uploading}
                       >

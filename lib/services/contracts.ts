@@ -70,8 +70,9 @@ export const contractService = {
     return api.del(`/api/v1/contracts/${id}`);
   },
 
-  downloadContract: async (id: string): Promise<Blob> => {
-    return api.get(`/api/v1/contracts/${id}/download`);
+  downloadContract: async (id: string): Promise<void> => {
+    const filename = `contract-${id}.pdf`;
+    return api.downloadBlob(`/api/v1/contracts/${id}/download`, filename);
   },
 
 };

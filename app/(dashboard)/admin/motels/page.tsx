@@ -23,7 +23,6 @@ export default function AdminMotelsPage() {
   const [form, setForm] = useState<Partial<Motel>>({
     name: "",
     address: "",
-    ownerEmail: "",
     description: "",
     totalRooms: undefined,
     monthlyRent: undefined,
@@ -95,7 +94,6 @@ export default function AdminMotelsPage() {
       setForm({
         name: "",
         address: "",
-        ownerEmail: "",
         description: "",
         totalRooms: undefined,
         monthlyRent: undefined,
@@ -178,7 +176,6 @@ export default function AdminMotelsPage() {
                 <div>
                   <div className="font-medium">{m.name}</div>
                   <div className="text-xs text-zinc-500">{m.address}</div>
-                  {m.owner && <div className="text-xs text-zinc-500">Chủ: {m.owner.email}</div>}
                 </div>
                 <div className="mt-3 flex gap-2">
                   <button onClick={() => { setEditing(m); setForm(m); setOpen(true); }} className="rounded-lg border border-black/10 px-3 py-1.5 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Sửa</button>
@@ -238,15 +235,7 @@ export default function AdminMotelsPage() {
                   className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
                 />
               </div>
-              <div>
-                <label className="mb-1 block text-sm">Email chủ</label>
-                <input
-                  type="email"
-                  value={form.ownerEmail || ""}
-                  onChange={(e) => setForm((f) => ({ ...f, ownerEmail: e.target.value }))}
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                />
-              </div>
+
               <div>
                 <label className="mb-1 block text-sm">Mô tả</label>
                 <textarea
@@ -329,7 +318,7 @@ export default function AdminMotelsPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", ownerEmail: "", description: "", totalRooms: undefined, monthlyRent: undefined, images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
+                <button type="button" onClick={() => { setOpen(false); setEditing(null); setForm({ name: "", address: "", description: "", totalRooms: undefined, monthlyRent: undefined, images: [] }); }} className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Hủy</button>
                 <button onClick={save} disabled={uploading} className="btn-primary disabled:opacity-50">{uploading ? "Đang tải..." : "Lưu"}</button>
               </div>
             </div>

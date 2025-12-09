@@ -2,27 +2,26 @@ import { api } from "../api";
 import type { Bill } from "../../types";
 
 export interface CreateBillRequest {
-  tenantEmail: string;
-  roomId: string;
-  month: number;
-  year: number;
-  roomPrice: number;
-  electricityUsage: number;
-  electricityPrice: number;
-  waterUsage: number;
-  waterPrice: number;
+  contractId: string;
+  month: string; // ISO date string
+  electricityStart: number;
+  electricityEnd: number;
+  waterStart: number;
+  waterEnd: number;
+  electricityRate: number;
+  waterRate: number;
   otherFees?: number;
-  dueDate: string;
 }
 
 export interface UpdateBillRequest {
-  roomPrice?: number;
-  electricityUsage?: number;
-  electricityPrice?: number;
-  waterUsage?: number;
-  waterPrice?: number;
+  electricityStart?: number;
+  electricityEnd?: number;
+  waterStart?: number;
+  waterEnd?: number;
+  electricityRate?: number;
+  waterRate?: number;
   otherFees?: number;
-  dueDate?: string;
+  isPaid?: boolean;
 }
 
 export interface BillListResponse {
