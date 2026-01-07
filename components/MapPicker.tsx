@@ -54,8 +54,8 @@ export function MapPicker({ latitude, longitude, onSelect }: MapPickerProps) {
       const L = window.L;
       if (!L || !mapContainer.current || map.current) return;
 
-      const initialLat = latitude || 10.7769;
-      const initialLng = longitude || 106.6966;
+      const initialLat = latitude || 21.006709;
+      const initialLng = longitude || 105.806434;
 
       map.current = L.map(mapContainer.current).setView([initialLat, initialLng], 13);
 

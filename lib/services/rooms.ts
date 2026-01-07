@@ -5,7 +5,6 @@ export interface CreateRoomRequest {
   number: string;
   area: number;
   price: number;
-  motelId?: string;
   bathroomType?: string;
   hasWaterHeater?: boolean;
   furnishingStatus?: string;
@@ -42,7 +41,6 @@ export interface UpdateRoomRequest {
   area?: number;
   price?: number;
   status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
-  motelId?: string;
   tenantId?: string;
   bathroomType?: string;
   hasWaterHeater?: boolean;

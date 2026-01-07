@@ -5,6 +5,7 @@ import { useEnsureRole } from "../../../hooks/useAuth";
 import { useEffect, useState } from "react";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import type { Bill, Contract } from "../../../types";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LandlordDashboard() {
   useEnsureRole(["LANDLORD"]);
@@ -12,14 +13,7 @@ export default function LandlordDashboard() {
   const [bills] = useLocalStorage<Bill[]>("emotel_bills", []);
   const [contracts] = useLocalStorage<Contract[]>("emotel_contracts", []);
 
-  const landlordEmail = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      return session?.email || "";
-    } catch {
-      return "";
-    }
-  })();
+  const landlordEmail = useAuthStore((state) => state.user?.email || "");
 
   const myBills = bills.filter((b) => b.landlordEmail === landlordEmail);
   const myContracts = contracts;

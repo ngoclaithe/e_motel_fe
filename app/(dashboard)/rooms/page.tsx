@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../types";
+import type { Room, RoomStatus, BathroomType, FurnishingStatus } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
-import { roomService, motelService } from "../../../lib/services";
+import { roomService } from "../../../lib/services";
 
 const COMMON_AMENITIES = [
   "Cửa sổ lớn",
@@ -24,7 +24,6 @@ export default function RoomsPage() {
   const { push } = useToast();
 
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [motels, setMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [status, setStatus] = useState<RoomStatus | "all">("all");
@@ -125,17 +124,8 @@ export default function RoomsPage() {
     }
   };
 
-  const loadMotels = async () => {
-    try {
-      const res = await motelService.listMotels({ page: 1, limit: 100 });
-      const data = Array.isArray((res as any)?.data) ? (res as any).data : Array.isArray(res) ? (res as Motel[]) : [];
-      setMotels(data);
-    } catch { }
-  };
-
   useEffect(() => {
     loadRooms();
-    loadMotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, viewFilter]);
 
@@ -162,7 +152,6 @@ export default function RoomsPage() {
         price: Number(form.price),
         amenities: form.amenities || [],
         images: imageUrls.length > 0 ? imageUrls : (form.images || []),
-        motelId: form.motelId,
         bathroomType: form.bathroomType as BathroomType,
         hasWaterHeater: form.hasWaterHeater ?? false,
         furnishingStatus: form.furnishingStatus as FurnishingStatus,
@@ -461,23 +450,6 @@ export default function RoomsPage() {
                         placeholder="301"
                         disabled={uploading}
                       />
-                    </div>
-
-                    <div>
-                      <label className="mb-1 block text-sm font-medium">Nhà trọ (tùy chọn)</label>
-                      <select
-                        value={form.motelId || ""}
-                        onChange={(e) => setForm((f) => ({ ...f, motelId: e.target.value || undefined }))}
-                        className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
-                        disabled={uploading}
-                      >
-                        <option value="">Không chọn nhà trọ</option>
-                        {motels.map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
-                          </option>
-                        ))}
-                      </select>
                     </div>
 
                     <div>

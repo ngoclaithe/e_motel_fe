@@ -79,9 +79,6 @@ export const reportService = {
     query.append("year", year.toString());
     if (month) query.append("month", month.toString());
     const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "")}/api/v1/reports/export?${query.toString()}`, {
-      headers: {
-        "Authorization": `Bearer ${getTokenFromStorage()}`,
-      },
       credentials: "include",
     });
     if (!response.ok) throw new Error("Failed to export report");
@@ -95,48 +92,9 @@ export const reportService = {
     query.append("year", year.toString());
     if (month) query.append("month", month.toString());
     const response = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "")}/api/v1/reports/export?${query.toString()}`, {
-      headers: {
-        "Authorization": `Bearer ${getTokenFromStorage()}`,
-      },
       credentials: "include",
     });
     if (!response.ok) throw new Error("Failed to export report");
     return response.blob();
   },
 };
-
-function getTokenFromStorage(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const keys = ["emotel_token", "token", "access_token", "accessToken", "auth_token"];
-    for (const storage of [localStorage, sessionStorage]) {
-      try {
-        for (const k of keys) {
-          const v = storage.getItem(k);
-          if (typeof v === "string" && v.trim()) {
-            return v.replace(/^Bearer\s+/i, "").trim();
-          }
-        }
-        const session = storage.getItem("emotel_session");
-        if (session) {
-          const obj = JSON.parse(session) as unknown;
-          if (
-            obj &&
-            typeof obj === "object" &&
-            typeof (obj as Record<string, unknown>).token === "string"
-          ) {
-            return ((obj as Record<string, unknown>).token as string).replace(
-              /^Bearer\s+/i,
-              ""
-            ).trim();
-          }
-        }
-      } catch {
-        // ignore
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}

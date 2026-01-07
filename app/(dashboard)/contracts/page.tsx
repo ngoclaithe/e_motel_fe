@@ -5,6 +5,7 @@ import type { Contract } from "../../../types";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { contractService } from "../../../lib/services/contracts";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ContractsPage() {
   useEnsureRole(["TENANT"]);
@@ -14,14 +15,7 @@ export default function ContractsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const userEmail = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      return session?.email || "";
-    } catch {
-      return "";
-    }
-  })();
+  const userEmail = useAuthStore((state) => state.user?.email || "");
 
   useEffect(() => {
     const fetchContracts = async () => {

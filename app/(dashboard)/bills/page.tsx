@@ -5,6 +5,7 @@ import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { billService } from "../../../lib/services";
 import PaymentQR from "../../../components/PaymentQR";
+import { useAuthStore } from "@/store/authStore";
 
 export default function TenantBillsPage() {
   useEnsureRole(["TENANT"]);
@@ -16,14 +17,7 @@ export default function TenantBillsPage() {
   const [showPaymentQR, setShowPaymentQR] = useState(false);
   const [paymentInfo, setPaymentInfo] = useState<any>(null);
 
-  const userEmail = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      return session?.email || "";
-    } catch {
-      return "";
-    }
-  })();
+  const userEmail = useAuthStore((state) => state.user?.email || "");
 
   useEffect(() => {
     fetchBills();

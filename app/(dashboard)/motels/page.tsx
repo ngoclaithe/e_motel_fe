@@ -53,8 +53,8 @@ const INITIAL_FORM: MotelFormData = {
   address: "",
   description: "",
   totalRooms: 0,
-  latitude: 10.7769,
-  longitude: 106.6966,
+  latitude: 21.006709,
+  longitude: 105.806434,
   alleyType: "MOTORBIKE",
   alleyWidth: 0,
   hasElevator: false,
@@ -242,8 +242,8 @@ export default function MotelsPage() {
         address: form.address,
         description: form.description || "",
         totalRooms: form.totalRooms || 0,
-        latitude: form.latitude || 10.7769,
-        longitude: form.longitude || 106.6966,
+        latitude: form.latitude || 21.006709,
+        longitude: form.longitude || 105.806434,
         alleyType: form.alleyType || "MOTORBIKE",
         alleyWidth: form.alleyWidth || 0,
         hasElevator: form.hasElevator || false,
@@ -1005,8 +1005,8 @@ export default function MotelsPage() {
                 <div className="border-b border-black/10 pb-4 dark:border-white/15">
                   <h3 className="mb-4 text-sm font-semibold">Vị trí trên bản đồ</h3>
                   <MapPicker
-                    latitude={form.latitude || 10.7769}
-                    longitude={form.longitude || 106.6966}
+                    latitude={form.latitude || 21.006709}
+                    longitude={form.longitude || 105.806434}
                     onSelect={(lat, lng) => {
                       setForm((f) => ({ ...f, latitude: lat, longitude: lng }));
                     }}

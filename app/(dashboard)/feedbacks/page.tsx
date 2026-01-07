@@ -5,6 +5,7 @@ import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { feedbackService, type Feedback } from "../../../lib/services/feedbacks";
 import { roomService } from "../../../lib/services";
+import { useAuthStore } from "@/store/authStore";
 
 export default function TenantFeedbacksPage() {
   useEnsureRole(["TENANT"]);
@@ -23,14 +24,7 @@ export default function TenantFeedbacksPage() {
     roomId: "",
   });
 
-  const userEmail = (() => {
-    try {
-      const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-      return session?.email || "";
-    } catch {
-      return "";
-    }
-  })();
+  const userEmail = useAuthStore((state) => state.user?.email || "");
 
   useEffect(() => {
     fetchFeedbacks();

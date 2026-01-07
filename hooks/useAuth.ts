@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "../components/providers/ToastProvider";
-import type { UserRole, LoginResponse } from "../lib/services/auth";
+import type { UserRole } from "../lib/services/auth";
+import { useAuthStore } from "@/store/authStore";
 
 function normalizeRole(value: unknown): UserRole | null {
   if (!value || typeof value !== "string") return null;
@@ -14,7 +15,7 @@ function normalizeRole(value: unknown): UserRole | null {
 
 import { api } from "../lib/api";
 
-async function fetchMe(): Promise<{ role?: string } | null> {
+async function fetchMe(): Promise<{ id: string; email: string; role?: string; isVerified: boolean } | null> {
   try {
     return await api.get("/api/v1/auth/me");
   } catch {
@@ -34,48 +35,32 @@ export function routeForRole(role: UserRole): string {
   }
 }
 
-function readActiveEmail(): string | null {
-  try {
-    const session = JSON.parse(localStorage.getItem("emotel_session") || "null");
-    return session?.email || null;
-  } catch {
-    return null;
-  }
-}
-
-function inferRoleFromLocal(email: string | null): UserRole | null {
-  try {
-    const active = normalizeRole(localStorage.getItem("emotel_active_role"));
-    if (active) return active;
-    if (!email) return null;
-    const users: Array<{ email: string; role?: string }> = JSON.parse(localStorage.getItem("emotel_users") || "[]");
-    const found = users.find((u) => u.email === email);
-    const role = normalizeRole(found?.role);
-    return role;
-  } catch {
-    return null;
-  }
-}
-
 export function useCurrentRole() {
-  const [role, setRole] = useState<UserRole | null>(() => inferRoleFromLocal(readActiveEmail()));
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const me = await fetchMe();
-      const normalized = normalizeRole(me?.role);
-      if (mounted && normalized) {
-        try { localStorage.setItem("emotel_active_role", normalized); } catch {}
-        setRole(normalized);
-      } else if (mounted) {
-        setRole(inferRoleFromLocal(readActiveEmail()) || null);
+      if (!user) {
+        const me = await fetchMe();
+        if (mounted && me) {
+          const normalized = normalizeRole(me.role);
+          if (normalized) {
+            setUser({
+              id: me.id,
+              email: me.email,
+              role: normalized,
+              isVerified: me.isVerified,
+            });
+          }
+        }
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [user, setUser]);
 
-  return role;
+  return user?.role || null;
 }
 
 export function useEnsureRole(allowed: UserRole[], fallback?: string) {
@@ -111,74 +96,51 @@ export function useAuth() {
   const router = useRouter();
   const { push } = useToast();
   const [loading, setLoading] = useState(false);
-
-  const clearLocal = () => {
-    try {
-      localStorage.removeItem("emotel_token");
-      localStorage.removeItem("emotel_session");
-      localStorage.removeItem("emotel_active_role");
-    } catch {}
-  };
+  const { setUser, clearUser } = useAuthStore();
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      let loginResponse: LoginResponse | null = null;
-
-      try {
-        loginResponse = await api.post("/api/v1/auth/login", { email, password });
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Email hoặc mật khẩu không đúng";
-        push({ title: "Lỗi đăng nhập", description: errorMessage, type: "error" });
-        return;
-      }
-
-      if (!loginResponse?.accessToken) {
-        push({ title: "Lỗi", description: "Không thể đăng nhập. Vui lòng thử lại.", type: "error" });
-        return;
-      }
-
-      // Store tokens
-      localStorage.setItem("emotel_token", loginResponse.accessToken);
-      localStorage.setItem("emotel_session", JSON.stringify({ email, token: loginResponse.accessToken }));
-
-      if (loginResponse.refreshToken) {
-        localStorage.setItem("emotel_refresh_token", loginResponse.refreshToken);
-      }
+      await api.post("/api/v1/auth/login", { email, password });
 
       const me = await fetchMe();
-      let role: UserRole | null = normalizeRole(me?.role);
-
-      if (!role) {
-        role = "LANDLORD";
+      if (!me) {
+        push({ title: "Lỗi", description: "Không thể lấy thông tin người dùng.", type: "error" });
+        return;
       }
 
-      try {
-        if (role) localStorage.setItem("emotel_active_role", role);
-      } catch {}
+      const role: UserRole = normalizeRole(me.role) || "LANDLORD";
 
-      push({ title: "Đăng nhập thành công", description: `Xin chào ${email}`, type: "success" });
+      setUser({
+        id: me.id,
+        email: me.email,
+        role,
+        isVerified: me.isVerified,
+      });
+
       router.push(routeForRole(role));
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Không thể đăng nhập. Vui lòng thử lại.";
-      push({ title: "Lỗi", description: errorMessage, type: "error" });
+      const errorMessage = error instanceof Error ? error.message : "Email hoặc mật khẩu không đúng";
+      push({ title: "Lỗi đăng nhập", description: errorMessage, type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  const logout = (opts?: { redirect?: boolean }) => {
-    clearLocal();
-    push({ title: "Đã đăng xuất", type: "info" });
+  const logout = async (opts?: { redirect?: boolean }) => {
+    try {
+      await api.post("/api/v1/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
+    clearUser();
     if (opts?.redirect !== false) router.push("/login");
   };
 
   const getSession = () => {
-    try {
-      return JSON.parse(localStorage.getItem("emotel_session") || "null");
-    } catch {
-      return null;
-    }
+    const user = useAuthStore.getState().user;
+    return user ? { email: user.email, token: null } : null;
   };
 
   const redirectByRole = (role: UserRole) => {
