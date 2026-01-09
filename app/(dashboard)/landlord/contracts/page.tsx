@@ -66,7 +66,7 @@ export default function LandlordContractsPage() {
     }
 
     try {
-      const r = await roomService.myRooms();
+      const r = await roomService.myRooms("VACANT");
       setRooms(Array.isArray(r) ? r : []);
     } catch {
       setRooms([]);
@@ -454,12 +454,14 @@ export default function LandlordContractsPage() {
                       <option value="">-- Chọn phòng --</option>
                       {loadingRooms && <option>Đang tải...</option>}
                       {!loadingRooms &&
-                        rooms.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.number}
-                            {r.price ? ` — ${Number(r.price).toLocaleString()}đ` : ""}
-                          </option>
-                        ))}
+                        rooms
+                          .filter((r) => r.status === "VACANT")
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.number}
+                              {r.price ? ` — ${Number(r.price).toLocaleString()}đ` : ""}
+                            </option>
+                          ))}
                     </select>
                   ) : (
                     <select

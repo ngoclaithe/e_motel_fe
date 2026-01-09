@@ -109,8 +109,8 @@ export const roomService = {
   createRoom: async (data: CreateRoomRequest): Promise<Room> => {
     return api.post(`/api/v1/rooms`, data) as Promise<Room>;
   },
-  myRooms: async (): Promise<Room[]> => {
-    const res = await api.get(`/api/v1/rooms/my-rooms`);
+  myRooms: async (status?: string): Promise<Room[]> => {
+    const res = await api.get(`/api/v1/rooms/my-rooms${status ? `?status=${status}` : ""}`);
     return normalizeList(res);
   },
   updateRoom: async (id: string, data: UpdateRoomRequest): Promise<Room> => {
