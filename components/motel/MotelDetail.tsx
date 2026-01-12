@@ -35,7 +35,7 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-950/20">
+        <div className="flex flex-col flex-1 min-h-0 bg-slate-950/20">
             {/* Header */}
             <div className="flex-shrink-0 border-b border-white/10 px-6 py-4 flex justify-between items-center bg-black/40 backdrop-blur-md sticky top-0 z-10">
                 <h2 className="text-xl font-bold text-white truncate max-w-[80%]">{motel.name}</h2>

@@ -357,9 +357,9 @@ export default function AdminMotelsPage() {
                           <Home className="h-3.5 w-3.5" />
                         </div>
                         <span>{m.totalRooms || 0} phòng
-                          {m.rooms && m.rooms.length > 0 && (
-                            <span className="ml-1 text-emerald-400 font-bold">
-                              ({m.rooms.filter(r => r.status === 'VACANT').length} trống)
+                          {m.rooms && Array.isArray(m.rooms) && (
+                            <span className={`ml-1 font-bold ${(m.rooms as any[]).filter(r => r.status === 'VACANT').length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                              ({(m.rooms as any[]).filter(r => r.status === 'VACANT').length} trống)
                             </span>
                           )}
                         </span>

@@ -2,15 +2,20 @@
 
 :root {
   /* Core colors */
-  --background: #f7fbff; /* light sky background */
-  --foreground: #0f1724; /* primary text */
+  --background: #f7fbff;
+  /* light sky background */
+  --foreground: #0f1724;
+  /* primary text */
 
   /* Accent palette */
-  --accent: #6366f1; /* indigo-500 */
+  --accent: #6366f1;
+  /* indigo-500 */
   --accent-foreground: #ffffff;
-  --accent-2: #06b6d4; /* teal-400 */
+  --accent-2: #06b6d4;
+  /* teal-400 */
 
-  --muted: #94a3b8; /* muted text */
+  --muted: #94a3b8;
+  /* muted text */
   --card-bg: #ffffff;
 }
 
@@ -52,25 +57,37 @@ body {
   gap: 0.5rem;
   transition: transform .12s ease, box-shadow .12s ease;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,0.12); }
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+}
 
 /* Backwards compatible names used in JSX */
-.bg-foreground { background: var(--accent); }
-.text-background { color: var(--accent-foreground); }
+.bg-foreground {
+  background: var(--accent);
+}
+
+.text-background {
+  color: var(--accent-foreground);
+}
 
 /* Card style */
 .card {
   background: var(--card-bg);
   border-radius: 1rem;
-  border: 1px solid rgba(15,23,36,0.06);
+  border: 1px solid rgba(15, 23, 36, 0.06);
   padding: 1rem;
-  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.04);
 }
-.dark .card { border-color: rgba(255,255,255,0.06); }
+
+.dark .card {
+  border-color: rgba(255, 255, 255, 0.06);
+}
 
 /* Accent badges */
 .badge-accent {
-  background: linear-gradient(90deg, rgba(99,102,241,0.12), rgba(6,182,212,0.08));
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.12), rgba(6, 182, 212, 0.08));
   color: var(--accent);
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
@@ -80,14 +97,16 @@ body {
 
 /* Feature card subtle color */
 .feature {
-  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(249,250,255,0.6));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(249, 250, 255, 0.6));
   border-radius: 0.75rem;
   padding: 1rem;
-  border: 1px solid rgba(15,23,36,0.04);
+  border: 1px solid rgba(15, 23, 36, 0.04);
 }
 
 @media (prefers-color-scheme: dark) {
-  .feature { background: linear-gradient(180deg, rgba(2,6,23,0.4), rgba(3,7,18,0.45)); }
+  .feature {
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.4), rgba(3, 7, 18, 0.45));
+  }
 }
 
 /* Site title accent */
@@ -97,7 +116,35 @@ body {
 }
 
 /* small helpers */
-.text-muted { color: var(--muted); }
+.text-muted {
+  color: var(--muted);
+}
 
 /* Landing hero visual background */
-.home-hero-visual { background: url("/images/hero.png") center/cover no-repeat; }
+.home-hero-visual {
+  background: url("/images/hero.png") center/cover no-repeat;
+}
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}

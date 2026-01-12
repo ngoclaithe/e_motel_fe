@@ -490,9 +490,9 @@ export default function MotelsPage() {
                     <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-slate-500"></span>
                       Tổng {m.totalRooms} phòng
-                      {m.rooms && (
-                        <span className={`ml-1 font-medium ${m.rooms.filter(r => r.status === 'VACANT').length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
-                          ({m.rooms.filter(r => r.status === 'VACANT').length} phòng trống)
+                      {m.rooms && Array.isArray(m.rooms) && (
+                        <span className={`ml-1 font-medium ${(m.rooms as any[]).filter(r => r.status === 'VACANT').length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                          ({(m.rooms as any[]).filter(r => r.status === 'VACANT').length} phòng trống)
                         </span>
                       )}
                     </div>
