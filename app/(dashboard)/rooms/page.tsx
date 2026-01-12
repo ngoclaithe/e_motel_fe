@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Room, RoomStatus, BathroomType, FurnishingStatus } from "../../../types";
+import { roomService, motelService } from "../../../lib/services";
+import { Home, Search, Plus, Filter, Edit2, Trash2, Users, Maximize2, Layout, X, Image as ImageIcon, Check, ChevronRight, MapPin } from "lucide-react";
 import { useToast } from "../../../components/providers/ToastProvider";
 import { useEnsureRole, useCurrentRole } from "../../../hooks/useAuth";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
-import { roomService } from "../../../lib/services";
+
+import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../types";
 
 const COMMON_AMENITIES = [
   "Cửa sổ lớn",
@@ -24,6 +26,7 @@ export default function RoomsPage() {
   const { push } = useToast();
 
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [motels, setMotels] = useState<Motel[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [status, setStatus] = useState<RoomStatus | "all">("all");
@@ -131,8 +134,17 @@ export default function RoomsPage() {
     }
   };
 
+  const loadMotels = async () => {
+    try {
+      const res = await motelService.listMotels({ page: 1, limit: 100 });
+      const data = Array.isArray((res as any)?.data) ? (res as any).data : Array.isArray(res) ? (res as Motel[]) : [];
+      setMotels(data);
+    } catch { }
+  };
+
   useEffect(() => {
     loadRooms();
+    loadMotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, viewFilter]);
 
@@ -191,6 +203,7 @@ export default function RoomsPage() {
         fanCount: form.fanCount ?? 0,
         waterHeaterCount: form.waterHeaterCount ?? 0,
         otherEquipment: form.otherEquipment ?? "",
+        motelId: form.motelId,
       };
 
       if (editing) {
@@ -272,6 +285,7 @@ export default function RoomsPage() {
       fanCount: 0,
       waterHeaterCount: 0,
       otherEquipment: "",
+      motelId: undefined,
     });
   };
 
@@ -576,6 +590,29 @@ export default function RoomsPage() {
                           className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors icon-white"
                           disabled={uploading}
                         />
+                      </div>
+
+                      <div className="lg:col-span-2">
+                        <label className="mb-1 block text-sm font-medium text-slate-300 flex items-center gap-2">
+                          <Layout className="w-4 h-4 text-indigo-400" />
+                          Thuộc nhà trọ (Liên kết)
+                        </label>
+                        <select
+                          value={form.motelId || ""}
+                          onChange={(e) => setForm((f) => ({ ...f, motelId: e.target.value || undefined }))}
+                          className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-3 text-sm text-white outline-none focus:border-indigo-500 transition-colors appearance-none cursor-pointer"
+                          disabled={uploading}
+                        >
+                          <option value="" className="bg-slate-900">-- Không liên kết --</option>
+                          {motels.map((m) => (
+                            <option key={m.id} value={m.id} className="bg-slate-900">
+                              {m.name} ({m.address})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-[10px] text-slate-500 italic mt-1 leading-relaxed">
+                          * Chỉ có thể liên kết với nhà trọ bạn sở hữu và còn trống suất phòng theo giới hạn totalRooms của nhà trọ đó.
+                        </p>
                       </div>
                     </div>
 
