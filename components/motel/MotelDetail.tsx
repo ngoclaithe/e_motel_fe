@@ -265,11 +265,16 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
                             </h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {motel.rooms.map((room) => (
-                                    <div key={room.id} className="group relative rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Phòng {room.number}</h4>
-                                                <p className="text-xs text-slate-500">{room.area}m² • Tầng {room.floor || 1}</p>
+                                    <div key={room.id} className="group relative rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-lg ${room.status === 'VACANT' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                                    <Home className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Phòng {room.number}</h4>
+                                                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{room.area}m² • Tầng {room.floor || 1}</p>
+                                                </div>
                                             </div>
                                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${room.status === 'VACANT' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
                                                 room.status === 'OCCUPIED' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
@@ -278,14 +283,16 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
                                                 {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
                                             </span>
                                         </div>
-                                        <div className="text-lg font-bold text-emerald-400 mb-2">{formatMoney(room.price)}</div>
-                                        <a
-                                            href={`/rooms/${room.id}`}
-                                            className="inline-flex items-center gap-2 text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
-                                        >
-                                            Xem chi tiết
-                                            <Info className="w-3 h-3" />
-                                        </a>
+                                        <div className="flex items-center justify-between mt-auto">
+                                            <div className="text-lg font-black text-emerald-400">{formatMoney(room.price)}</div>
+                                            <a
+                                                href={`/rooms/${room.id}`}
+                                                className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500/20 transition-all"
+                                                title="Xem chi tiết"
+                                            >
+                                                <Info className="w-4 h-4" />
+                                            </a>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
