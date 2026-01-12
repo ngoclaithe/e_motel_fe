@@ -153,25 +153,46 @@ export default function AdminMotelsPage() {
       const existingImageUrls = (form.images || []).filter((img) => typeof img === 'string' && img.startsWith('http'));
       const finalImages = [...existingImageUrls, ...imageUrls];
 
-      const payload = {
-        ...form,
+      const basePayload = {
+        name: form.name,
+        address: form.address,
+        description: form.description || "",
+        totalRooms: Number(form.totalRooms) || 0,
+        monthlyRent: Number(form.monthlyRent) || 0,
+        latitude: Number(form.latitude) || 21.006709,
+        longitude: Number(form.longitude) || 105.806434,
+        alleyType: form.alleyType || "MOTORBIKE",
+        alleyWidth: Number(form.alleyWidth) || 0,
+        hasElevator: Boolean(form.hasElevator),
+        hasParking: Boolean(form.hasParking),
+        securityType: form.securityType || "NONE",
+        has24hSecurity: Boolean(form.has24hSecurity),
+        hasWifi: Boolean(form.hasWifi),
+        hasAirConditioner: Boolean(form.hasAirConditioner),
+        hasWashingMachine: Boolean(form.hasWashingMachine),
+        hasKitchen: Boolean(form.hasKitchen),
+        hasRooftop: Boolean(form.hasRooftop),
+        allowPets: Boolean(form.allowPets),
+        allowCooking: Boolean(form.allowCooking),
+        electricityCostPerKwh: Number(form.electricityCostPerKwh) || 0,
+        waterCostPerCubicMeter: Number(form.waterCostPerCubicMeter) || 0,
+        internetCost: Number(form.internetCost) || 0,
+        parkingCost: Number(form.parkingCost) || 0,
+        paymentCycleMonths: Number(form.paymentCycleMonths) || 1,
+        depositMonths: Number(form.depositMonths) || 0,
+        contactPhone: form.contactPhone || "",
+        contactZalo: form.contactZalo || "",
+        regulations: form.regulations || "",
+        nearbyPlaces: Array.isArray(form.nearbyPlaces) ? form.nearbyPlaces : [],
         images: finalImages,
-        totalRooms: Number(form.totalRooms),
-        monthlyRent: Number(form.monthlyRent),
-        alleyWidth: Number(form.alleyWidth),
-        electricityCostPerKwh: Number(form.electricityCostPerKwh),
-        waterCostPerCubicMeter: Number(form.waterCostPerCubicMeter),
-        internetCost: Number(form.internetCost),
-        parkingCost: Number(form.parkingCost),
-        paymentCycleMonths: Number(form.paymentCycleMonths),
-        depositMonths: Number(form.depositMonths),
+        status: form.status || "VACANT",
       };
 
       if (editing) {
-        await motelService.updateMotel(editing.id, payload as any);
+        await motelService.updateMotel(editing.id, basePayload as any);
         push({ title: "Cập nhật thành công", type: "success" });
       } else {
-        await motelService.createMotel(payload as any);
+        await motelService.createMotel(basePayload as any);
         push({ title: "Tạo nhà trọ thành công", type: "success" });
       }
 
