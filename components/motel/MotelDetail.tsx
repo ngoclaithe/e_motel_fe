@@ -256,7 +256,41 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
                         </div>
                     </div>
 
-
+                    {/* Rooms List Section */}
+                    {motel.rooms && motel.rooms.length > 0 && (
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-semibold text-white pl-1 flex items-center gap-2">
+                                <span className="w-1 h-4 bg-emerald-500 rounded-full"></span>
+                                Danh sách phòng trọ ({motel.rooms.length})
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {motel.rooms.map((room) => (
+                                    <div key={room.id} className="group relative rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div>
+                                                <h4 className="font-bold text-white group-hover:text-emerald-400 transition-colors">Phòng {room.number}</h4>
+                                                <p className="text-xs text-slate-500">{room.area}m² • Tầng {room.floor || 1}</p>
+                                            </div>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${room.status === 'VACANT' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
+                                                room.status === 'OCCUPIED' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
+                                                    'border-red-500/30 bg-red-500/10 text-red-400'
+                                                }`}>
+                                                {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
+                                            </span>
+                                        </div>
+                                        <div className="text-lg font-bold text-emerald-400 mb-2">{formatMoney(room.price)}</div>
+                                        <a
+                                            href={`/rooms/${room.id}`}
+                                            className="inline-flex items-center gap-2 text-xs text-indigo-400 font-semibold hover:text-indigo-300 transition-colors"
+                                        >
+                                            Xem chi tiết
+                                            <Info className="w-3 h-3" />
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

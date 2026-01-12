@@ -38,6 +38,7 @@ export interface Motel {
   images?: string[];
   status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
   owner?: User;
+  rooms?: Room[];
   createdAt: string;
 }
 

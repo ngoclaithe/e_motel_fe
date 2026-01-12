@@ -711,6 +711,26 @@ export default function AdminRoomsPage() {
                         disabled={uploading}
                       />
                     </div>
+                    <div className="space-y-2 lg:col-span-2">
+                      <label className="text-sm font-medium text-slate-300 ml-1 flex items-center gap-2">
+                        <Layout className="w-4 h-4 text-indigo-400" />
+                        Thuộc nhà trọ (Liên kết)
+                      </label>
+                      <select
+                        value={form.motelId || ""}
+                        onChange={(e) => setForm((f) => ({ ...f, motelId: e.target.value || undefined }))}
+                        className="w-full rounded-2xl border border-white/10 bg-slate-800/50 px-4 py-4 text-white focus:border-indigo-500/50 outline-none transition-all appearance-none cursor-pointer"
+                        disabled={uploading}
+                      >
+                        <option value="" className="bg-slate-900">-- Không liên kết --</option>
+                        {motels.map((m) => (
+                          <option key={m.id} value={m.id} className="bg-slate-900">
+                            {m.name} ({m.address})
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-slate-500 italic ml-1">* Chỉ có thể liên kết với nhà trọ bạn sở hữu và còn trống suất phòng.</p>
+                    </div>
                   </div>
                 </section>
 
