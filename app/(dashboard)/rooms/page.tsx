@@ -171,7 +171,7 @@ export default function RoomsPage() {
         area: Number(form.area),
         price: Number(form.price),
         amenities: form.amenities || [],
-        images: imageUrls.length > 0 ? imageUrls : (form.images || []),
+        images: [...(form.images || []), ...imageUrls],
         bathroomType: form.bathroomType as BathroomType,
         hasWaterHeater: form.hasWaterHeater ?? false,
         furnishingStatus: form.furnishingStatus as FurnishingStatus,
@@ -238,7 +238,14 @@ export default function RoomsPage() {
 
   const openEditModal = (room: Room) => {
     setEditing(room);
-    setForm(room);
+    // Map image objects to URL strings to prevent "[object Object]" issues in the form
+    const imageUrls = (room.images || []).map((img: any) =>
+      typeof img === 'string' ? img : img.url
+    );
+    setForm({
+      ...room,
+      images: imageUrls
+    });
     setImageFiles([]);
     setOpen(true);
   };
