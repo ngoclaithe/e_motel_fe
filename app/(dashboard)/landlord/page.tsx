@@ -1,275 +1,297 @@
 "use client";
 
-import Link from "next/link";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { useEffect, useState } from "react";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
-import type { Bill, Contract } from "../../../types";
-import { useAuthStore } from "@/store/authStore";
+import { api } from "@/lib/api";
+import { RevenueChart } from "@/components/charts/RevenueChart";
+import { RoomStatusChart } from "@/components/charts/RoomStatusChart";
+import {
+  Users,
+  Home,
+  Wallet,
+  TrendingUp,
+  AlertCircle,
+  Calendar,
+  ChevronRight,
+  Activity,
+  ArrowUpRight,
+  Clock
+} from "lucide-react";
+import Link from "next/link";
+
+interface OverviewStats {
+  totalRooms: number;
+  totalTenants: number;
+  monthlyRevenue: number;
+}
 
 export default function LandlordDashboard() {
   useEnsureRole(["LANDLORD"]);
 
-  const [bills] = useLocalStorage<Bill[]>("emotel_bills", []);
-  const [contracts] = useLocalStorage<Contract[]>("emotel_contracts", []);
+  const [loading, setLoading] = useState(true);
+  const [overview, setOverview] = useState<OverviewStats | null>(null);
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [roomStatusData, setRoomStatusData] = useState<any[]>([]);
+  const [overdueBills, setOverdueBills] = useState<any[]>([]);
+  const [expiringContracts, setExpiringContracts] = useState<any[]>([]);
 
-  const landlordEmail = useAuthStore((state) => state.user?.email || "");
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // Fetch all stats concurrently
+        const [ovRes, revRes, rsRes, billsRes, contractsRes] = await Promise.all([
+          api.get<OverviewStats>("/api/v1/statistics/landlord/overview"),
+          api.get<any[]>("/api/v1/statistics/landlord/revenue"),
+          api.get<any[]>("/api/v1/statistics/landlord/room-status"),
+          api.get<any[]>("/api/v1/bills"), // We'll filter these locally or use a specific endpoint if we had one
+          api.get<any[]>("/api/v1/contracts"),
+        ]);
 
-  const myBills = bills.filter((b) => b.landlordEmail === landlordEmail);
-  const myContracts = contracts;
+        setOverview(ovRes);
+        setRevenueData(revRes);
+        setRoomStatusData(rsRes);
 
-  const unpaidBills = myBills.filter((b) => b.status === "unpaid");
-  const overdueBills = unpaidBills.filter((b) => new Date(b.dueDate) < new Date());
-  const totalRevenue = myBills
-    .filter((b) => b.status === "paid")
-    .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        // Filter overdue bills
+        const now = new Date();
+        const overdue = (billsRes || []).filter(b => !b.isPaid && new Date(b.month) < now);
+        setOverdueBills(overdue);
 
-  const expiringContracts = myContracts.filter((c) => {
-    const end = new Date(c.endDate);
-    const now = new Date();
-    const daysLeft = Math.floor((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysLeft >= 0 && daysLeft <= 30;
-  });
+        // Filter expiring contracts (within 30 days)
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const expiring = (contractsRes || []).filter(c => {
+          const endDate = new Date(c.endDate);
+          return c.status === 'ACTIVE' && endDate > now && endDate <= thirtyDaysFromNow;
+        });
+        setExpiringContracts(expiring);
+
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-t-indigo-500"></div>
+          <p className="text-sm font-medium text-slate-400">Đang tải dữ liệu dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold text-white tracking-tight">
           Dashboard
         </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Tổng quan quản lý nhà trọ của bạn
+        <p className="mt-1 text-slate-400">
+          Tổng quan tình hình kinh doanh nhà trọ của bạn
         </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Revenue */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-green-50 to-emerald-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-green-900/20 dark:to-emerald-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-green-200/30 blur-2xl dark:bg-green-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-green-700 dark:text-green-400">
-                Doanh thu đã thu
-              </div>
-              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/40">
-                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+      {/* Overview Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <div className="rounded-2xl bg-indigo-500/10 p-3 text-indigo-400 group-hover:scale-110 transition-transform">
+              <Home className="h-6 w-6" />
             </div>
-            <div className="mt-3 text-3xl font-bold text-green-900 dark:text-green-100">
-              {totalRevenue.toLocaleString()}đ
-            </div>
-            <div className="mt-1 text-xs text-green-600 dark:text-green-400">
-              Tổng số tiền đã thanh toán
-            </div>
+            <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">
+              <ArrowUpRight className="h-3 w-3" />
+              +12%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-white">{overview?.totalRooms || 0}</div>
+            <div className="text-sm font-medium text-slate-400">Tổng số phòng</div>
           </div>
         </div>
 
-        {/* Unpaid Bills */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-orange-900/20 dark:to-amber-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-orange-200/30 blur-2xl dark:bg-orange-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                Hóa đơn chưa thu
-              </div>
-              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/40">
-                <svg className="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
+        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <div className="rounded-2xl bg-purple-500/10 p-3 text-purple-400 group-hover:scale-110 transition-transform">
+              <Users className="h-6 w-6" />
             </div>
-            <div className="mt-3 text-3xl font-bold text-orange-900 dark:text-orange-100">
-              {unpaidBills.length}
-            </div>
-            <div className="mt-1 text-xs text-orange-600 dark:text-orange-400">
-              {unpaidBills.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString()}đ chưa thu
-            </div>
+            <span className="flex items-center gap-1 text-xs font-medium text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded-full">
+              <ArrowUpRight className="h-3 w-3" />
+              +4%
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-white">{overview?.totalTenants || 0}</div>
+            <div className="text-sm font-medium text-slate-400">Người đang thuê</div>
           </div>
         </div>
 
-        {/* Overdue Bills */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-red-50 to-pink-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-red-900/20 dark:to-pink-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-200/30 blur-2xl dark:bg-red-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-red-700 dark:text-red-400">
-                Hóa đơn quá hạn
-              </div>
-              <div className="rounded-lg bg-red-100 p-2 dark:bg-red-900/40">
-                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
+        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between">
+            <div className="rounded-2xl bg-emerald-500/10 p-3 text-emerald-400 group-hover:scale-110 transition-transform">
+              <Wallet className="h-6 w-6" />
             </div>
-            <div className="mt-3 text-3xl font-bold text-red-900 dark:text-red-100">
-              {overdueBills.length}
+            <span className="flex items-center gap-1 text-xs font-medium text-indigo-400 bg-indigo-400/10 px-2 py-1 rounded-full">
+              Tháng này
+            </span>
+          </div>
+          <div className="mt-4">
+            <div className="text-3xl font-bold text-white">{(overview?.monthlyRevenue || 0).toLocaleString()}đ</div>
+            <div className="text-sm font-medium text-slate-400">Doanh thu thu về</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Charts Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Revenue Chart */}
+        <div className="lg:col-span-2 rounded-3xl border border-white/10 bg-slate-900/50 p-8 pt-6 shadow-xl backdrop-blur-xl">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-indigo-400" />
+                Doanh thu 6 tháng qua
+              </h3>
+              <p className="text-sm text-slate-400">Thống kê doanh thu định kỳ</p>
             </div>
-            <div className="mt-1 text-xs text-red-600 dark:text-red-400">
+            <div className="rounded-lg bg-white/5 p-1 border border-white/10">
+              <button className="px-3 py-1 text-xs font-medium text-white bg-indigo-500 rounded-md">Cột</button>
+              <button className="px-3 py-1 text-xs font-medium text-slate-400 hover:text-white transition-colors">Đường</button>
+            </div>
+          </div>
+          <RevenueChart data={revenueData} />
+        </div>
+
+        {/* Room Status Chart */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-8 pt-6 shadow-xl backdrop-blur-xl">
+          <h3 className="mb-2 text-lg font-bold text-white flex items-center gap-2">
+            <Activity className="h-5 w-5 text-purple-400" />
+            Trạng thái phòng
+          </h3>
+          <p className="text-sm text-slate-400 mb-6">Tình trạng các phòng hiện tại</p>
+          <RoomStatusChart data={roomStatusData} />
+        </div>
+      </div>
+
+      {/* Secondary Data Section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Overdue Items */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-400" />
               Cần xử lý ngay
-            </div>
+            </h3>
+            <span className="text-xs font-bold uppercase tracking-wider text-red-400 bg-red-400/10 px-2.5 py-1 rounded-full">
+              {overdueBills.length} Mục
+            </span>
           </div>
-        </div>
 
-        {/* Expiring Contracts */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-blue-900/20 dark:to-indigo-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-200/30 blur-2xl dark:bg-blue-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                HĐ sắp hết hạn
+          <div className="space-y-3">
+            {overdueBills.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                <div className="p-3 bg-white/5 rounded-full mb-2">✅</div>
+                <p className="text-sm">Mọi thứ đều ổn!</p>
               </div>
-              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/40">
-                <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 text-3xl font-bold text-blue-900 dark:text-blue-100">
-              {expiringContracts.length}
-            </div>
-            <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-              Trong vòng 30 ngày
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
-        <h2 className="mb-4 text-lg font-semibold">Thao tác nhanh</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Link
-            href="/landlord/contracts"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-purple-50 to-purple-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-purple-900/20 dark:to-purple-800/20"
-          >
-            <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/40">
-              <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Hợp đồng</span>
-          </Link>
-
-          <Link
-            href="/landlord/bills"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-blue-50 to-blue-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-blue-900/20 dark:to-blue-800/20"
-          >
-            <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/40">
-              <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Hóa đơn</span>
-          </Link>
-
-          <Link
-            href="/motels"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-green-50 to-green-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-green-900/20 dark:to-green-800/20"
-          >
-            <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/40">
-              <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-green-900 dark:text-green-100">Nhà trọ</span>
-          </Link>
-
-          <Link
-            href="/rooms"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-orange-50 to-orange-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-orange-900/20 dark:to-orange-800/20"
-          >
-            <div className="rounded-lg bg-orange-100 p-3 dark:bg-orange-900/40">
-              <svg className="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-orange-900 dark:text-orange-100">Phòng</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Overdue Bills List */}
-        {overdueBills.length > 0 && (
-          <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-pink-50 p-6 shadow-sm dark:border-red-900/30 dark:from-red-900/20 dark:to-pink-900/20">
-            <h2 className="mb-4 text-lg font-semibold text-red-900 dark:text-red-100">
-              ⚠️ Hóa đơn quá hạn
-            </h2>
-            <div className="space-y-2">
-              {overdueBills.slice(0, 5).map((bill) => (
-                <div
-                  key={bill.id}
-                  className="flex items-center justify-between rounded-lg border border-red-200 bg-white/50 p-3 dark:border-red-900/30 dark:bg-black/20"
-                >
-                  <div>
-                    <div className="text-sm font-medium">Phòng {bill.roomId}</div>
-                    <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                      Hạn: {new Date(bill.dueDate).toLocaleDateString("vi-VN")}
+            ) : (
+              overdueBills.map(bill => (
+                <div key={bill.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-4 border border-white/5 hover:border-red-500/20 transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-400">
+                      <Wallet className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-white">Chưa đóng tiền phòng </div>
+                      <div className="text-xs text-slate-400 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Hạn: {new Date(bill.month).toLocaleDateString('vi-VN')}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-red-700 dark:text-red-400">
-                      {bill.totalAmount?.toLocaleString()}đ
-                    </div>
+                    <div className="text-sm font-bold text-red-400">{bill.totalAmount.toLocaleString()}đ</div>
+                    <Link href="/landlord/bills" className="text-[10px] text-slate-500 group-hover:text-red-400 transition-colors uppercase font-bold">Chi tiết →</Link>
                   </div>
                 </div>
-              ))}
-            </div>
-            {overdueBills.length > 5 && (
-              <Link
-                href="/landlord/bills"
-                className="mt-3 block text-center text-sm text-red-700 hover:underline dark:text-red-400"
-              >
-                Xem tất cả {overdueBills.length} hóa đơn →
-              </Link>
+              ))
             )}
           </div>
-        )}
+        </div>
 
-        {/* Expiring Contracts List */}
-        {expiringContracts.length > 0 && (
-          <div className="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 shadow-sm dark:border-blue-900/30 dark:from-blue-900/20 dark:to-indigo-900/20">
-            <h2 className="mb-4 text-lg font-semibold text-blue-900 dark:text-blue-100">
-              📋 Hợp đồng sắp hết hạn
-            </h2>
-            <div className="space-y-2">
-              {expiringContracts.slice(0, 5).map((contract) => (
-                <div
-                  key={contract.id}
-                  className="flex items-center justify-between rounded-lg border border-blue-200 bg-white/50 p-3 dark:border-blue-900/30 dark:bg-black/20"
-                >
-                  <div>
-                    <div className="text-sm font-medium">
-                      {contract.type === "ROOM" ? `Phòng ${contract.roomId}` : `Nhà trọ ${contract.motelId}`}
+        {/* Upcoming Expirations */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-6 shadow-xl backdrop-blur-xl">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-amber-400" />
+              Hợp đồng sắp hết hạn
+            </h3>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-full">
+              {expiringContracts.length} Mục
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {expiringContracts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                <p className="text-sm">Không có hợp đồng nào sắp hết hạn</p>
+              </div>
+            ) : (
+              expiringContracts.map(contract => (
+                <div key={contract.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-4 border border-white/5 hover:border-amber-500/20 transition-all group">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400">
+                      <ClipboardList className="h-5 w-5" />
                     </div>
-                    <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                      Hết hạn: {new Date(contract.endDate).toLocaleDateString("vi-VN")}
+                    <div>
+                      <div className="text-sm font-bold text-white">
+                        {contract.room?.number ? `Phòng ${contract.room.number}` : 'Hợp đồng trọ'}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        Người thuê: {contract.tenant?.firstName} {contract.tenant?.lastName}
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-blue-700 dark:text-blue-400">
-                      {contract.monthlyRent?.toLocaleString()}đ/tháng
+                    <div className="text-sm font-bold text-white">
+                      {new Date(contract.endDate).toLocaleDateString('vi-VN')}
                     </div>
+                    <Link href="/landlord/contracts" className="text-[10px] text-slate-500 group-hover:text-amber-400 transition-colors uppercase font-bold">Gia hạn →</Link>
                   </div>
                 </div>
-              ))}
-            </div>
-            {expiringContracts.length > 5 && (
-              <Link
-                href="/landlord/contracts"
-                className="mt-3 block text-center text-sm text-blue-700 hover:underline dark:text-blue-400"
-              >
-                Xem tất cả {expiringContracts.length} hợp đồng →
-              </Link>
+              ))
             )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
+}
+
+function ClipboardList(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <path d="M9 12h6" />
+      <path d="M9 16h6" />
+      <path d="M9 8h6" />
+    </svg>
+  )
 }

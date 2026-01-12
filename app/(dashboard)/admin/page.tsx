@@ -1,285 +1,332 @@
 "use client";
 
-import Link from "next/link";
 import { useEnsureRole } from "../../../hooks/useAuth";
 import { useEffect, useState } from "react";
-import { userService } from "../../../lib/services/user";
-import { motelService } from "../../../lib/services/motels";
-import { roomService } from "../../../lib/services/rooms";
+import { api } from "../../../lib/api";
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import {
+  Users,
+  Building2,
+  Home,
+  FileText,
+  TrendingUp,
+  DollarSign,
+  Activity,
+  PieChartIcon,
+} from "lucide-react";
+
+interface AdminStats {
+  totalUsers: number;
+  totalMotels: number;
+  totalRooms: number;
+  totalContracts: number;
+  activeContracts: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+}
 
 export default function AdminDashboard() {
   useEnsureRole(["ADMIN"]);
 
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalMotels: 0,
-    totalRooms: 0,
-    occupiedRooms: 0,
-    vacantRooms: 0,
-    maintenanceRooms: 0,
-    estimatedRevenue: 0,
-    occupancyRate: 0,
-  });
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [revenueChart, setRevenueChart] = useState<any[]>([]);
+  const [userGrowth, setUserGrowth] = useState<any[]>([]);
+  const [contractStatus, setContractStatus] = useState<any[]>([]);
+  const [occupancyRate, setOccupancyRate] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const [users, motelsResponse, rooms] = await Promise.all([
-          userService.getAllUsers(),
-          motelService.listMotels({ page: 1, limit: 100 }),
-          roomService.listAll(),
+        const [overview, revenue, users, contracts, occupancy] = await Promise.all([
+          api.get<AdminStats>("/api/v1/statistics/admin/overview"),
+          api.get<any[]>("/api/v1/statistics/admin/revenue-chart"),
+          api.get<any[]>("/api/v1/statistics/admin/user-growth"),
+          api.get<any[]>("/api/v1/statistics/admin/contract-status"),
+          api.get<any[]>("/api/v1/statistics/admin/occupancy-rate"),
         ]);
 
-        const userList = Array.isArray(users) ? users : [];
-        const motelList = motelsResponse.data || [];
-        const roomList = rooms || [];
-
-        const occupied = roomList.filter((r) => r.status === "OCCUPIED").length;
-        const vacant = roomList.filter((r) => r.status === "VACANT").length;
-        const maintenance = roomList.filter((r) => r.status === "MAINTENANCE").length;
-        const revenue = roomList
-          .filter((r) => r.status === "OCCUPIED")
-          .reduce((sum, r) => sum + (r.price || 0), 0);
-        const occupancyRate = roomList.length ? Math.round((occupied / roomList.length) * 100) : 0;
-
-        setStats({
-          totalUsers: userList.length,
-          totalMotels: motelList.length,
-          totalRooms: roomList.length,
-          occupiedRooms: occupied,
-          vacantRooms: vacant,
-          maintenanceRooms: maintenance,
-          estimatedRevenue: revenue,
-          occupancyRate,
-        });
+        setStats(overview);
+        setRevenueChart(revenue);
+        setUserGrowth(users);
+        setContractStatus(contracts);
+        setOccupancyRate(occupancy);
       } catch (error) {
-        console.error("Error fetching stats:", error);
+        console.error("Error fetching admin stats:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchStats();
+
+    fetchData();
   }, []);
 
-  if (loading) {
+  if (loading || !stats) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Tổng quan hệ thống e-motel
-          </p>
-        </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-8 text-center dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Đang tải...</div>
-        </div>
+      <div className="flex h-[60vh] flex-col items-center justify-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500/20 border-t-indigo-500"></div>
+        <div className="text-slate-400 font-medium animate-pulse">Đang tải dữ liệu...</div>
       </div>
     );
   }
 
+  const statCards = [
+    {
+      title: "Tổng người dùng",
+      value: stats.totalUsers,
+      icon: Users,
+      color: "from-purple-500 to-indigo-500",
+      bgColor: "bg-purple-500/10",
+      textColor: "text-purple-400",
+    },
+    {
+      title: "Nhà trọ",
+      value: stats.totalMotels,
+      icon: Building2,
+      color: "from-emerald-500 to-teal-500",
+      bgColor: "bg-emerald-500/10",
+      textColor: "text-emerald-400",
+    },
+    {
+      title: "Phòng trọ",
+      value: stats.totalRooms,
+      icon: Home,
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-500/10",
+      textColor: "text-blue-400",
+    },
+    {
+      title: "Hợp đồng",
+      value: `${stats.activeContracts}/${stats.totalContracts}`,
+      icon: FileText,
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-amber-500/10",
+      textColor: "text-amber-400",
+      subtitle: "Đang hoạt động",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-12">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-          Admin Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Tổng quan hệ thống e-motel
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <Activity className="h-8 w-8 text-indigo-500" />
+            Admin Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-slate-400">Tổng quan và phân tích hệ thống E-Motel</p>
+        </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total Users */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-purple-50 to-indigo-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-purple-900/20 dark:to-indigo-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-purple-200/30 blur-2xl dark:bg-purple-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-purple-700 dark:text-purple-400">
-                Người dùng
-              </div>
-              <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900/40">
-                <svg className="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={idx}
+              className="group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl transition-all hover:border-white/20"
+            >
+              <div className="absolute right-0 top-0 h-32 w-32 -translate-y-8 translate-x-8 rounded-full bg-gradient-to-br opacity-20 blur-3xl transition-opacity group-hover:opacity-30"
+                style={{ backgroundImage: `linear-gradient(to bottom right, ${card.color.split(' ')[1]}, ${card.color.split(' ')[3]})` }}
+              ></div>
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <div className={`rounded-2xl ${card.bgColor} p-3`}>
+                    <Icon className={`h-6 w-6 ${card.textColor}`} />
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-slate-400">{card.title}</div>
+                  <div className={`mt-1 text-3xl font-bold ${card.textColor}`}>
+                    {card.value.toLocaleString()}
+                  </div>
+                  {card.subtitle && (
+                    <div className="mt-1 text-xs text-slate-500">{card.subtitle}</div>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="mt-3 text-3xl font-bold text-purple-900 dark:text-purple-100">
-              {stats.totalUsers}
+          );
+        })}
+      </div>
+
+      {/* Revenue Cards */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 p-6 backdrop-blur-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="rounded-2xl bg-emerald-500/20 p-3">
+              <DollarSign className="h-6 w-6 text-emerald-400" />
             </div>
-            <div className="mt-1 text-xs text-purple-600 dark:text-purple-400">
-              Tổng số người dùng
+            <div>
+              <div className="text-sm font-medium text-slate-400">Doanh thu tháng này</div>
+              <div className="text-3xl font-bold text-emerald-400">
+                {stats.monthlyRevenue.toLocaleString()}đ
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Total Motels */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-green-50 to-emerald-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-green-900/20 dark:to-emerald-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-green-200/30 blur-2xl dark:bg-green-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-green-700 dark:text-green-400">
-                Nhà trọ
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 p-6 backdrop-blur-xl">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="rounded-2xl bg-indigo-500/20 p-3">
+              <TrendingUp className="h-6 w-6 text-indigo-400" />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-slate-400">Tổng doanh thu</div>
+              <div className="text-3xl font-bold text-indigo-400">
+                {stats.totalRevenue.toLocaleString()}đ
               </div>
-              <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/40">
-                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 text-3xl font-bold text-green-900 dark:text-green-100">
-              {stats.totalMotels}
-            </div>
-            <div className="mt-1 text-xs text-green-600 dark:text-green-400">
-              Tổng số nhà trọ
-            </div>
-          </div>
-        </div>
-
-        {/* Total Rooms */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-blue-900/20 dark:to-cyan-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-blue-200/30 blur-2xl dark:bg-blue-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                Phòng
-              </div>
-              <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/40">
-                <svg className="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 text-3xl font-bold text-blue-900 dark:text-blue-100">
-              {stats.totalRooms}
-            </div>
-            <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-              Tổng số phòng
-            </div>
-          </div>
-        </div>
-
-        {/* Occupancy Rate */}
-        <div className="group relative overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-orange-50 to-amber-50 p-6 shadow-sm transition-all hover:shadow-lg dark:border-white/10 dark:from-orange-900/20 dark:to-amber-900/20">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-orange-200/30 blur-2xl dark:bg-orange-500/10"></div>
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-orange-700 dark:text-orange-400">
-                Tỉ lệ lấp đầy
-              </div>
-              <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900/40">
-                <svg className="h-5 w-5 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3 text-3xl font-bold text-orange-900 dark:text-orange-100">
-              {stats.occupancyRate}%
-            </div>
-            <div className="mt-1 text-xs text-orange-600 dark:text-orange-400">
-              {stats.occupiedRooms}/{stats.totalRooms} phòng đang thuê
             </div>
           </div>
         </div>
       </div>
 
-      {/* Room Status */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Đang thuê</div>
-          <div className="mt-1 text-2xl font-semibold text-green-600">{stats.occupiedRooms}</div>
+      {/* Charts Row 1: Revenue & User Growth */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Revenue Chart */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl">
+          <h3 className="mb-6 text-lg font-bold text-white flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-emerald-400" />
+            Doanh thu 12 tháng
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={revenueChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  color: '#fff',
+                }}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                name="Doanh thu"
+                stroke="#10b981"
+                strokeWidth={3}
+                dot={{ fill: '#10b981', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Phòng trống</div>
-          <div className="mt-1 text-2xl font-semibold text-blue-600">{stats.vacantRooms}</div>
-        </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <div className="text-sm text-zinc-500">Bảo trì</div>
-          <div className="mt-1 text-2xl font-semibold text-orange-600">{stats.maintenanceRooms}</div>
+
+        {/* User Growth Chart */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl">
+          <h3 className="mb-6 text-lg font-bold text-white flex items-center gap-2">
+            <Users className="h-5 w-5 text-purple-400" />
+            Tăng trưởng người dùng
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={userGrowth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="month" stroke="#94a3b8" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#94a3b8" style={{ fontSize: '12px' }} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  color: '#fff',
+                }}
+              />
+              <Legend />
+              <Bar dataKey="users" name="Người dùng mới" fill="#a855f7" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Revenue */}
-      <div className="rounded-2xl border border-black/10 bg-gradient-to-br from-emerald-50 to-teal-50 p-6 shadow-sm dark:border-white/10 dark:from-emerald-900/20 dark:to-teal-900/20">
-        <div className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-          Doanh thu ước tính (tháng)
+      {/* Charts Row 2: Contract Status & Occupancy Rate */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Contract Status Pie Chart */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl">
+          <h3 className="mb-6 text-lg font-bold text-white flex items-center gap-2">
+            <PieChartIcon className="h-5 w-5 text-amber-400" />
+            Trạng thái hợp đồng
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={contractStatus}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {contractStatus.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  color: '#fff',
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-        <div className="mt-2 text-4xl font-bold text-emerald-900 dark:text-emerald-100">
-          {stats.estimatedRevenue.toLocaleString()}đ
-        </div>
-        <div className="mt-1 text-xs text-emerald-600 dark:text-emerald-400">
-          Từ {stats.occupiedRooms} phòng đang cho thuê
-        </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
-        <h2 className="mb-4 text-lg font-semibold">Quản lý hệ thống</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <Link
-            href="/admin/users"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-purple-50 to-purple-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-purple-900/20 dark:to-purple-800/20"
-          >
-            <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900/40">
-              <svg className="h-6 w-6 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Người dùng</span>
-          </Link>
-
-          <Link
-            href="/admin/motels"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-green-50 to-green-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-green-900/20 dark:to-green-800/20"
-          >
-            <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900/40">
-              <svg className="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-green-900 dark:text-green-100">Nhà trọ</span>
-          </Link>
-
-          <Link
-            href="/admin/rooms"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-blue-50 to-blue-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-blue-900/20 dark:to-blue-800/20"
-          >
-            <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900/40">
-              <svg className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Phòng</span>
-          </Link>
-
-          <Link
-            href="/admin/reports"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-orange-50 to-orange-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-orange-900/20 dark:to-orange-800/20"
-          >
-            <div className="rounded-lg bg-orange-100 p-3 dark:bg-orange-900/40">
-              <svg className="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-orange-900 dark:text-orange-100">Báo cáo</span>
-          </Link>
-
-          <Link
-            href="/admin/notifications"
-            className="group flex flex-col items-center gap-2 rounded-xl border border-black/10 bg-gradient-to-br from-pink-50 to-pink-100 p-4 text-center transition-all hover:scale-105 hover:shadow-md dark:border-white/10 dark:from-pink-900/20 dark:to-pink-800/20"
-          >
-            <div className="rounded-lg bg-pink-100 p-3 dark:bg-pink-900/40">
-              <svg className="h-6 w-6 text-pink-600 dark:text-pink-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-            </div>
-            <span className="text-sm font-medium text-pink-900 dark:text-pink-100">Thông báo</span>
-          </Link>
+        {/* Occupancy Rate Pie Chart */}
+        <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl">
+          <h3 className="mb-6 text-lg font-bold text-white flex items-center gap-2">
+            <Home className="h-5 w-5 text-blue-400" />
+            Tỷ lệ lấp đầy phòng
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={occupancyRate}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {occupancyRate.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#1e293b',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  color: '#fff',
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

@@ -144,13 +144,13 @@ export default function FaceVerification({ onClose, onVerified }: FaceVerificati
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="relative w-full max-w-2xl rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
-                <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
+            <div className="relative w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+                <div className="border-b border-white/10 p-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Xác thực danh tính</h2>
+                        <h2 className="text-xl font-bold text-white">Xác thực danh tính</h2>
                         <button
                             onClick={onClose}
-                            className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            className="flex h-10 w-10 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-white/10 hover:text-white"
                         >
                             <X className="h-5 w-5" />
                         </button>
@@ -159,27 +159,27 @@ export default function FaceVerification({ onClose, onVerified }: FaceVerificati
 
                 <div className="p-6 space-y-4">
                     {!cameraActive && !capturedImage && (
-                        <div className="text-center space-y-4">
-                            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                                <Camera className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+                        <div className="text-center space-y-6 py-4">
+                            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20">
+                                <Camera className="h-12 w-12 text-indigo-400" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold">Chụp ảnh selfie hoặc upload ảnh</h3>
-                                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                <h3 className="text-lg font-semibold text-white">Chụp ảnh selfie hoặc upload ảnh</h3>
+                                <p className="mt-2 text-sm text-slate-400">
                                     Chúng tôi sẽ so sánh ảnh với avatar của bạn để xác thực danh tính
                                 </p>
                             </div>
                             <div className="flex justify-center gap-3">
                                 <button
                                     onClick={startCamera}
-                                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 font-medium text-white shadow-lg transition-all hover:shadow-xl"
+                                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 font-medium text-white shadow-lg shadow-indigo-500/20 transition-all hover:shadow-xl hover:shadow-indigo-500/40 hover:from-indigo-500 hover:to-purple-500"
                                 >
                                     <Camera className="h-5 w-5" />
                                     Bật camera
                                 </button>
                                 <button
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-6 py-3 font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                                    className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
                                 >
                                     <Upload className="h-5 w-5" />
                                     Upload ảnh
@@ -197,19 +197,19 @@ export default function FaceVerification({ onClose, onVerified }: FaceVerificati
 
                     {cameraActive && (
                         <div className="space-y-4">
-                            <div className="relative overflow-hidden rounded-lg bg-black">
+                            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black">
                                 <video ref={videoRef} autoPlay playsInline className="w-full" />
                             </div>
                             <div className="flex justify-center gap-3">
                                 <button
                                     onClick={stopCamera}
-                                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                                    className="rounded-xl border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
                                 >
                                     Hủy
                                 </button>
                                 <button
                                     onClick={capturePhoto}
-                                    className="rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md"
+                                    className="rounded-xl bg-white px-6 py-2.5 text-sm font-medium text-black shadow-sm transition-all hover:bg-slate-200"
                                 >
                                     Chụp ảnh
                                 </button>
@@ -218,26 +218,28 @@ export default function FaceVerification({ onClose, onVerified }: FaceVerificati
                     )}
 
                     {capturedImage && (
-                        <div className="space-y-4">
-                            <div className="relative overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <div className="space-y-6">
+                            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/20 flex items-center justify-center p-4">
                                 <img
                                     src={capturedImage}
                                     alt="Preview"
-                                    className="max-h-96 w-auto object-contain"
+                                    className="max-h-96 w-auto rounded-lg object-contain"
                                 />
                             </div>
 
                             {result && (
-                                <div className={`rounded-lg border p-4 ${result.verified ? 'border-green-200 bg-green-50 dark:border-green-900/30 dark:bg-green-900/20' : 'border-red-200 bg-red-50 dark:border-red-900/30 dark:bg-red-900/20'}`}>
+                                <div className={`rounded-xl border p-4 ${result.verified ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-red-500/20 bg-red-500/10'}`}>
                                     <div className="flex items-center gap-3">
                                         {result.verified ? (
-                                            <CheckCircle className="h-6 w-6 text-green-600" />
+                                            <CheckCircle className="h-6 w-6 text-emerald-400" />
                                         ) : (
-                                            <XCircle className="h-6 w-6 text-red-600" />
+                                            <XCircle className="h-6 w-6 text-red-400" />
                                         )}
                                         <div>
-                                            <div className="font-semibold">{result.verified ? 'Xác thực thành công!' : 'Xác thực thất bại'}</div>
-                                            <div className="text-sm">Độ tương đồng: {(result.similarity * 100).toFixed(1)}%</div>
+                                            <div className={`font-semibold ${result.verified ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {result.verified ? 'Xác thực thành công!' : 'Xác thực thất bại'}
+                                            </div>
+                                            <div className="text-sm text-slate-400">Độ tương đồng: {(result.similarity * 100).toFixed(1)}%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -247,14 +249,14 @@ export default function FaceVerification({ onClose, onVerified }: FaceVerificati
                                 <button
                                     onClick={retake}
                                     disabled={uploading || verifying}
-                                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                                    className="rounded-xl border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white disabled:opacity-50"
                                 >
                                     Chọn lại
                                 </button>
                                 <button
                                     onClick={handleVerify}
                                     disabled={uploading || verifying || !!result}
-                                    className="rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50"
+                                    className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/20 transition-all hover:shadow-xl hover:shadow-indigo-500/40 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50"
                                 >
                                     {uploading ? "Đang upload..." : verifying ? "Đang xác thực..." : "Xác thực"}
                                 </button>

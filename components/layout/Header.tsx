@@ -50,19 +50,19 @@ export default function Header() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-black/10 bg-background/80 px-4 backdrop-blur-md dark:border-white/10">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/10 bg-slate-900/50 px-4 backdrop-blur-xl">
       <div className="flex items-center gap-3">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 md:hidden">
           <Image src="/images/e-motel.png" alt="E-motel logo" width={28} height={28} className="rounded" />
-          <span className="site-title text-sm font-semibold">E-motel</span>
+          <span className="site-title text-sm font-bold text-white">E-motel</span>
         </Link>
-        <span className="hidden text-xs text-zinc-500 sm:inline">Quản lý nhà trọ hiện đại</span>
+        <span className="hidden text-xs text-slate-400 sm:inline">Quản lý nhà trọ hiện đại</span>
       </div>
-      <div className="flex items-center gap-2">
-        {mounted && email && <div className="hidden text-xs text-zinc-600 dark:text-zinc-300 sm:block">{email}</div>}
+      <div className="flex items-center gap-3">
+        {mounted && email && <div className="hidden text-xs text-slate-300 sm:block">{email}</div>}
         {mounted && label && (
-          <span className="rounded-lg border border-black/10 px-2 py-1 text-xs text-zinc-600 dark:border-white/15 dark:text-zinc-300">
-            Vai trò: {label}
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-200">
+            {label}
           </span>
         )}
 
@@ -71,13 +71,13 @@ export default function Header() {
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative rounded-lg border border-black/10 p-2 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+              className="relative rounded-full border border-white/10 bg-white/5 p-2 text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-slate-900">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
@@ -86,13 +86,13 @@ export default function Header() {
             {showNotifications && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-black/90">
-                  <div className="border-b border-black/10 px-4 py-3 dark:border-white/10">
+                <div className="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-white/10 bg-slate-900 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
+                  <div className="border-b border-white/10 px-4 py-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold">Thông báo</h3>
+                      <h3 className="font-semibold text-white">Thông báo</h3>
                       <Link
                         href="/notifications"
-                        className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                        className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline"
                         onClick={() => setShowNotifications(false)}
                       >
                         Xem tất cả
@@ -101,7 +101,7 @@ export default function Header() {
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="p-8 text-center text-sm text-zinc-500">
+                      <div className="p-8 text-center text-sm text-slate-500">
                         Không có thông báo mới
                       </div>
                     ) : (
@@ -109,13 +109,13 @@ export default function Header() {
                         <div
                           key={notif.id}
                           onClick={() => handleMarkAsRead(notif.id)}
-                          className="cursor-pointer border-b border-black/5 p-4 hover:bg-black/5 dark:border-white/5 dark:hover:bg-white/5"
+                          className="cursor-pointer border-b border-white/5 p-4 hover:bg-white/5 transition-colors"
                         >
-                          <div className="font-medium text-sm">{notif.title}</div>
-                          <div className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
+                          <div className="font-medium text-sm text-slate-200">{notif.title}</div>
+                          <div className="mt-1 text-xs text-slate-400">
                             {notif.message}
                           </div>
-                          <div className="mt-2 text-xs text-zinc-500">
+                          <div className="mt-2 text-xs text-slate-500">
                             {new Date(notif.createdAt).toLocaleString("vi-VN")}
                           </div>
                         </div>
@@ -128,7 +128,7 @@ export default function Header() {
           </div>
         )}
 
-        <button onClick={() => logout()} className="ml-2 rounded-lg border border-black/10 px-3 py-1 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Đăng xuất</button>
+        <button onClick={() => logout()} className="ml-2 rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-colors">Đăng xuất</button>
       </div>
     </header>
   );

@@ -21,6 +21,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -38,6 +39,7 @@ export default function Sidebar() {
     if (r === "LANDLORD") {
       return [
         { href: "/landlord", label: "Tổng quan", icon: LayoutDashboard },
+        { href: "/landlord/contract-requests", label: "Yêu cầu HĐ", icon: ClipboardList },
         { href: "/motels", label: "Nhà trọ", icon: Building2 },
         { href: "/rooms", label: "Phòng", icon: DoorOpen },
         { href: "/landlord/contracts", label: "Hợp đồng", icon: FileText },
@@ -49,6 +51,7 @@ export default function Sidebar() {
     if (r === "TENANT") {
       return [
         { href: "/tenant", label: "Tổng quan", icon: LayoutDashboard },
+        { href: "/tenant/contract-requests", label: "Yêu cầu thuê", icon: ClipboardList },
         { href: "/contracts", label: "Hợp đồng", icon: FileText },
         { href: "/bills", label: "Hóa đơn", icon: Receipt },
         { href: "/feedbacks", label: "Sửa chữa", icon: Wrench },
@@ -92,27 +95,27 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 z-40 h-screen shrink-0 border-r border-black/10 bg-white transition-all duration-300 dark:border-white/10 dark:bg-black/90 md:sticky",
+          "fixed top-0 z-40 h-screen shrink-0 border-r border-white/10 bg-slate-900/80 backdrop-blur-xl transition-all duration-300 md:sticky",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
           isCollapsed ? "w-16" : "w-60"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex h-14 items-center justify-between border-b border-black/10 px-4 dark:border-white/10">
+          <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
             {!isCollapsed && (
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20">
                   <Building2 className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-semibold">E-Motel</span>
+                <span className="font-bold text-white tracking-wide">E-Motel</span>
               </div>
             )}
 
             {/* Desktop Toggle */}
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden rounded-lg p-1.5 hover:bg-black/5 dark:hover:bg-white/10 md:flex"
+              className="hidden rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white md:flex transition-colors"
             >
               {isCollapsed ? (
                 <ChevronRight className="h-4 w-4" />
@@ -124,7 +127,7 @@ export default function Sidebar() {
             {/* Mobile Close */}
             <button
               onClick={() => setIsOpen(false)}
-              className="flex rounded-lg p-1.5 hover:bg-black/5 dark:hover:bg-white/10 md:hidden"
+              className="flex rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
             >
               <X className="h-5 w-5" />
             </button>
@@ -142,14 +145,15 @@ export default function Sidebar() {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                    "hover:bg-black/5 dark:hover:bg-white/10",
-                    isActive && "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700",
-                    !isActive && "text-gray-700 dark:text-gray-300"
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                    "hover:bg-white/10 hover:text-white group",
+                    isActive
+                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20"
+                      : "text-slate-400"
                   )}
                   title={isCollapsed ? item.label : undefined}
                 >
-                  <Icon className={cn("h-5 w-5 shrink-0", isCollapsed && "mx-auto")} />
+                  <Icon className={cn("h-5 w-5 shrink-0 transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-white", isCollapsed && "mx-auto")} />
                   {!isCollapsed && <span>{item.label}</span>}
                 </Link>
               );
@@ -158,8 +162,8 @@ export default function Sidebar() {
 
           {/* Footer */}
           {!isCollapsed && (
-            <div className="border-t border-black/10 p-4 dark:border-white/10">
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="border-t border-white/10 p-4">
+              <div className="text-xs text-slate-500">
                 © 2024 E-Motel
               </div>
             </div>

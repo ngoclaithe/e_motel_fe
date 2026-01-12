@@ -2,6 +2,8 @@ function getBaseUrl() {
   return (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/+$/, "");
 }
 
+let isRefreshing = false;
+
 async function request<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
   const base = getBaseUrl();
   const url = path.match(/^https?:\/\//i) ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
@@ -13,27 +15,51 @@ async function request<T = unknown>(path: string, init: RequestInit = {}): Promi
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(url, { credentials: "include", ...init, headers });
+  try {
+    const res = await fetch(url, { credentials: "include", ...init, headers });
 
-  if (!res.ok) {
-    const text = await res.text();
-    let data: unknown = text;
-    try {
-      data = JSON.parse(text);
-    } catch {
+    if (res.status === 401 && !path.includes("/auth/refresh") && !isRefreshing) {
+      isRefreshing = true;
+      try {
+        const refreshRes = await fetch(`${base}/api/v1/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+        });
+
+        if (refreshRes.ok) {
+          // Retry the original request
+          isRefreshing = false;
+          return await request<T>(path, init);
+        }
+      } catch (refreshErr) {
+        console.error("Token refresh failed:", refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
     }
-    const err = new Error(res.statusText || "Request failed") as Record<string, unknown> & Error;
-    err.status = res.status;
-    err.data = data;
-    throw err;
-  }
 
-  if (res.status === 204) return null as T;
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    return res.json() as Promise<T>;
+    if (!res.ok) {
+      const text = await res.text();
+      let data: unknown = text;
+      try {
+        data = JSON.parse(text);
+      } catch {
+      }
+      const err = new Error((data as any)?.message || res.statusText || "Request failed") as Record<string, unknown> & Error;
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+
+    if (res.status === 204) return null as T;
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      return res.json() as Promise<T>;
+    }
+    return res.text() as Promise<T>;
+  } catch (error) {
+    throw error;
   }
-  return res.text() as Promise<T>;
 }
 
 export const api = {

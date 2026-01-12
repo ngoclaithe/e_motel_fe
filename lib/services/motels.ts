@@ -29,7 +29,6 @@ export interface CreateMotelRequest {
   paymentCycleMonths?: number;
   depositMonths?: number;
   contactPhone?: string;
-  contactEmail?: string;
   contactZalo?: string;
   regulations?: string;
   nearbyPlaces?: string[];
@@ -64,7 +63,6 @@ export interface UpdateMotelRequest {
   paymentCycleMonths?: number;
   depositMonths?: number;
   contactPhone?: string;
-  contactEmail?: string;
   contactZalo?: string;
   regulations?: string;
   nearbyPlaces?: string[];
@@ -122,7 +120,7 @@ export const motelService = {
   },
 
   getMyMotels: async (): Promise<MotelListResponse> => {
-    const response = await api.get<Motel[] | MotelListResponse>(`/api/v1/motels/my-motels`); 
+    const response = await api.get<Motel[] | MotelListResponse>(`/api/v1/motels/my-motels`);
     if (Array.isArray(response)) {
       return {
         data: response,
@@ -136,7 +134,7 @@ export const motelService = {
   },
 
   getMotel: async (id: string): Promise<Motel> => {
-    return api.get<Motel>(`/api/v1/motels/${id}`); 
+    return api.get<Motel>(`/api/v1/motels/${id}`);
   },
 
   createMotel: async (data: CreateMotelRequest): Promise<Motel> => {
@@ -148,6 +146,6 @@ export const motelService = {
   },
 
   deleteMotel: async (id: string): Promise<{ message: string }> => {
-    return api.del<{ message: string }>(`/api/v1/motels/${id}`); 
+    return api.del<{ message: string }>(`/api/v1/motels/${id}`);
   },
 };

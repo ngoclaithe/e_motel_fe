@@ -75,4 +75,12 @@ export const contractService = {
     return api.downloadBlob(`/api/v1/contracts/${id}/download`, filename);
   },
 
+  approveContract: async (id: string): Promise<Contract> => {
+    return api.post(`/api/v1/contracts/${id}/approve`);
+  },
+
+  terminateContract: async (id: string): Promise<Contract> => {
+    return api.post(`/api/v1/contracts/${id}/terminate`);
+  },
+
 };

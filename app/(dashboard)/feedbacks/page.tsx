@@ -7,6 +7,27 @@ import { feedbackService, type Feedback } from "../../../lib/services/feedbacks"
 import { roomService } from "../../../lib/services";
 import { useAuthStore } from "@/store/authStore";
 
+const StatusBadge = ({ status }: { status: string }) => {
+  const styles: any = {
+    PENDING: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    IN_PROGRESS: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    RESOLVED: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  };
+
+  const labels: any = {
+    PENDING: "Chờ xử lý",
+    IN_PROGRESS: "Đang xử lý",
+    RESOLVED: "Đã giải quyết",
+  };
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${styles[status]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${status === 'PENDING' ? 'animate-pulse bg-amber-400' : status === 'IN_PROGRESS' ? 'bg-blue-400' : 'bg-emerald-400'}`}></span>
+      {labels[status]}
+    </span>
+  );
+};
+
 export default function TenantFeedbacksPage() {
   useEnsureRole(["TENANT"]);
   const { push } = useToast();
@@ -123,244 +144,234 @@ export default function TenantFeedbacksPage() {
     setOpen(true);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>Chờ xử lý</span>;
-      case "IN_PROGRESS":
-        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-white"></span>Đang xử lý</span>;
-      case "RESOLVED":
-        return <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-xs font-medium text-white shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-white"></span>Đã giải quyết</span>;
-      default:
-        return null;
-    }
-  };
-
   const getRoomName = (roomId: string) => {
     const room = rooms.find(r => r.id === roomId);
     return room?.number || roomId;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-50 p-6 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-400">
-              Yêu Cầu Sửa Chữa
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">Gửi yêu cầu sửa chữa và theo dõi tiến độ</p>
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-medium text-white shadow-lg shadow-blue-500/25 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              <span className="text-xl">+</span>
-              Tạo Yêu Cầu
-            </span>
-          </button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Yêu cầu sửa chữa</h1>
+          <p className="mt-1 text-sm text-slate-400">Gửi và theo dõi các yêu cầu hỗ trợ kỹ thuật</p>
         </div>
+        <button
+          onClick={openCreateModal}
+          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 transition-all flex items-center gap-2"
+        >
+          <span className="text-xl">+</span>
+          Tạo yêu cầu
+        </button>
+      </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-white"></div>
-          </div>
-        ) : feedbacks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/50 py-20 backdrop-blur-sm dark:border-zinc-800 dark:bg-black/20">
-            <div className="text-6xl mb-4">🔧</div>
-            <p className="text-zinc-500">Chưa có yêu cầu nào</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {feedbacks.map((feedback) => (
-              <div
-                key={feedback.id}
-                className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50/50 p-6 shadow-sm transition-all hover:shadow-lg hover:shadow-zinc-200/50 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950/50 dark:hover:shadow-zinc-900/50"
-              >
-                <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-2xl"></div>
+      {isLoading ? (
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-12 text-center text-sm text-slate-400 backdrop-blur-xl">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500 mb-4"></div>
+          Đang tải danh sách...
+        </div>
+      ) : feedbacks.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/10 p-20 text-center text-slate-500 bg-slate-900/20">
+          <div className="text-6xl mb-4">🔧</div>
+          <p>Hiện chưa có yêu cầu sửa chữa nào</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {feedbacks.map((feedback) => (
+            <div
+              key={feedback.id}
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm transition-all hover:bg-slate-900/80 backdrop-blur-xl"
+            >
+              <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-blue-500/5 blur-2xl"></div>
 
-                <div className="relative space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="font-semibold text-zinc-900 dark:text-white">{feedback.title}</div>
-                      <div className="mt-1 text-sm text-zinc-500">
-                        Phòng {getRoomName(feedback.roomId)}
-                      </div>
+              <div className="relative space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="text-lg font-bold text-white truncate max-w-[200px]">{feedback.title}</div>
+                    <div className="mt-1 text-sm text-slate-400 font-medium font-mono">
+                      Phòng {getRoomName(feedback.roomId)}
                     </div>
-                    {getStatusBadge(feedback.status)}
                   </div>
+                  <StatusBadge status={feedback.status} />
+                </div>
 
-                  <div className="rounded-lg bg-zinc-50/50 p-4 text-sm text-zinc-600 dark:bg-white/5 dark:text-zinc-400">
-                    {feedback.description}
-                  </div>
+                <div className="rounded-xl bg-white/5 p-4 text-sm text-slate-300 border border-white/5 line-clamp-2 min-h-[60px]">
+                  {feedback.description}
+                </div>
 
-                  <div className="text-xs text-zinc-400">
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-xs text-slate-500 font-medium">
                     {new Date(feedback.createdAt).toLocaleDateString("vi-VN")}
                   </div>
-
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => setSelectedFeedback(feedback)}
-                      className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                      className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-slate-400 hover:bg-white/10 hover:text-white transition-all"
                     >
                       Chi tiết
                     </button>
                     {feedback.status === "PENDING" && (
-                      <>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => openEditModal(feedback)}
-                          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                          className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-3 py-1.5 text-xs font-medium text-blue-400 hover:bg-blue-500/10 hover:text-blue-300 transition-all"
                         >
                           Sửa
                         </button>
                         <button
                           onClick={() => handleDelete(feedback.id)}
-                          className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-100 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/40"
+                          className="rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
                         >
                           Xóa
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create/Edit Modal */}
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+            <div className="border-b border-white/10 bg-white/5 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">
+                {editing ? "Sửa Yêu Cầu" : "Tạo Yêu Cầu Mới"}
+              </h2>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-2xl text-slate-400 hover:text-white transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="mb-2 block text-xs font-bold text-slate-500 uppercase tracking-widest">Phòng</label>
+                <select
+                  value={form.roomId}
+                  onChange={(e) => setForm({ ...form, roomId: e.target.value })}
+                  disabled={!!editing}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all disabled:opacity-50"
+                >
+                  <option value="" className="bg-slate-900">-- Chọn phòng --</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id} className="bg-slate-900">
+                      Phòng {room.number}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-bold text-slate-500 uppercase tracking-widest">Tiêu đề</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  placeholder="VD: Điều hòa không hoạt động"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200 placeholder:text-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-bold text-slate-500 uppercase tracking-widest">Mô tả chi tiết</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Mô tả cụ thể vấn đề anh/chị đang gặp phải..."
+                  rows={4}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-200 placeholder:text-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 bg-white/5 p-6 flex justify-end gap-3">
+              <button
+                onClick={() => setOpen(false)}
+                className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleSubmit}
+                className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-purple-500"
+              >
+                {editing ? "Cập nhật" : "Gửi yêu cầu"}
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Create/Edit Modal */}
-        {open && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
-              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">
-                    {editing ? "Sửa Yêu Cầu" : "Tạo Yêu Cầu Mới"}
-                  </h2>
-                  <button
-                    onClick={() => setOpen(false)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <span className="text-2xl text-zinc-400">×</span>
-                  </button>
+      {/* Detail Modal */}
+      {selectedFeedback && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden">
+            <div className="border-b border-white/10 bg-white/5 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Chi tiết yêu cầu</h2>
+              <button
+                onClick={() => setSelectedFeedback(null)}
+                className="text-2xl text-slate-400 hover:text-white transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Mã yêu cầu</span>
+                  <div className="text-slate-300 font-mono text-sm">{selectedFeedback.id}</div>
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Phòng</span>
+                  <div className="text-slate-300 font-bold">Phòng {getRoomName(selectedFeedback.roomId)}</div>
                 </div>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium">Phòng</label>
-                  <select
-                    value={form.roomId}
-                    onChange={(e) => setForm({ ...form, roomId: e.target.value })}
-                    disabled={!!editing}
-                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900"
-                  >
-                    <option value="">-- Chọn phòng --</option>
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        Phòng {room.number}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Tiêu đề</span>
+                <div className="text-white text-lg font-bold">{selectedFeedback.title}</div>
+              </div>
 
-                <div>
-                  <label className="mb-2 block text-sm font-medium">Tiêu đề</label>
-                  <input
-                    type="text"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="VD: Điều hòa không hoạt động"
-                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium">Mô tả chi tiết</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Mô tả vấn đề cần sửa chữa..."
-                    rows={4}
-                    className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-2.5 transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-800 dark:bg-zinc-900"
-                  />
+              <div>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Nội dung chi tiết</span>
+                <div className="mt-2 rounded-2xl bg-white/5 p-5 text-slate-300 border border-white/5 leading-relaxed">
+                  {selectedFeedback.description}
                 </div>
               </div>
 
-              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setOpen(false)}
-                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-                  >
-                    Hủy
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
-                  >
-                    {editing ? "Cập nhật" : "Tạo"}
-                  </button>
+              <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <div>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Trạng thái</span>
+                  <StatusBadge status={selectedFeedback.status} />
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Ngày gửi</span>
+                  <div className="text-slate-400 text-sm font-medium">
+                    {new Date(selectedFeedback.createdAt).toLocaleString("vi-VN")}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Detail Modal */}
-        {selectedFeedback && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
-              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Chi Tiết Yêu Cầu</h2>
-                  <button
-                    onClick={() => setSelectedFeedback(null)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <span className="text-2xl text-zinc-400">×</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6 space-y-4">
-                <div>
-                  <span className="text-sm text-zinc-500">Tiêu đề</span>
-                  <div className="mt-1 font-semibold">{selectedFeedback.title}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-zinc-500">Phòng</span>
-                  <div className="mt-1 font-semibold">Phòng {getRoomName(selectedFeedback.roomId)}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-zinc-500">Mô tả</span>
-                  <div className="mt-2 rounded-lg bg-zinc-50 p-4 dark:bg-white/5">{selectedFeedback.description}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-zinc-500">Trạng thái</span>
-                  <div className="mt-2">{getStatusBadge(selectedFeedback.status)}</div>
-                </div>
-                <div>
-                  <span className="text-sm text-zinc-500">Ngày tạo</span>
-                  <div className="mt-1 font-medium">{new Date(selectedFeedback.createdAt).toLocaleString("vi-VN")}</div>
-                </div>
-              </div>
-
-              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setSelectedFeedback(null)}
-                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-                  >
-                    Đóng
-                  </button>
-                </div>
-              </div>
+            <div className="border-t border-white/10 bg-white/5 p-6 flex justify-end">
+              <button
+                onClick={() => setSelectedFeedback(null)}
+                className="rounded-xl border border-white/10 px-8 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+              >
+                Đóng
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -157,21 +157,21 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Hồ sơ cá nhân</h1>
+      <h1 className="text-xl font-semibold text-white">Hồ sơ cá nhân</h1>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Avatar Card */}
-        <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm backdrop-blur-xl transition-all hover:border-indigo-500/30">
           <div className="text-center">
             <div className="relative mx-auto mb-4 h-24 w-24">
               {form.avatar ? (
                 <img
                   src={form.avatar}
                   alt="Avatar"
-                  className="h-24 w-24 rounded-full object-cover"
+                  className="h-24 w-24 rounded-full object-cover border-2 border-white/10"
                 />
               ) : (
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-black/10 text-2xl font-semibold dark:bg-white/10">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-indigo-500/10 text-2xl font-semibold text-indigo-400 border-2 border-indigo-500/20">
                   {form.firstName?.charAt(0)?.toUpperCase() || "?"}
                 </div>
               )}
@@ -197,112 +197,112 @@ export default function ProfilePage() {
             </div>
             {uploading && <div className="text-xs text-blue-600">Đang upload...</div>}
             <div className="flex items-center justify-center gap-2">
-              <div className="text-lg font-semibold">{form.firstName} {form.lastName}</div>
+              <div className="text-lg font-semibold text-white">{form.firstName} {form.lastName}</div>
               {userData?.isVerifiedIdentity ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-green-400" />
               ) : (
                 <button
                   onClick={() => setShowFaceVerification(true)}
                   className="transition-all hover:scale-110"
                   title="Click để xác thực danh tính"
                 >
-                  <XCircle className="h-5 w-5 text-red-600 cursor-pointer" />
+                  <XCircle className="h-5 w-5 text-red-400 cursor-pointer" />
                 </button>
               )}
             </div>
-            <div className="mt-1 text-sm text-zinc-500">{session?.email}</div>
-            <div className="mt-2 inline-block rounded-full bg-black/10 px-3 py-1 text-xs font-medium dark:bg-white/10">
+            <div className="mt-1 text-sm text-slate-400">{session?.email}</div>
+            <div className="mt-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-indigo-200 border border-white/5">
               {getRoleLabel()}
             </div>
           </div>
         </div>
 
         {/* Info Card */}
-        <div className="lg:col-span-2 rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
+        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm backdrop-blur-xl">
           {!isEditing ? (
             <>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold">Thông tin cá nhân</h2>
+                <h2 className="text-lg font-semibold text-white">Thông tin cá nhân</h2>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                  className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
                 >
                   Chỉnh sửa
                 </button>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 text-sm">
-                <div>
-                  <span className="text-zinc-500">Họ</span>
-                  <div className="font-medium">{form.firstName || "Chưa cập nhật"}</div>
+                <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                  <span className="text-slate-400 block text-xs mb-1">Họ</span>
+                  <div className="font-medium text-slate-200">{form.firstName || "Chưa cập nhật"}</div>
                 </div>
-                <div>
-                  <span className="text-zinc-500">Tên</span>
-                  <div className="font-medium">{form.lastName || "Chưa cập nhật"}</div>
+                <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                  <span className="text-slate-400 block text-xs mb-1">Tên</span>
+                  <div className="font-medium text-slate-200">{form.lastName || "Chưa cập nhật"}</div>
                 </div>
-                <div>
-                  <span className="text-zinc-500">Email</span>
-                  <div className="font-medium">{session?.email}</div>
+                <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                  <span className="text-slate-400 block text-xs mb-1">Email</span>
+                  <div className="font-medium text-slate-200">{session?.email}</div>
                 </div>
-                <div>
-                  <span className="text-zinc-500">Số điện thoại</span>
-                  <div className="font-medium">{form.phoneNumber || "Chưa cập nhật"}</div>
+                <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                  <span className="text-slate-400 block text-xs mb-1">Số điện thoại</span>
+                  <div className="font-medium text-slate-200">{form.phoneNumber || "Chưa cập nhật"}</div>
                 </div>
-                <div className="sm:col-span-2">
-                  <span className="text-zinc-500">Địa chỉ</span>
-                  <div className="font-medium">{form.address || "Chưa cập nhật"}</div>
+                <div className="sm:col-span-2 rounded-lg bg-black/20 p-3 border border-white/5">
+                  <span className="text-slate-400 block text-xs mb-1">Địa chỉ</span>
+                  <div className="font-medium text-slate-200">{form.address || "Chưa cập nhật"}</div>
                 </div>
               </div>
             </>
           ) : (
             <>
               <div className="mb-4">
-                <h2 className="text-lg font-semibold">Chỉnh sửa hồ sơ</h2>
+                <h2 className="text-lg font-semibold text-white">Chỉnh sửa hồ sơ</h2>
               </div>
               <div className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm">Họ</label>
+                    <label className="mb-1 block text-sm text-slate-300">Họ</label>
                     <input
                       value={form.firstName}
                       onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-                      className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                      className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-sm">Tên</label>
+                    <label className="mb-1 block text-sm text-slate-300">Tên</label>
                     <input
                       value={form.lastName}
                       onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-                      className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                      className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm">Số điện thoại</label>
+                  <label className="mb-1 block text-sm text-slate-300">Số điện thoại</label>
                   <input
                     value={form.phoneNumber}
                     onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm">Địa chỉ</label>
+                  <label className="mb-1 block text-sm text-slate-300">Địa chỉ</label>
                   <input
                     value={form.address}
                     onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                    className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                    className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                    className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
                   >
                     Hủy
                   </button>
                   <button
                     onClick={saveProfile}
-                    className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                    className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:from-indigo-500 hover:to-purple-500 transition-all"
                   >
                     Lưu
                   </button>
@@ -315,50 +315,50 @@ export default function ProfilePage() {
 
       {/* Bank Info - For LANDLORD and TENANT */}
       {(role === "LANDLORD" || role === "TENANT") && (
-        <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
-          <h2 className="mb-4 text-lg font-semibold">Thông tin ngân hàng</h2>
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm backdrop-blur-xl">
+          <h2 className="mb-4 text-lg font-semibold text-white">Thông tin ngân hàng</h2>
           {!isEditing ? (
             <div className="grid gap-4 sm:grid-cols-3 text-sm">
-              <div>
-                <span className="text-zinc-500">Ngân hàng</span>
-                <div className="font-medium">{form.bankName || "Chưa cập nhật"}</div>
+              <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                <span className="text-slate-400 block text-xs mb-1">Ngân hàng</span>
+                <div className="font-medium text-slate-200">{form.bankName || "Chưa cập nhật"}</div>
               </div>
-              <div>
-                <span className="text-zinc-500">Mã ngân hàng</span>
-                <div className="font-medium font-mono">{form.bankCode || "Chưa cập nhật"}</div>
+              <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                <span className="text-slate-400 block text-xs mb-1">Mã ngân hàng</span>
+                <div className="font-medium font-mono text-slate-200">{form.bankCode || "Chưa cập nhật"}</div>
               </div>
-              <div>
-                <span className="text-zinc-500">Số tài khoản</span>
-                <div className="font-medium font-mono">{form.bankAccountNumber || "Chưa cập nhật"}</div>
+              <div className="rounded-lg bg-black/20 p-3 border border-white/5">
+                <span className="text-slate-400 block text-xs mb-1">Số tài khoản</span>
+                <div className="font-medium font-mono text-slate-200">{form.bankAccountNumber || "Chưa cập nhật"}</div>
               </div>
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-3">
               <div>
-                <label className="mb-1 block text-sm">Tên ngân hàng</label>
+                <label className="mb-1 block text-sm text-slate-300">Tên ngân hàng</label>
                 <input
                   value={form.bankName}
                   onChange={(e) => setForm((f) => ({ ...f, bankName: e.target.value }))}
                   placeholder="VD: Vietcombank"
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm">Mã ngân hàng</label>
+                <label className="mb-1 block text-sm text-slate-300">Mã ngân hàng</label>
                 <input
                   value={form.bankCode}
                   onChange={(e) => setForm((f) => ({ ...f, bankCode: e.target.value.toUpperCase() }))}
                   placeholder="VD: VCB"
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm font-mono outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-mono text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm">Số tài khoản</label>
+                <label className="mb-1 block text-sm text-slate-300">Số tài khoản</label>
                 <input
                   value={form.bankAccountNumber}
                   onChange={(e) => setForm((f) => ({ ...f, bankAccountNumber: e.target.value }))}
                   placeholder="VD: 1234567890"
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm font-mono outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-mono text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
             </div>
@@ -367,52 +367,52 @@ export default function ProfilePage() {
       )}
 
       {/* Password Section */}
-      <div className="rounded-2xl border border-black/10 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-black/40">
+      <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm backdrop-blur-xl">
         {!changingPassword ? (
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Bảo mật</h2>
+            <h2 className="text-lg font-semibold text-white">Bảo mật</h2>
             <button
               onClick={() => setChangingPassword(true)}
-              className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+              className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
             >
               Đổi mật khẩu
             </button>
           </div>
         ) : (
           <>
-            <h2 className="mb-4 text-lg font-semibold">Đổi mật khẩu</h2>
+            <h2 className="mb-4 text-lg font-semibold text-white">Đổi mật khẩu</h2>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm">Mật khẩu hiện tại</label>
+                <label className="mb-1 block text-sm text-slate-300">Mật khẩu hiện tại</label>
                 <input
                   type="password"
                   value={passwordForm.currentPassword}
                   onChange={(e) =>
                     setPasswordForm((f) => ({ ...f, currentPassword: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm">Mật khẩu mới</label>
+                <label className="mb-1 block text-sm text-slate-300">Mật khẩu mới</label>
                 <input
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={(e) =>
                     setPasswordForm((f) => ({ ...f, newPassword: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm">Xác nhận mật khẩu</label>
+                <label className="mb-1 block text-sm text-slate-300">Xác nhận mật khẩu</label>
                 <input
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) =>
                     setPasswordForm((f) => ({ ...f, confirmPassword: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-black/10 bg-transparent px-3 py-2 text-sm outline-none focus:border-black/20 dark:border-white/15 dark:focus:border-white/25"
+                  className="w-full rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
@@ -425,13 +425,13 @@ export default function ProfilePage() {
                       confirmPassword: "",
                     });
                   }}
-                  className="rounded-lg border border-black/10 px-3 py-2 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                  className="rounded-lg border border-white/10 px-3 py-2 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-colors"
                 >
                   Hủy
                 </button>
                 <button
                   onClick={changePassword}
-                  className="rounded-lg bg-black px-3 py-2 text-sm text-white hover:bg-black/80 dark:bg-white dark:text-black dark:hover:bg-white/80"
+                  className="rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:from-indigo-500 hover:to-purple-500 transition-all"
                 >
                   Đổi mật khẩu
                 </button>

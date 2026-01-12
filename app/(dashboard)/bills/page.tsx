@@ -44,21 +44,7 @@ export default function TenantBillsPage() {
   };
 
   const handleShowPayment = (bill: any) => {
-    // Debug logs
-    console.log("=== DEBUG PAYMENT INFO ===");
-    console.log("Full bill object:", bill);
-    console.log("Contract:", bill.contract);
-    console.log("Room:", bill.contract?.room);
-    console.log("Motel:", bill.contract?.motel);
-
-    // Get owner (landlord) from room or motel
     const landlord = bill.contract?.room?.owner || bill.contract?.motel?.owner;
-
-    console.log("Bank info:", {
-      bankName: landlord?.bankName,
-      bankCode: landlord?.bankCode,
-      bankAccountNumber: landlord?.bankAccountNumber,
-    });
 
     if (!landlord?.bankName || !landlord?.bankCode || !landlord?.bankAccountNumber) {
       push({
@@ -87,242 +73,220 @@ export default function TenantBillsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 via-white to-zinc-50 p-6 dark:from-zinc-950 dark:via-black dark:to-zinc-950">
-      <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 bg-clip-text text-transparent dark:from-white dark:to-zinc-400">
-              Hóa Đơn
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">Quản lý hóa đơn tiền phòng của bạn</p>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Hóa đơn của tôi</h1>
+          <p className="mt-1 text-sm text-slate-400">Xem và thanh toán các hóa đơn tiền phòng</p>
         </div>
+      </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900 dark:border-zinc-800 dark:border-t-white"></div>
-          </div>
-        ) : (
-          <>
-            {/* Unpaid Summary */}
-            {getTotalUnpaid() > 0 && (
-              <div className="group relative overflow-hidden rounded-2xl border border-amber-200/50 bg-gradient-to-br from-amber-50 to-orange-50 p-6 shadow-lg shadow-amber-100/50 transition-all hover:shadow-xl dark:border-amber-900/30 dark:from-amber-950/30 dark:to-orange-950/30 dark:shadow-amber-900/20">
-                <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-amber-200/20 blur-2xl dark:bg-amber-800/20"></div>
-                <div className="relative">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10 text-2xl">
-                      ⚠️
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-amber-900 dark:text-amber-200">Tổng còn nợ</div>
-                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">{getTotalUnpaid().toLocaleString()}đ</div>
-                    </div>
+      {isLoading ? (
+        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-12 text-center text-sm text-slate-400 backdrop-blur-xl">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-700 border-t-blue-500 mb-4"></div>
+          Đang tải hóa đơn...
+        </div>
+      ) : (
+        <>
+          {getTotalUnpaid() > 0 && (
+            <div className="relative overflow-hidden rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 backdrop-blur-xl">
+              <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-amber-500/10 blur-2xl"></div>
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/20 text-2xl">
+                    ⚠️
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-amber-200/60 uppercase tracking-wider">Tổng còn nợ</div>
+                    <div className="text-3xl font-bold text-amber-400">{getTotalUnpaid().toLocaleString()}đ</div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Bills Grid */}
-            {tenantBills.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-200 bg-white/50 py-20 backdrop-blur-sm dark:border-zinc-800 dark:bg-black/20">
-                <div className="text-6xl mb-4">📄</div>
-                <p className="text-zinc-500">Chưa có hóa đơn nào</p>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {tenantBills.map((bill) => (
-                  <div
-                    key={bill.id}
-                    className="group relative overflow-hidden rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-white to-zinc-50/50 p-6 shadow-sm transition-all hover:shadow-lg hover:shadow-zinc-200/50 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950/50 dark:hover:shadow-zinc-900/50"
-                  >
-                    <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-gradient-to-br from-blue-500/5 to-purple-500/5 blur-2xl"></div>
+          {tenantBills.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 p-20 text-center text-slate-500 bg-slate-900/20">
+              <div className="text-6xl mb-4">📄</div>
+              <p>Chưa có hóa đơn nào được tạo</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {tenantBills.map((bill) => (
+                <div
+                  key={bill.id}
+                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-6 shadow-sm transition-all hover:bg-slate-900/80 backdrop-blur-xl"
+                >
+                  <div className="absolute right-0 top-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-blue-500/5 blur-2xl"></div>
 
-                    <div className="relative space-y-4">
-                      {/* Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-semibold text-zinc-900 dark:text-white">Phòng {getContractInfo(bill)}</div>
-                          <div className="mt-1 text-sm text-zinc-500">
-                            {new Date(bill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
-                          </div>
-                        </div>
-                        {bill.isPaid ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
-                            <span className="h-1.5 w-1.5 rounded-full bg-white"></span>
-                            Đã thanh toán
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-1 text-xs font-medium text-white shadow-sm">
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>
-                            Chưa thanh toán
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Usage Details */}
-                      <div className="space-y-2 rounded-xl bg-zinc-50/50 p-4 text-sm dark:bg-white/5">
-                        <div className="flex justify-between">
-                          <span className="text-zinc-600 dark:text-zinc-400">⚡ Điện</span>
-                          <span className="font-medium">{bill.electricityEnd - bill.electricityStart} kWh</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-zinc-600 dark:text-zinc-400">💧 Nước</span>
-                          <span className="font-medium">{bill.waterEnd - bill.waterStart} m³</span>
+                  <div className="relative space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="text-lg font-bold text-white">Phòng {getContractInfo(bill)}</div>
+                        <div className="mt-1 text-sm text-slate-400 font-medium">
+                          {new Date(bill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
                         </div>
                       </div>
-
-                      {/* Total Amount */}
-                      <div className="flex items-baseline justify-between border-t border-zinc-200/50 pt-4 dark:border-zinc-800/50">
-                        <span className="text-sm text-zinc-600 dark:text-zinc-400">Tổng cộng</span>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
-                          {bill.totalAmount?.toLocaleString()}đ
+                      {bill.isPaid ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 text-xs font-semibold text-emerald-400">
+                          Đã thanh toán
                         </span>
-                      </div>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-xs font-semibold text-amber-400">
+                          Chưa thanh toán
+                        </span>
+                      )}
+                    </div>
 
-                      {/* Actions */}
-                      <div className="flex gap-2 pt-2">
+                    <div className="grid grid-cols-2 gap-3 rounded-xl bg-white/5 p-4 text-sm border border-white/5">
+                      <div className="flex flex-col">
+                        <span className="text-slate-500 text-xs uppercase tracking-tight">Điện sử dụng</span>
+                        <span className="font-semibold text-slate-300">{bill.electricityEnd - bill.electricityStart} kWh</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-slate-500 text-xs uppercase tracking-tight">Nước sử dụng</span>
+                        <span className="font-semibold text-slate-300">{bill.waterEnd - bill.waterStart} m³</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline justify-between border-t border-white/10 pt-4">
+                      <span className="text-sm text-slate-400">Tổng cộng</span>
+                      <span className="text-2xl font-bold text-blue-400">
+                        {bill.totalAmount?.toLocaleString()}đ
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button
+                        onClick={() => setSelectedBill(bill)}
+                        className="flex-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
+                      >
+                        Chi tiết
+                      </button>
+                      {!bill.isPaid && (
                         <button
-                          onClick={() => setSelectedBill(bill)}
-                          className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                          onClick={() => handleShowPayment(bill)}
+                          className="flex-1 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-purple-500 transition-all"
                         >
-                          Chi tiết
+                          Thanh toán
                         </button>
-                        {!bill.isPaid && (
-                          <button
-                            onClick={() => handleShowPayment(bill)}
-                            className="flex-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
-                          >
-                            Thanh toán
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Detail Modal */}
-        {selectedBill && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-            <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-zinc-200/50 bg-white shadow-2xl dark:border-zinc-800/50 dark:bg-zinc-900">
-              {/* Modal Header */}
-              <div className="border-b border-zinc-200/50 bg-gradient-to-r from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Chi Tiết Hóa Đơn</h2>
-                  <button
-                    onClick={() => setSelectedBill(null)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <span className="text-2xl text-zinc-400">×</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div className="p-6 space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <span className="text-sm text-zinc-500">Phòng</span>
-                    <div className="mt-1 font-semibold">Phòng {getContractInfo(selectedBill)}</div>
-                  </div>
-                  <div>
-                    <span className="text-sm text-zinc-500">Tháng</span>
-                    <div className="mt-1 font-semibold">{new Date(selectedBill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}</div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-zinc-200/50 bg-gradient-to-br from-zinc-50 to-white p-6 dark:border-zinc-800/50 dark:from-zinc-900 dark:to-zinc-950">
-                  <div className="mb-4 font-semibold">Chi tiết sử dụng</div>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-600 dark:text-zinc-400">Điện: {selectedBill.electricityStart} → {selectedBill.electricityEnd}</span>
-                      <span className="font-semibold">{((selectedBill.electricityEnd - selectedBill.electricityStart) * selectedBill.electricityRate).toLocaleString()}đ</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-600 dark:text-zinc-400">Nước: {selectedBill.waterStart} → {selectedBill.waterEnd}</span>
-                      <span className="font-semibold">{((selectedBill.waterEnd - selectedBill.waterStart) * selectedBill.waterRate).toLocaleString()}đ</span>
-                    </div>
-                    {selectedBill.otherFees > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-zinc-600 dark:text-zinc-400">Phí khác</span>
-                        <span className="font-semibold">{selectedBill.otherFees.toLocaleString()}đ</span>
-                      </div>
-                    )}
-                    <div className="border-t border-zinc-200 pt-3 dark:border-zinc-800">
-                      <div className="flex justify-between text-base">
-                        <span className="font-semibold">Tổng cộng</span>
-                        <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
-                          {selectedBill.totalAmount?.toLocaleString()}đ
-                        </span>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
+      {/* Bill Detail Modal */}
+      {selectedBill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-slate-900 shadow-2xl">
+            <div className="border-b border-white/10 bg-white/5 p-6 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Chi tiết hóa đơn</h2>
+              <button
+                onClick={() => setSelectedBill(null)}
+                className="text-2xl text-slate-400 hover:text-white transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-sm text-zinc-500">Trạng thái</span>
-                  <div className="mt-2">
-                    {selectedBill.isPaid ? (
-                      <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
-                        <span className="h-2 w-2 rounded-full bg-white"></span>
-                        Đã thanh toán
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-medium text-white shadow-sm">
-                        <span className="h-2 w-2 animate-pulse rounded-full bg-white"></span>
-                        Chưa thanh toán
-                      </span>
-                    )}
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Phòng</span>
+                  <div className="mt-1 font-bold text-slate-200">Phòng {getContractInfo(selectedBill)}</div>
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Tháng thanh toán</span>
+                  <div className="mt-1 font-bold text-slate-200">
+                    {new Date(selectedBill.month).toLocaleDateString("vi-VN", { month: "long", year: "numeric" })}
                   </div>
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="border-t border-zinc-200/50 bg-zinc-50/50 p-6 dark:border-zinc-800/50 dark:bg-zinc-900/50">
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => setSelectedBill(null)}
-                    className="rounded-lg border border-zinc-200 bg-white px-6 py-2.5 text-sm font-medium transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-                  >
-                    Đóng
-                  </button>
-                  {!selectedBill.isPaid && (
-                    <button
-                      onClick={() => {
-                        handleShowPayment(selectedBill);
-                        setSelectedBill(null);
-                      }}
-                      className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:from-blue-700 hover:to-purple-700"
-                    >
-                      Thanh toán ngay
-                    </button>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
+                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider">Chi tiết sử dụng</div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center text-slate-300">
+                    <span>Điện ({selectedBill.electricityStart} → {selectedBill.electricityEnd})</span>
+                    <span className="font-bold">{((selectedBill.electricityEnd - selectedBill.electricityStart) * selectedBill.electricityRate).toLocaleString()}đ</span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-300">
+                    <span>Nước ({selectedBill.waterStart} → {selectedBill.waterEnd})</span>
+                    <span className="font-bold">{((selectedBill.waterEnd - selectedBill.waterStart) * selectedBill.waterRate).toLocaleString()}đ</span>
+                  </div>
+                  {selectedBill.otherFees > 0 && (
+                    <div className="flex justify-between items-center text-slate-300">
+                      <span>Phí khác</span>
+                      <span className="font-bold">{selectedBill.otherFees.toLocaleString()}đ</span>
+                    </div>
+                  )}
+                  <div className="border-t border-white/10 pt-4 flex justify-between items-center">
+                    <span className="font-bold text-white">Tổng cộng</span>
+                    <span className="text-2xl font-bold text-blue-400">
+                      {selectedBill.totalAmount?.toLocaleString()}đ
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 uppercase tracking-wider">Trạng thái</span>
+                <div className="mt-1">
+                  {selectedBill.isPaid ? (
+                    <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 text-sm font-bold text-emerald-400">
+                      Đã thanh toán
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-4 py-1.5 text-sm font-bold text-amber-400">
+                      Chưa thanh toán
+                    </span>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Payment QR Modal */}
-        {showPaymentQR && paymentInfo && (
-          <PaymentQR
-            billId={paymentInfo.billId}
-            amount={paymentInfo.amount}
-            bankName={paymentInfo.bankName}
-            bankCode={paymentInfo.bankCode}
-            accountNumber={paymentInfo.accountNumber}
-            landlordName={paymentInfo.landlordName}
-            onClose={() => {
-              setShowPaymentQR(false);
-              setPaymentInfo(null);
-            }}
-          />
-        )}
-      </div>
+            <div className="border-t border-white/10 bg-white/5 p-6 flex justify-end gap-3">
+              <button
+                onClick={() => setSelectedBill(null)}
+                className="rounded-xl border border-white/10 px-6 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
+              >
+                Đóng
+              </button>
+              {!selectedBill.isPaid && (
+                <button
+                  onClick={() => {
+                    handleShowPayment(selectedBill);
+                    setSelectedBill(null);
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-purple-500"
+                >
+                  Thanh toán ngay
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentQR && paymentInfo && (
+        <PaymentQR
+          billId={paymentInfo.billId}
+          amount={paymentInfo.amount}
+          bankName={paymentInfo.bankName}
+          bankCode={paymentInfo.bankCode}
+          accountNumber={paymentInfo.accountNumber}
+          landlordName={paymentInfo.landlordName}
+          onClose={() => {
+            setShowPaymentQR(false);
+            setPaymentInfo(null);
+          }}
+        />
+      )}
     </div>
   );
 }

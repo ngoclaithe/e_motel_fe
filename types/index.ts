@@ -32,12 +32,23 @@ export interface Motel {
   paymentCycleMonths?: number;
   depositMonths?: number;
   contactPhone?: string;
-  contactEmail?: string;
   contactZalo?: string;
   regulations?: string;
   nearbyPlaces?: string[];
   images?: string[];
+  status?: "VACANT" | "OCCUPIED" | "MAINTENANCE";
+  owner?: User;
   createdAt: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  role: UserRole;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  avatar?: string;
 }
 
 export type RoomStatus = "VACANT" | "OCCUPIED" | "MAINTENANCE";
@@ -47,6 +58,7 @@ export type FurnishingStatus = "UNFURNISHED" | "PARTIALLY_FURNISHED" | "FULLY_FU
 export interface Room {
   id: string;
   number: string;
+  address?: string;
   area: number;
   price: number;
   motelId?: string;
@@ -81,7 +93,14 @@ export interface Room {
   amenities: string[];
   availableFrom?: string;
   images?: string[];
+  hasFan?: boolean;
+  hasKitchenTable?: boolean;
+  lightBulbCount?: number;
   createdAt: string;
+  airConditionerCount?: number;
+  fanCount?: number;
+  waterHeaterCount?: number;
+  otherEquipment?: string;
 }
 
 export type ContractType = "ROOM" | "MOTEL";
@@ -108,7 +127,7 @@ export interface Contract {
   maxOccupants?: number;
   hasWifi?: boolean;
   hasParking?: boolean;
-  status?: string;
+  status?: "ACTIVE" | "PENDING_TENANT" | "EXPIRED" | "TERMINATED";
   regulations?: string;
   documentContent?: string;
   documentUrl?: string | null;

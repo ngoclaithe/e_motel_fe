@@ -6,7 +6,7 @@ import Sidebar from "./Sidebar";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-zinc-50 text-foreground dark:bg-black">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-slate-200">
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col">
         <Header />
