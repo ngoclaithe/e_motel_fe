@@ -756,9 +756,9 @@ export default function AdminMotelsPage() {
                               {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
                             </span>
                             <Link
-                              href={`/rooms/${room.id}`}
+                              href={`/admin/rooms?roomId=${room.id}`}
                               className="p-2 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-emerald-500/20 transition-all"
-                              title="Xem chi tiết phòng"
+                              title="Xem chi tiết quản lý phòng"
                             >
                               <Info className="w-4 h-4" />
                             </Link>

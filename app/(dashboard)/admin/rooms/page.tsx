@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Room, RoomStatus, Motel, BathroomType, FurnishingStatus } from "../../../../types";
 import { useToast } from "../../../../components/providers/ToastProvider";
 import { useEnsureRole } from "../../../../hooks/useAuth";
@@ -21,6 +22,14 @@ const COMMON_AMENITIES = [
 ];
 
 export default function AdminRoomsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500 text-sm">Đang tải...</div>}>
+      <AdminRoomsPageContent />
+    </Suspense>
+  );
+}
+
+function AdminRoomsPageContent() {
   useEnsureRole(["ADMIN"]);
   const { push } = useToast();
 
@@ -138,6 +147,19 @@ export default function AdminRoomsPage() {
     loadRooms();
     loadMotels();
   }, []);
+
+  // Handle roomId from URL to auto-open modal
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const roomId = searchParams.get('roomId');
+    if (roomId && rooms.length > 0) {
+      const room = rooms.find(r => r.id === roomId);
+      if (room) {
+        openEditModal(room);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, rooms.length]);
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {

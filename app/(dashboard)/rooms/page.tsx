@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { roomService, motelService } from "../../../lib/services";
 import { Home, Search, Plus, Filter, Edit2, Trash2, Users, Maximize2, Layout, X, Image as ImageIcon, Check, ChevronRight, MapPin } from "lucide-react";
 import { useToast } from "../../../components/providers/ToastProvider";
@@ -21,6 +22,14 @@ const COMMON_AMENITIES = [
 ];
 
 export default function RoomsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Đang tải...</div>}>
+      <RoomsPageContent />
+    </Suspense>
+  );
+}
+
+function RoomsPageContent() {
   useEnsureRole(["LANDLORD", "TENANT", "ADMIN"]);
   const role = useCurrentRole();
   const { push } = useToast();
@@ -147,6 +156,19 @@ export default function RoomsPage() {
     loadMotels();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, viewFilter]);
+
+  // Handle roomId from URL to auto-open modal
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const roomId = searchParams.get('roomId');
+    if (roomId && rooms.length > 0) {
+      const room = rooms.find(r => r.id === roomId);
+      if (room) {
+        openEditModal(room);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, rooms.length]);
 
   const save = async () => {
     if (!form.number || !form.area || !form.price) {

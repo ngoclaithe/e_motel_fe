@@ -1,4 +1,6 @@
 import type { Motel } from "../../types";
+import Link from "next/link";
+import { useCurrentRole } from "../../hooks/useAuth";
 import {
     MapPin,
     Phone,
@@ -30,6 +32,7 @@ interface MotelDetailProps {
 }
 
 export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
+    const role = useCurrentRole();
     const formatMoney = (amount?: number) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
     };
@@ -285,13 +288,13 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
                                         </div>
                                         <div className="flex items-center justify-between mt-auto">
                                             <div className="text-lg font-black text-emerald-400">{formatMoney(room.price)}</div>
-                                            <a
-                                                href={`/rooms/${room.id}`}
+                                            <Link
+                                                href={role === 'ADMIN' ? `/admin/rooms?roomId=${room.id}` : role === 'LANDLORD' ? `/rooms?roomId=${room.id}` : `/rooms/${room.id}`}
                                                 className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500/20 transition-all"
                                                 title="Xem chi tiết"
                                             >
                                                 <Info className="w-4 h-4" />
-                                            </a>
+                                            </Link>
                                         </div>
                                     </div>
                                 ))}
