@@ -7,6 +7,7 @@ import { useCurrentRole, useEnsureRole } from "../../../hooks/useAuth";
 import { motelService, type MotelFilterParams } from "../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
 import { MapPicker } from "../../../components/MapPicker";
+import { Home } from "lucide-react";
 import MotelDetail from "../../../components/motel/MotelDetail";
 
 interface MotelFormImage {
@@ -489,6 +490,11 @@ export default function MotelsPage() {
                     <div className="mt-2 text-[10px] text-slate-500 flex items-center gap-1">
                       <span className="w-1 h-1 rounded-full bg-slate-500"></span>
                       Tổng {m.totalRooms} phòng
+                      {m.rooms && (
+                        <span className={`ml-1 font-medium ${m.rooms.filter(r => r.status === 'VACANT').length > 0 ? 'text-emerald-400' : 'text-slate-500'}`}>
+                          ({m.rooms.filter(r => r.status === 'VACANT').length} phòng trống)
+                        </span>
+                      )}
                     </div>
                   )}
                   <div className="mt-3 flex gap-2">
@@ -959,6 +965,31 @@ export default function MotelsPage() {
                     </div>
                   )}
                 </div>
+                {editing && editing.rooms && editing.rooms.length > 0 && (
+                  <div className="border-t border-white/10 pt-6">
+                    <h3 className="mb-4 text-sm font-semibold text-white flex items-center gap-2">
+                      <Home className="w-4 h-4 text-emerald-400" />
+                      Phòng trọ đang liên kết ({editing.rooms.length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {editing.rooms.map((room) => (
+                        <div key={room.id} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/10">
+                          <div>
+                            <div className="text-sm font-bold text-white">Phòng {room.number}</div>
+                            <div className="text-[10px] text-slate-500">{room.area}m² - {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(room.price)}</div>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${room.status === 'VACANT' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
+                            room.status === 'OCCUPIED' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
+                              'border-red-500/30 bg-red-500/10 text-red-400'
+                            }`}>
+                            {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-[10px] text-slate-500 italic">* Để thay đổi liên kết, vui lòng vào mục "Quản lý phòng" để chỉnh sửa từng phòng.</p>
+                  </div>
+                )}
               </div>
             </div>
 
