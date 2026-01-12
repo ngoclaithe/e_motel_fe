@@ -101,7 +101,10 @@ export default function AdminMotelsPage() {
 
   const openEdit = (motel: Motel) => {
     setEditing(motel);
-    setForm(motel);
+    setForm({
+      ...motel,
+      images: (motel.images || []).map(img => typeof img === 'string' ? img : (img as any).url)
+    });
     setOpen(true);
   };
 

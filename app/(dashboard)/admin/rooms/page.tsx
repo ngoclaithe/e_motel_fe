@@ -157,7 +157,7 @@ export default function AdminRoomsPage() {
       }
 
       const existingImageUrls = (form.images || []).filter((img) => typeof img === 'string' && img.startsWith('http'));
-      const finalImages = imageUrls.length > 0 ? imageUrls : existingImageUrls;
+      const finalImages = [...existingImageUrls, ...imageUrls];
 
       const basePayload = {
         number: String(form.number),
@@ -236,7 +236,10 @@ export default function AdminRoomsPage() {
 
   const openEditModal = (room: Room) => {
     setEditing(room);
-    setForm(room);
+    setForm({
+      ...room,
+      images: (room.images || []).map(img => typeof img === 'string' ? img : (img as any).url)
+    });
     setImageFiles([]);
     setOpen(true);
   };
@@ -772,8 +775,8 @@ export default function AdminRoomsPage() {
                               type="button"
                               onClick={() => setForm(f => ({ ...f, status: s }))}
                               className={`rounded-xl px-4 py-2.5 text-[10px] font-bold border transition-all ${form.status === s
-                                  ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20'
-                                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                                ? 'bg-indigo-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/20'
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
                                 }`}
                             >
                               {s === 'VACANT' ? 'CÒN TRỐNG' : s === 'OCCUPIED' ? 'ĐANG THUÊ' : 'BẢO TRÌ'}
