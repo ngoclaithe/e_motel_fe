@@ -48,7 +48,7 @@ export default function MotelDetail({ motel, onClose }: MotelDetailProps) {
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
                 <div className="p-6 space-y-8">
                     {/* Images Gallery */}
                     {motel.images && motel.images.length > 0 && (
