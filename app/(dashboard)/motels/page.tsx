@@ -7,7 +7,8 @@ import { useCurrentRole, useEnsureRole } from "../../../hooks/useAuth";
 import { motelService, type MotelFilterParams } from "../../../lib/services/motels";
 import { uploadToCloudinary } from "../../../lib/cloudinary";
 import { MapPicker } from "../../../components/MapPicker";
-import { Home } from "lucide-react";
+import { Home, Info } from "lucide-react";
+import Link from "next/link";
 import MotelDetail from "../../../components/motel/MotelDetail";
 
 interface MotelFormImage {
@@ -973,17 +974,26 @@ export default function MotelsPage() {
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {editing.rooms.map((room) => (
-                        <div key={room.id} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/10">
-                          <div>
-                            <div className="text-sm font-bold text-white">Phòng {room.number}</div>
+                        <div key={room.id} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/10 group/room hover:border-indigo-500/50 transition-all">
+                          <div className="flex-1">
+                            <div className="text-sm font-bold text-white group-hover/room:text-indigo-400 transition-colors">Phòng {room.number}</div>
                             <div className="text-[10px] text-slate-500">{room.area}m² - {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(room.price)}</div>
                           </div>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${room.status === 'VACANT' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
-                            room.status === 'OCCUPIED' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
-                              'border-red-500/30 bg-red-500/10 text-red-400'
-                            }`}>
-                            {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${room.status === 'VACANT' ? 'border-green-500/30 bg-green-500/10 text-green-400' :
+                              room.status === 'OCCUPIED' ? 'border-blue-500/30 bg-blue-500/10 text-blue-400' :
+                                'border-red-500/30 bg-red-500/10 text-red-400'
+                              }`}>
+                              {room.status === 'VACANT' ? 'TRỐNG' : room.status === 'OCCUPIED' ? 'ĐÃ THUÊ' : 'BẢO TRÌ'}
+                            </span>
+                            <Link
+                              href={`/rooms/${room.id}`}
+                              className="p-1.5 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-indigo-500/20 transition-all"
+                              title="Xem chi tiết phòng"
+                            >
+                              <Info className="w-4 h-4" />
+                            </Link>
+                          </div>
                         </div>
                       ))}
                     </div>
