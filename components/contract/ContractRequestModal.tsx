@@ -24,7 +24,7 @@ export default function ContractRequestModal({ room, motel, isOpen, onClose }: C
         startDate: "",
         endDate: "",
         monthlyRent: target?.price || target?.monthlyRent || 0,
-        deposit: target?.price || target?.monthlyRent || 0, // Default 1 month deposit
+        deposit: target?.price || target?.monthlyRent || 0, 
         message: "",
     });
 

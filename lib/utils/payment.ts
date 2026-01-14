@@ -26,7 +26,6 @@ export function generatePaymentQR(
     amount: number,
     billId: string
 ): string {
-    // Shorten billId to last 8 characters for QR content
     const shortId = billId.slice(-8).toUpperCase();
     const content = `HD ${shortId}`;
     return `https://img.vietqr.io/image/${bankCode}-${accountNumber}-compact.jpg?amount=${amount}&addInfo=${encodeURIComponent(content)}`;

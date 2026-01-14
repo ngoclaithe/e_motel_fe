@@ -2,7 +2,6 @@ import { api } from "../api";
 
 export type UserRole = "ADMIN" | "LANDLORD" | "TENANT";
 
-// Request DTOs (for sending to backend)
 export interface LoginRequest {
   email: string;
   password: string;
@@ -69,7 +68,6 @@ export interface AuthMeResponse {
   updatedAt: string;
 }
 
-// Service functions
 export const authService = {
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     return api.post("/api/v1/auth/login", data);

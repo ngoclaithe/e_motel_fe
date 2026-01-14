@@ -27,7 +27,6 @@ async function request<T = unknown>(path: string, init: RequestInit = {}): Promi
         });
 
         if (refreshRes.ok) {
-          // Retry the original request
           isRefreshing = false;
           return await request<T>(path, init);
         }

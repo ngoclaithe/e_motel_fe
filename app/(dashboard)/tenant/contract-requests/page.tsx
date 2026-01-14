@@ -56,15 +56,12 @@ export default function TenantContractRequestsPage() {
         if (!user) return;
         try {
             setLoading(true);
-            // Fetch room rental requests (sent by tenant)
             const reqsData = await api.get<any[]>("/api/v1/contract-requests");
             setRequests(reqsData);
 
-            // Fetch pending contracts (sent by landlord)
             const contractsData = await contractService.listContracts(1, 100);
             const allContracts = Array.isArray(contractsData) ? contractsData : (contractsData.data || []);
 
-            // Filter only PENDING_TENANT contracts for this user
             const filtered = allContracts.filter((c: any) =>
                 c.status === "PENDING_TENANT" && c.tenant?.email === user.email
             );
@@ -87,7 +84,7 @@ export default function TenantContractRequestsPage() {
             setActionLoading(id);
             await contractService.approveContract(id);
             push({ title: "Thành công", description: "Hợp đồng đã được ký kết và có hiệu lực", type: "success" });
-            fetchData(); // Refresh both lists
+            fetchData(); 
         } catch (err) {
             push({ title: "Lỗi", description: "Không thể ký hợp đồng", type: "error" });
         } finally {
@@ -207,7 +204,6 @@ export default function TenantContractRequestsPage() {
                                             <button
                                                 className="flex-1 rounded-xl bg-white/5 border border-white/10 py-2 text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all text-center"
                                                 onClick={() => {
-                                                    // This can be a simple modal to view contract.documentContent
                                                     alert("Vui lòng tải bản PDF hoặc liên hệ chủ nhà để xem nội dung chi tiết.");
                                                 }}
                                             >

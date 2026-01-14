@@ -26,7 +26,6 @@ export default function ContractsPage() {
         setError(null);
         const response = await contractService.listContracts(1, 100);
         console.log("📋 Contracts response:", response);
-        // Backend returns array directly, not wrapped in {data: [...]}
         const contractsData = Array.isArray(response) ? response : (response.data || []);
         console.log("📋 Contracts data:", contractsData);
         setContracts(contractsData);
@@ -42,15 +41,11 @@ export default function ContractsPage() {
     fetchContracts();
   }, []);
 
-  // Filter contracts where tenant email matches current user
-  console.log("👤 Current user email:", userEmail);
-  console.log("📋 All contracts:", contracts);
   const tenantContracts = contracts.filter((c: any) => {
     const isMine = c.tenant?.email === userEmail;
     const isNotPending = c.status !== "PENDING_TENANT";
     return isMine && isNotPending;
   });
-  console.log("✅ Filtered tenant contracts:", tenantContracts);
 
   const isExpiringSoon = (endDate: string) => {
     const end = new Date(endDate);
@@ -78,28 +73,6 @@ export default function ContractsPage() {
     } catch (err) {
       console.error("Failed to terminate contract:", err);
       push({ title: "Không thể kết thúc hợp đồng", type: "error" });
-    }
-  };
-
-  const handleUpdateContract = async (id: string, updates: any) => {
-    try {
-      const updated = await contractService.updateContract(id, updates);
-      setContracts(contracts.map(c => c.id === id ? updated : c));
-      setSelectedContract(updated);
-      push({ title: "Đã cập nhật hợp đồng", type: "success" });
-    } catch (err) {
-      console.error("Failed to update contract:", err);
-      push({ title: "Không thể cập nhật hợp đồng", type: "error" });
-    }
-  };
-
-  const handleGetContractDetail = async (id: string) => {
-    try {
-      const detail = await contractService.getContract(id);
-      setSelectedContract(detail);
-    } catch (err) {
-      console.error("Failed to fetch contract detail:", err);
-      push({ title: "Không thể lấy chi tiết hợp đồng", type: "error" });
     }
   };
 
@@ -235,7 +208,6 @@ ${contract.specialTerms || "Không có ghi chú"}
                       try {
                         await contractService.approveContract(contract.id);
                         push({ title: "Thành công", description: "Đã duyệt hợp đồng", type: "success" });
-                        // Refresh list
                         const response = await contractService.listContracts(1, 100);
                         const contractsData = Array.isArray(response) ? response : (response.data || []);
                         setContracts(contractsData);

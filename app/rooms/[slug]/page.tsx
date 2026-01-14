@@ -21,7 +21,6 @@ export default function RoomDetailPage() {
     useEffect(() => {
         const fetchRoom = async () => {
             try {
-                // Sử dụng slug thay vì ID
                 const data = await api.get<any>(`/api/v1/rooms/s/${params.slug}`);
                 setRoom(data);
             } catch (error) {

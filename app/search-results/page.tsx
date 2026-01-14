@@ -21,7 +21,6 @@ function SearchResultsContent() {
             setLoading(true);
             try {
                 const query = searchParams.toString();
-                // Sử dụng api utility với prefix /api/v1 tự động hoặc path tương đối
                 const data = await api.get<any>(`/api/v1/rooms/public/search?${query}`);
                 setRooms(data.data || []);
                 setTotal(data.total || 0);

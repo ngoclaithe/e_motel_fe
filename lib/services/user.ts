@@ -64,7 +64,6 @@ export const userService = {
     return api.del(`/api/v1/users/${id}`);
   },
   updateProfile: async (payload: { firstName?: string; lastName?: string; phoneNumber?: string; address?: string }): Promise<unknown> => {
-    // Get current user profile first to get the ID
     const profile = await api.get("/api/v1/users/profile") as any;
     return api.put(`/api/v1/users/${profile.id}`, payload);
   },

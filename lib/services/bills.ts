@@ -3,7 +3,7 @@ import type { Bill } from "../../types";
 
 export interface CreateBillRequest {
   contractId: string;
-  month: string; // ISO date string
+  month: string; 
   electricityStart: number;
   electricityEnd: number;
   waterStart: number;

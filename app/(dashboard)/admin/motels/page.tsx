@@ -22,7 +22,6 @@ export default function AdminMotelsPage() {
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  // Add/Edit State
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Motel | null>(null);
   const [uploading, setUploading] = useState(false);
